@@ -45,4 +45,60 @@ module.exports = class Admin {
 			}
 		})
 	}
+
+	/**
+	 * Controller method to delete an entity (and optionally its related entities).
+	 * @api {post} v1/admin/deleteEntity/6852c8de7248c20014b38a61?recursive=false
+	 * @apiVersion 1.0.0
+	 * @apiName deleteEntity
+	 * @apiGroup Entities
+	 * @apiParam {entityId} entityId Mandatory
+	 *  @returns {JSON} - Message of successfully created.
+	 * @param {Object} req - Express request object
+	 * @param {String} req.params._id - The ID of the entity to delete
+	 * @param {String|Boolean} req.query.recursive - Whether to delete related/grouped entities
+	 *
+	 * @returns {Promise<Object>} - Response object with status and result or error
+	 * @returns {JSON} - ENTITIES_DELETED_SUCCESSFULLY
+	 * {
+    		"message": "ENTITIES_DELETED_SUCCESSFULLY",
+    		"status": 200,
+    		"result": {
+    		    "deletedEntities": 1,
+    		    "unlinkResult": 1
+    		}
+		}
+	 */
+	async deleteEntity(req) {
+		return new Promise(async (resolve, reject) => {
+			try {
+				let deletedEntity
+				if (
+					req.userDetails &&
+					req.userDetails.userInformation &&
+					req.userDetails.userInformation.roles &&
+					req.userDetails.userInformation.roles.includes(CONSTANTS.common.ADMIN_ROLE)
+				) {
+					deletedEntity = await adminHelper.deleteEntity(
+						req.params._id,
+						req.query.recursive,
+						req.userDetails.tenantAndOrgInfo.tenantId,
+						req.userDetails.userInformation.userId
+					)
+				} else {
+					throw {
+						status: HTTP_STATUS_CODE.forbidden.status,
+						message: CONSTANTS.apiResponses.ADMIN_ROLE_REQUIRED,
+					}
+				}
+				return resolve(deletedEntity)
+			} catch (error) {
+				return reject({
+					status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+					message: error.message || HTTP_STATUS_CODE.internal_server_error.message,
+					errorObject: error,
+				})
+			}
+		})
+	}
 }
