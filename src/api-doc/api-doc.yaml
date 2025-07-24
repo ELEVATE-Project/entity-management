@@ -6,6 +6,26 @@ info:
     * This Service enables the creation and management of various entities and
     entityType .It provides functionalities for entities, ensuring seamless
     integration and maintenance of entity-related data across the platform.
+
+
+    **🔐 Note for Admin/System Admin:**  
+
+    When accessing APIs as an **Admin** or **System Admin**, include the
+    following headers in your request:
+
+
+    | **Header Name**         | **Description**                  | **Example
+    Value**          |
+
+    |-------------------------|----------------------------------|----------------------------|
+
+    | `admin-auth-token`      | Admin-specific auth token        |
+    `{admin-auth-token}`       |
+
+    | `tenantId`              | Tenant identifier                |
+    `shikshagraha`             |
+
+    | `orgId`                 | Organization ID                  | `blr`
   contact:
     email: tech-infra@shikshalokam.org
 servers:
@@ -290,13 +310,14 @@ paths:
         - in: header
           name: tenantId
           description: >-
-            This header should be passed when system admin wants to create
-            resources
+            This header specifies the tenant data of the resource creator. This
+            header should be passed when system admin wants to create resources
           schema: *ref_2
           required: true
         - in: header
           name: orgId
           description: >-
+            This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
           schema: *ref_2
@@ -417,13 +438,14 @@ paths:
         - in: header
           name: tenantId
           description: >-
-            This header should be passed when system admin wants to create
-            resources
+            This header specifies the tenant data of the resource creator. This
+            header should be passed when system admin wants to create resources
           schema: *ref_4
           required: true
         - in: header
           name: orgId
           description: >-
+            This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
           schema: *ref_4
@@ -1173,6 +1195,17 @@ paths:
                       properties:
                         _id:
                           type: string
+                        metaInformation:
+                          type: object
+                          properties:
+                            targetedEntityTypes:
+                              type: array
+                              items:
+                                type: string
+                            externalId:
+                              type: string
+                            name:
+                              type: string
                         childHierarchyPath:
                           type: array
                           items:
@@ -1187,35 +1220,112 @@ paths:
                           type: string
                         entityType:
                           type: string
-                        metaInformation:
+                        registryDetails:
                           type: object
                           properties:
-                            externalId:
+                            code:
                               type: string
+                            locationId:
+                              type: string
+                        tenantId:
+                          type: string
+                        orgId:
+                          type: string
                         updatedAt:
                           type: string
                         createdAt:
                           type: string
                         __v:
                           type: number
+                        parentInformation:
+                          type: object
+                          properties:
+                            state:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  _id:
+                                    type: string
+                                  externalId:
+                                    type: string
+                                  name:
+                                    type: string
+                            district:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  _id:
+                                    type: string
+                                  externalId:
+                                    type: string
+                                  name:
+                                    type: string
+                            block:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  _id:
+                                    type: string
+                                  externalId:
+                                    type: string
+                                  name:
+                                    type: string
+                            cluster:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  _id:
+                                    type: string
+                                  externalId:
+                                    type: string
+                                  name:
+                                    type: string
               examples:
-                SuccessResponse:
+                example1:
                   value:
                     message: ENTITY_INFORMATION_FETCHED
                     status: 200
                     result:
-                      - _id: 662f856a4b41910591c2fde9
-                        childHierarchyPath: []
-                        createdBy: user123
-                        updatedBy: user123
-                        deleted: false
-                        entityTypeId: 627a13928ce12806f5803f57
-                        entityType: block
+                      - _id: 6852c9207248c20014b38dd3
                         metaInformation:
-                          externalId: entity123
-                        updatedAt: '2024-04-30T13:16:23.597Z'
-                        createdAt: '2024-04-29T11:32:58.439Z'
+                          targetedEntityTypes: []
+                          externalId: '16030100406'
+                          name: BALARAM BAZAR J. B. SCHOOL
+                        childHierarchyPath: []
+                        createdBy: '20'
+                        updatedBy: '20'
+                        deleted: false
+                        entityTypeId: 6825915c97b5680013e6a148
+                        entityType: school
+                        registryDetails:
+                          code: '16030100406'
+                          locationId: '16030100406'
+                        tenantId: shikshalokam
+                        orgId: sl
+                        updatedAt: '2025-06-18T14:11:49.122Z'
+                        createdAt: '2025-06-18T14:11:49.122Z'
                         __v: 0
+                        parentInformation:
+                          state:
+                            - _id: 6852c86c7248c20014b38a4d
+                              externalId: '16'
+                              name: Tripura
+                          district:
+                            - _id: 6852c8ae7248c20014b38a50
+                              externalId: dhalai
+                              name: Dhalai
+                          block:
+                            - _id: 6852c8de7248c20014b38a61
+                              externalId: '160301'
+                              name: AMBASSA
+                          cluster:
+                            - _id: 6852c9027248c20014b38af2
+                              externalId: '1603010007'
+                              name: BALARAM HIGH SCHOOL
         '400':
           description: 'Bad Request. '
           content:
