@@ -13,6 +13,9 @@ module.exports = (req) => {
 		},
 		deleteEntity: function () {
 			req.checkParams('_id').exists().withMessage('required entity _id')
+			if (req.query.recursive !== undefined) {
+				req.checkQuery('recursive').isBoolean().withMessage('recursive must be a boolean value')
+			}
 		},
 	}
 
