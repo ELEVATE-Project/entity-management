@@ -13,9 +13,9 @@ const pushDeletedEntityTopic =
 		: 'RESOURCE_DELETION_TOPIC'
 
 /**
- * Push improvement projects to kafka.
+ * Push Entity Id to kafka.
  * @function
- * @name pushProjectToKafka
+ * @name pushDeletedEntityToKafka
  * @param {Object} message - Message data.
  */
 
