@@ -48,7 +48,7 @@ module.exports = class Admin {
 
 	/**
 	 * Controller method to delete an entity (and optionally its related entities).
-	 * @api {post} v1/admin/deleteEntity/6852c8de7248c20014b38a61?recursive=false
+	 * @api {post} v1/admin/deleteEntity/6852c8de7248c20014b38a61?allowRecursiveDelete=false
 	 * @apiVersion 1.0.0
 	 * @apiName deleteEntity
 	 * @apiGroup Entities
@@ -56,7 +56,7 @@ module.exports = class Admin {
 	 *  @returns {JSON} - Message of successfully created.
 	 * @param {Object} req - Express request object
 	 * @param {String} req.params._id - The ID of the entity to delete
-	 * @param {String|Boolean} req.query.recursive - Whether to delete related/grouped entities
+	 * @param {String|Boolean} req.query.allowRecursiveDelete - Whether to delete related/grouped entities
 	 *
 	 * @returns {Promise<Object>} - Response object with status and result or error
 	 * @returns {JSON} - ENTITIES_DELETED_SUCCESSFULLY
@@ -79,9 +79,9 @@ module.exports = class Admin {
 					req.userDetails.userInformation.roles &&
 					req.userDetails.userInformation.roles.includes(CONSTANTS.common.ADMIN_ROLE)
 				) {
-					deletedEntity = await adminHelper.deleteEntity(
+					deletedEntity = await adminHelper.allowRecursiveDelete(
 						req.params._id,
-						req.query.recursive,
+						req.query.allowRecursiveDelete == 'true' ? 'true' : 'false',
 						req.userDetails.tenantAndOrgInfo.tenantId,
 						req.userDetails.userInformation.userId
 					)

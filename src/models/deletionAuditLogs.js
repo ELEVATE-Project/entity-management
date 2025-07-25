@@ -23,14 +23,5 @@ module.exports = {
 			default: 'SYSTEM',
 			index: true,
 		},
-		createdBy: {
-			type: String,
-			default: 'SYSTEM',
-			index: true,
-		},
-		updatedBy: {
-			type: String,
-			default: 'SYSTEM',
-		},
 	},
 }

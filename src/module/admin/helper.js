@@ -5,7 +5,6 @@
  * Description : Admin.
  */
 
-const { ObjectId } = require('mongodb')
 // Dependencies
 /**
  * ProgramsHelper
@@ -15,6 +14,7 @@ const adminQueries = require(DB_QUERY_BASE_PATH + '/admin')
 const entitiesQueries = require(DB_QUERY_BASE_PATH + '/entities')
 const deletionAuditQueries = require(DB_QUERY_BASE_PATH + '/deletionAuditLogs')
 const kafkaProducersHelper = require(PROJECT_ROOT_DIRECTORY + '/generics/kafka/producers')
+const { ObjectId } = require('mongodb')
 module.exports = class AdminHelper {
 	/**
 	 * create index in the model.
@@ -74,17 +74,9 @@ module.exports = class AdminHelper {
 	 *
 	 * @returns {Promise<Object>} - Result containing the deleted entity info or error details.
 	 */
-	static deleteEntity(entityId, recursive, tenantId, deletedBy = 'SYSTEM') {
+	static allowRecursiveDelete(entityId, recursive, tenantId, deletedBy = 'SYSTEM') {
 		return new Promise(async (resolve, reject) => {
 			try {
-				//Validate and fetch entity by ID
-				if (!entityId) {
-					throw {
-						status: HTTP_STATUS_CODE.bad_request.status,
-						message: CONSTANTS.apiResponses.INVALID_ENTITY_ID,
-					}
-				}
-
 				//Fetch the entity document to validate existence and get its metadata
 				const filter = { _id: entityId, tenantId: tenantId }
 				const entityDocs = await entitiesQueries.entityDocuments(filter, ['groups', 'entityType'])
@@ -96,9 +88,9 @@ module.exports = class AdminHelper {
 					}
 				}
 
-				// Extract entity type and prepare ObjectId
+				// Extract entity type and prepare entityObjectId
 				const entityType = entityDocs[0].entityType
-				const objectId = typeof entityId === 'string' ? new ObjectId(entityId) : entityId
+				const entityObjectId = typeof entityId === 'string' ? new ObjectId(entityId) : entityId
 				//If recursive is true, delete this entity and all nested group entities
 				if (UTILS.convertStringToBoolean(recursive)) {
 					// Gather all nested group IDs + self
@@ -115,56 +107,30 @@ module.exports = class AdminHelper {
 					}
 
 					// Include the root entity's ID in deletion
-					relatedEntityIds.add(objectId.toString())
+					relatedEntityIds.add(entityObjectId.toString())
 
 					// Convert all to ObjectId type
-					const objectIds = Array.from(relatedEntityIds).map((id) => new ObjectId(id))
+					const relatedEntityObjectIds = Array.from(relatedEntityIds).map((id) => new ObjectId(id))
+					const deletedEntities = await entitiesQueries.removeDocuments({
+						_id: { $in: relatedEntityObjectIds },
+					})
 					// Insert logs into deletionAuditLogs collection
 					await this.logDeletion(Array.from(relatedEntityIds), deletedBy)
-					const deletedEntities = await adminQueries.removeDocuments({ _id: { $in: objectIds } })
-
-					for (const id of objectIds) {
-						const kafkaMessage = {
-							entity: 'resource',
-							type: 'entity',
-							eventType: 'delete',
-							entityId: id.toString(),
-							deleted_By: parseInt(deletedBy) || deletedBy,
-							tenant_code: tenantId,
-						}
-
-						try {
-							const kafkaPushed = await kafkaProducersHelper.pushDeletedEntityToKafka(kafkaMessage)
-							console.log(` Kafka event pushed for entityId ${id}:`, kafkaPushed)
-						} catch (err) {
-							console.error(`Kafka push failed for entityId ${id}:`, err.message)
-						}
+					for (const id of relatedEntityObjectIds) {
+						await this.pushEntityDeleteKafkaEvent(id, deletedBy, tenantId)
 					}
 					resolve({
 						message: CONSTANTS.apiResponses.ENTITIES_DELETED_SUCCESSFULLY,
 						result: deletedEntities,
 					})
 				} else {
-					// Insert logs into deletionAuditLogs collection
-					await this.logDeletion([objectId], deletedBy)
 					//Delete the document with _id
-					const deletedEntities = await adminQueries.removeDocuments({ _id: objectId })
+					const deletedEntities = await entitiesQueries.removeDocuments({ _id: entityObjectId })
 					//Remove from other entities' groups
-					const unlinkResult = await adminQueries.pullEntityFromGroups(entityType, objectId)
-
-					const kafkaMessage = {
-						entity: 'resource',
-						type: 'entity',
-						eventType: 'delete',
-						entityId: objectId.toString(),
-						deleted_By: parseInt(deletedBy) || deletedBy,
-						organization_id: entityDocs[0]?.groups?.org?.[0] || null,
-						tenant_code: tenantId,
-					}
-
-					const kafkaPushed = await kafkaProducersHelper.pushDeletedEntityToKafka(kafkaMessage)
-					console.log('Kafka Deletion Event:', kafkaPushed)
-
+					const unlinkResult = await adminQueries.pullEntityFromGroups(entityType, entityObjectId)
+					// Insert logs into deletionAuditLogs collection
+					await this.logDeletion([entityObjectId], deletedBy)
+					await this.pushEntityDeleteKafkaEvent(entityObjectId, deletedBy, tenantId)
 					let result
 					if (deletedEntities && unlinkResult) {
 						result = {
@@ -217,6 +183,38 @@ module.exports = class AdminHelper {
 					message: error.message,
 					data: {},
 				})
+			}
+		})
+	}
+
+	/**
+	 * Pushes a Kafka event for an entity deletion.
+	 *
+	 * @param {ObjectId|string} entityId - The MongoDB ObjectId (or string) of the deleted entity.
+	 * @param {string|number} deletedBy - The user ID or system name who performed the deletion.
+	 * @param {string} tenantId - The tenant code for identifying the tenant.
+	 * @param {string|null} [organizationId=null] - (Optional) Organization ID associated with the entity.
+	 * @returns {Promise<void>} - Resolves when the Kafka event is pushed or logs an error if it fails.
+	 */
+	static pushEntityDeleteKafkaEvent(entityId, deletedBy, tenantId) {
+		return new Promise(async (resolve, reject) => {
+			try {
+				// Construct the Kafka message payload with essential metadata
+				const kafkaMessage = {
+					entity: 'resource',
+					type: 'entity',
+					eventType: 'delete',
+					entityId: entityId.toString(),
+					deleted_By: parseInt(deletedBy) || deletedBy,
+					tenant_code: tenantId,
+				}
+
+				// Push the message to Kafka topic using helper
+				const kafkaPushed = await kafkaProducersHelper.pushDeletedEntityToKafka(kafkaMessage)
+				console.log(`Kafka event pushed for entityId ${entityId}:`, kafkaPushed)
+				return resolve()
+			} catch (err) {
+				console.error(`Kafka push failed for entityId ${entityId}:`, err.message)
 			}
 		})
 	}
