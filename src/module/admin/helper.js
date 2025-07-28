@@ -70,11 +70,11 @@ module.exports = class AdminHelper {
 	 * Deletes an entity and optionally its related child/grouped entities from the database.
 	 *
 	 * @param {String|ObjectId} entityId - The ID of the main entity to be deleted.
-	 * @param {Boolean|String} recursive - Flag indicating whether related/grouped entities should also be deleted.
+	 * @param {Boolean|String} allowRecursiveDelete - Flag indicating whether related/grouped entities should also be deleted.
 	 *
 	 * @returns {Promise<Object>} - Result containing the deleted entity info or error details.
 	 */
-	static allowRecursiveDelete(entityId, recursive, tenantId, deletedBy = 'SYSTEM') {
+	static allowRecursiveDelete(entityId, allowRecursiveDelete = 'false', tenantId, deletedBy = 'SYSTEM') {
 		return new Promise(async (resolve, reject) => {
 			try {
 				//Fetch the entity document to validate existence and get its metadata
@@ -91,8 +91,8 @@ module.exports = class AdminHelper {
 				// Extract entity type and prepare entityObjectId
 				const entityType = entityDocs[0].entityType
 				const entityObjectId = typeof entityId === 'string' ? new ObjectId(entityId) : entityId
-				//If recursive is true, delete this entity and all nested group entities
-				if (UTILS.convertStringToBoolean(recursive)) {
+				//If allowRecursiveDelete is true, delete this entity and all nested group entities
+				if (UTILS.convertStringToBoolean(allowRecursiveDelete)) {
 					// Gather all nested group IDs + self
 					const relatedEntityIds = new Set()
 
@@ -119,9 +119,14 @@ module.exports = class AdminHelper {
 					for (const id of relatedEntityObjectIds) {
 						await this.pushEntityDeleteKafkaEvent(id, deletedBy, tenantId)
 					}
+
+					let result = {
+						deletedEntitiesCount: deletedEntities.deletedCount,
+						deletedEntities: relatedEntityObjectIds,
+					}
 					resolve({
 						message: CONSTANTS.apiResponses.ENTITIES_DELETED_SUCCESSFULLY,
-						result: deletedEntities,
+						result: result,
 					})
 				} else {
 					//Delete the document with _id
@@ -134,8 +139,9 @@ module.exports = class AdminHelper {
 					let result
 					if (deletedEntities && unlinkResult) {
 						result = {
-							deletedEntities: deletedEntities.deletedCount,
-							unlinkResult: unlinkResult.nModified,
+							deletedEntities: entityId,
+							deletedEntitiesCount: deletedEntities.deletedCount,
+							unLinkedEntitiesCount: unlinkResult.nModified,
 						}
 					}
 					resolve({
@@ -211,7 +217,6 @@ module.exports = class AdminHelper {
 
 				// Push the message to Kafka topic using helper
 				const kafkaPushed = await kafkaProducersHelper.pushDeletedEntityToKafka(kafkaMessage)
-				console.log(`Kafka event pushed for entityId ${entityId}:`, kafkaPushed)
 				return resolve()
 			} catch (err) {
 				console.error(`Kafka push failed for entityId ${entityId}:`, err.message)

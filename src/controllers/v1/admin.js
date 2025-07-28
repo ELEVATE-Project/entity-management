@@ -64,8 +64,9 @@ module.exports = class Admin {
     		"message": "ENTITIES_DELETED_SUCCESSFULLY",
     		"status": 200,
     		"result": {
-    		    "deletedEntities": 1,
-    		    "unlinkResult": 1
+				"deletedEntities": "6825939a97b5680013e6a166",
+    		    "deletedEntitiesCount": 1,
+    		    "unLinkedEntitiesCount": 1
     		}
 		}
 	 */
