@@ -42,6 +42,18 @@ module.exports = class Entities extends Abstract {
 	 * @api {POST} /v1/entities/find all the API based on projection
 	 * @apiVersion 1.0.0
 	 * @apiName find
+	 * @param {Object} req - The request object.
+	 * @param {Object} req.body.query - MongoDB filter query to match specific entity documents.
+	 * @param {Object} req.body.projection - Fields to include or exclude in the result set.
+	 * @param {Number} req.pageNo - Page number for pagination.
+	 * @param {Number} req.pageSize - Number of documents to return per page.
+	 * @param {String} req.searchText - Optional search string for text-based filtering.
+	 * @param {String|null} req.query.aggregateValue - Field path to be used for aggregation (e.g., "groups.school"); set to `null` if not used.
+	 * @param {Boolean} req.query.aggregateStaging - Whether to apply aggregation stages in the pipeline.
+	 * @param {Boolean} req.query.aggregateSort - Whether to apply sorting within the aggregation pipeline.
+	 * @param {Array<Object>} req.body.aggregateProjection - Optional array of projection stages for aggregation.
+	 * 
+	 * @returns {Promise<Object>} - A Promise resolving to a list of matched entity documents with pagination.
 	 * @apiGroup Entities
 	 * @apiSampleRequest {
 		"query" : {
@@ -67,10 +79,22 @@ module.exports = class Entities extends Abstract {
 	 */
 
 	find(req) {
+		console.log('Reached in find controller')
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Calls the 'find' function from 'entitiesHelper' to retrieve entity data
-				let entityData = await entitiesHelper.find(req.body.query, req.body.projection)
+				req.body.query = UTILS.stripOrgIds(req.body.query)
+				let entityData = await entitiesHelper.find(
+					req.body.query,
+					req.body.projection,
+					req.pageNo,
+					req.pageSize,
+					req.searchText,
+					req.query.aggregateValue ? req.query.aggregateValue : null,
+					req.query.aggregateStaging == 'true' ? true : false,
+					req.query.aggregateSort == 'true' ? true : false,
+					req.body.aggregateProjection ? req.body.aggregateProjection : []
+				)
 				return resolve(entityData)
 			} catch (error) {
 				return reject({
@@ -87,6 +111,7 @@ module.exports = class Entities extends Abstract {
       * @apiVersion 1.0.0
       * @apiName Get Related Entities
       * @apiGroup Entities
+	  * @param {Object} req - The request object.
       * @apiSampleRequest v1/entities/relatedEntities/5c0bbab881bdbe330655da7f
       * @apiUse successBody
       * @apiUse errorBody
@@ -128,7 +153,11 @@ module.exports = class Entities extends Abstract {
 					'entityTypeId',
 					'entityType',
 				]
-				let entityDocument = await entitiesQueries.entityDocuments({ _id: req.params._id }, projection)
+				let tenantId = req.userDetails.userInformation.tenantId
+				let entityDocument = await entitiesQueries.entityDocuments(
+					{ _id: req.params._id, tenantId: tenantId },
+					projection
+				)
 
 				if (entityDocument.length < 1) {
 					throw {
@@ -141,7 +170,8 @@ module.exports = class Entities extends Abstract {
 					entityDocument[0]._id,
 					entityDocument[0].entityTypeId,
 					entityDocument[0].entityType,
-					projection
+					projection,
+					tenantId
 				)
 				_.merge(result, entityDocument[0])
 				result['relatedEntities'] = relatedEntities.length > 0 ? relatedEntities : []
@@ -166,6 +196,7 @@ module.exports = class Entities extends Abstract {
 	 * @apiVersion 1.0.0
 	 * @apiName entityListBasedOnEntityType
 	 * @apiGroup Entities
+	 * @param {Object} req - The request object.
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @apiParamExample {json} Response:
@@ -195,7 +226,8 @@ module.exports = class Entities extends Abstract {
 					req.pageNo,
 					req.pageSize,
 					req?.query?.paginate?.toLowerCase() == 'true' ? true : false,
-					req.query.language ? req.query.language : ''
+					req.query.language ? req.query.language : '',
+					req.userDetails
 				)
 				return resolve(entityData)
 			} catch (error) {
@@ -215,6 +247,7 @@ module.exports = class Entities extends Abstract {
 	  * @apiName createMappingCsv
 	  * @apiGroup Entities
 	  * @apiParam {File} entityCSV Mandatory entity mapping file of type CSV.
+	  * @param {Object} req - The request object.
 	  * @apiUse successBody
 	  * @apiUse errorBody
 	  * @param {Object} req - The request object containing the uploaded CSV file in `req.files.entityCSV`.
@@ -262,11 +295,12 @@ module.exports = class Entities extends Abstract {
 	createMappingCsv(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let tenantId = req.userDetails.tenantAndOrgInfo.tenantId
 				// Parse CSV data from the uploaded file in the request body
 				let entityCSVData = await csv().fromString(req.files.entityCSV.data.toString())
 
 				// Process the entity mapping upload data using 'entitiesHelper.createMappingCsv'
-				let mappedEntities = await entitiesHelper.createMappingCsv(entityCSVData)
+				let mappedEntities = await entitiesHelper.createMappingCsv(entityCSVData, tenantId)
 
 				return resolve({
 					message: CONSTANTS.apiResponses.MAPPING_CSV_GENERATED,
@@ -288,6 +322,7 @@ module.exports = class Entities extends Abstract {
 	  * @apiName mappingUpload
 	  * @apiGroup Entities
 	  * @apiParam {File} entityMap Mandatory entity mapping file of type CSV.
+	  * @param {Object} req - The request object.
 	  * @apiUse successBody
 	  * @apiUse errorBody
       * @param {Array} req.files.entityMap - Array of entityMap data.         
@@ -340,8 +375,6 @@ module.exports = class Entities extends Abstract {
 	  * @apiUse successBody
 	  * @apiUse errorBody
 	 * @param {Object} req - The request object containing parameters and user details.
-	 * @param {Object} req.params - The request parameters.
-	 * @param {string} req.params._id - The entity ID to filter roles.
 	 * @returns {Promise<Object>} A promise that resolves to the response containing the fetched roles or an error object.
 	 * * @returns {JSON} - Message of successfully response.
      * 
@@ -386,7 +419,9 @@ module.exports = class Entities extends Abstract {
 					req.pageNo,
 					req.pageSize,
 					req?.query?.paginate?.toLowerCase() == 'true' ? true : false,
-					req.query.entityType ? req.query.entityType : ''
+					req.query.entityType ? req.query.entityType : '',
+					req.query.language ? req.query.language : '',
+					req.userDetails.userInformation.tenantId
 				)
 				// Resolves the promise with the retrieved entity data
 				return resolve(userRoleDetails)
@@ -407,6 +442,7 @@ module.exports = class Entities extends Abstract {
 	 * @apiName details
 	 * @apiGroup Entities
 	 * @apiHeader {String} X-authenticated-user-token Authenticity token
+	 * @param {Object} req - The request object.
 	 * @apiSampleRequest v1/entities/details/67dcf90f97174bab15241faa?&language=hi
 	 * @apiUse successBody
 	 * @apiUse errorBody
@@ -492,7 +528,8 @@ module.exports = class Entities extends Abstract {
 				let result = await entitiesHelper.details(
 					req.params._id ? req.params._id : '',
 					req.body ? req.body : {},
-					req.query.language ? req.query.language : ''
+					req.query.language ? req.query.language : '',
+					req.userDetails
 				)
 
 				return resolve(result)
@@ -517,9 +554,6 @@ module.exports = class Entities extends Abstract {
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @param {Object} req - requested entity data.
-	 * @param {String} req.query.type - entity type.
-	 * @param {String} req.params._id - entity id.
-	 * @param {Object} req.body - entity information that need to be updated.
 	 * @returns {JSON} - Updated entity information.
 	 * 
 	 *  
@@ -549,7 +583,7 @@ module.exports = class Entities extends Abstract {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Call 'entitiesHelper.update' to perform the entity update operation
-				let result = await entitiesHelper.update(req.params._id, req.body)
+				let result = await entitiesHelper.update(req.params._id, req.body, req.userDetails)
 
 				return resolve(result)
 			} catch (error) {
@@ -573,7 +607,6 @@ module.exports = class Entities extends Abstract {
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @param {Object} req - All requested Data.
-	 * @param {Object} req.files - requested files.
 	 * @returns {JSON} - Added entities information.
 	 * 
 	 *   "result": [
@@ -602,8 +635,6 @@ module.exports = class Entities extends Abstract {
 				// Prepare query parameters for adding the entity
 				let queryParams = {
 					type: req.query.type,
-					// programId: req.query.programId,
-					//   solutionId: req.query.solutionId,
 					parentEntityId: req.query.parentEntityId,
 				}
 				// Call 'entitiesHelper.add' to perform the entity addition operation
@@ -634,7 +665,6 @@ module.exports = class Entities extends Abstract {
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @param {Object} req - requested data.
-	 * @param {Object} req.body.locationIds - registry data.
 	 * @returns {Object} -
 	 * 
 	 *   "result": [
@@ -660,7 +690,7 @@ module.exports = class Entities extends Abstract {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Call 'entitiesHelper.listByLocationIds' to retrieve entities based on location IDs
-				let entitiesData = await entitiesHelper.listByLocationIds(req.body.locationIds)
+				let entitiesData = await entitiesHelper.listByLocationIds(req.body.locationIds, req.userDetails)
 
 				entitiesData.result = entitiesData.data
 
@@ -683,6 +713,7 @@ module.exports = class Entities extends Abstract {
 	 * @apiGroup Entities
 	 * @apiHeader {String} X-authenticated-user-token Authenticity token
 	 * @apiSampleRequest v1/entities/subEntityListBasedOnRoleAndLocation
+	 * @param {Object} req - The request object.
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @param {String} req.params._id - entityId.
@@ -716,7 +747,10 @@ module.exports = class Entities extends Abstract {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Call 'entitiesHelper.subEntityListBasedOnRoleAndLocation' to retrieve sub-entity list
-				const entityTypeMappingData = await entitiesHelper.subEntityListBasedOnRoleAndLocation(req.params._id)
+				const entityTypeMappingData = await entitiesHelper.subEntityListBasedOnRoleAndLocation(
+					req.params._id,
+					req.userDetails
+				)
 				return resolve(entityTypeMappingData)
 			} catch (error) {
 				return reject({
@@ -737,7 +771,6 @@ module.exports = class Entities extends Abstract {
 	* @apiUse successBody
 	* @apiUse errorBody
 	* @param {Object} req - requested data.
-	* @param {String} req.params._id - requested entity type.
 	* @returns {JSON} - Array of entities.
 
 	"result": [
@@ -782,12 +815,7 @@ module.exports = class Entities extends Abstract {
 	* @apiSampleRequest /v1/entities/list
 	* @apiUse successBody
 	* @apiUse errorBody
-	* @param {String} req.query.type - type of entity requested.
-	* @param {String} req.params._id - requested entity id.
-	* @param {Number} req.pageSize - total size of the page.
-	* @param {Number} req.pageNo - page number.
-	* @param {string} req.query.schoolTypes - comma seperated school types.
-	* @param {string} req.query.administrationTypes - comma seperated administration types.
+	* @param {Object} req - The request object.
 	* @apiParamExample {json} Response:
 	* "result": [
 	{
@@ -811,7 +839,8 @@ module.exports = class Entities extends Abstract {
 					req.pageSize,
 					req.pageSize * (req.pageNo - 1),
 					req.schoolTypes,
-					req.administrationTypes
+					req.administrationTypes,
+					req.userDetails
 				)
 
 				return resolve(result)
@@ -881,7 +910,8 @@ module.exports = class Entities extends Abstract {
 					req.searchText,
 					req.pageSize,
 					req.pageNo,
-					req.query.language ? req.query.language : ''
+					req.query.language ? req.query.language : '',
+					req.userDetails
 				)
 				return resolve(entityDocuments)
 			} catch (error) {
@@ -916,8 +946,7 @@ module.exports = class Entities extends Abstract {
      * List of entities.
      * @method
      * @name listByIds
-	 * @param {Object} req - requested data.
-	 * @param {String} req.params._id - requested entity type.         
+	 * @param {Object} req - requested data.       
 	 * @returns {JSON} - Array of entities.
 	*/
 
@@ -925,7 +954,11 @@ module.exports = class Entities extends Abstract {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Call 'entitiesHelper.listByEntityIds' to retrieve entities based on provided entity IDs and fields
-				const entities = await entitiesHelper.listByEntityIds(req.body.entities, req.body.fields)
+				const entities = await entitiesHelper.listByEntityIds(
+					req.body.entities,
+					req.body.fields,
+					req.userDetails
+				)
 				return resolve(entities)
 			} catch (error) {
 				return reject({
@@ -948,10 +981,6 @@ module.exports = class Entities extends Abstract {
 	 * @apiUse errorBody
 	 * @apiParamExample {json} Response:
 	 * @param {Object} req - requested data.
-	 * @param {String} req.query.type - requested entity type.
-	 * @param {Object} req.userDetails - logged in user details.
-	 * @param {Object} req.files.entities - entities data.
-	 * @param {Object} req.files.translationFile - translation data.
 	 * @returns {CSV} - A CSV with name Entity-Upload is saved inside the folder
 	 * public/reports/currentDate
 	 *
@@ -1025,8 +1054,6 @@ module.exports = class Entities extends Abstract {
 	 * @apiUse errorBody
 	 * @apiParamExample {json} Response:
 	 * @param {Object} req - requested data.
-	 * @param {Object} req.files.entities - entities data.
-	 * @param {Object} req.files.translationFile - entities data.
 	 * @returns {CSV} - A CSV with name Entity-Upload is saved inside the folder
 	 * public/reports/currentDate
 	 *
@@ -1049,7 +1076,7 @@ module.exports = class Entities extends Abstract {
 					translationFile = JSON.parse(req.files.translationFile.data.toString())
 				}
 				// Call 'entitiesHelper.bulkUpdate' to update entities based on CSV data and user details
-				let newEntityData = await entitiesHelper.bulkUpdate(entityCSVData, translationFile)
+				let newEntityData = await entitiesHelper.bulkUpdate(entityCSVData, translationFile, req.userDetails)
 
 				// Check if entities were updated successfully
 				if (newEntityData.length > 0) {

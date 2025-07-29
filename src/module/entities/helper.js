@@ -93,10 +93,11 @@ module.exports = class UserProjectsHelper {
 	 * @method
 	 * @name createMappingCsv
 	 * @param {Array<Object>} entityCSVData - Array of objects parsed from the input CSV file.
+	 * @param {String} tenantId - Tenant ID for the user.
 	 * @returns {Promise<Object>} Resolves with an object containing:
 	 */
 
-	static async createMappingCsv(entityCSVData) {
+	static async createMappingCsv(entityCSVData, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				const parentEntityIds = []
@@ -113,6 +114,7 @@ module.exports = class UserProjectsHelper {
 						// Filter criteria to fetch entity documents based on entity type and external ID
 						const filter = {
 							'metaInformation.externalId': value,
+							tenantId: tenantId,
 						}
 
 						const entityDocuments = await entitiesQueries.entityDocuments(filter, ['_id'])
@@ -177,17 +179,22 @@ module.exports = class UserProjectsHelper {
 	 * List of Entities
 	 * @method
 	 * @name listByEntityIds
-	 * @param bodyData - Body data.
+	 * @param {Array} entityIds
+	 * @param {Array} fields
+	 * @param {Object} userDetails - user's loggedin info
 	 * @returns {Array} List of Entities.
 	 */
 
-	static listByEntityIds(entityIds = [], fields = []) {
+	static listByEntityIds(entityIds = [], fields = [], userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Call 'entitiesQueries.entityDocuments' to retrieve entities based on provided entity IDs and fields
+				let tenantId = userDetails.userInformation.tenantId
+
 				const entities = await entitiesQueries.entityDocuments(
 					{
 						_id: { $in: entityIds },
+						tenantId: tenantId,
 					},
 					fields ? fields : []
 				)
@@ -213,12 +220,14 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} limit - page limit.
 	 * @param {params} pageNo - page no.
 	 * @param {params} language - language Code
+	 * @param {Object} userDetails - loggedin user's details
 	 * @returns {Array} - List of all sub list entities.
 	 */
 
-	static subEntityList(entities, entityId, type, search, limit, pageNo, language) {
+	static subEntityList(entities, entityId, type, search, limit, pageNo, language, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let tenantId = userDetails.userInformation.tenantId
 				let result = []
 				let obj = {
 					entityId: entityId,
@@ -229,13 +238,13 @@ module.exports = class UserProjectsHelper {
 				}
 				// Retrieve sub-entities using 'this.subEntities' for a single entity
 				if (entityId !== '') {
-					result = await this.subEntities(obj, language)
+					result = await this.subEntities(obj, language, tenantId)
 				} else {
 					// Retrieve sub-entities using 'this.subEntities' for multiple entities
 					await Promise.all(
 						entities.map(async (entity) => {
 							obj['entityId'] = entity
-							let entitiesDocument = await this.subEntities(obj, language)
+							let entitiesDocument = await this.subEntities(obj, language, tenantId)
 
 							if (Array.isArray(entitiesDocument.data) && entitiesDocument.data.length > 0) {
 								result = entitiesDocument
@@ -245,58 +254,60 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Modify data properties (e.g., 'label') of retrieved entities if necessary
-				if (result.data && result.data.length > 0) {
-					// fetch the entity ids to look for parent hierarchy
-					const entityIds = _.map(result.data, (item) => ObjectId(item._id))
-					// dynamically set the entityType to search inside the group
-					const key = ['groups', type]
-					// create filter for fetching the parent data using group
-					let entityFilter = {}
-					entityFilter[key.join('.')] = {
-						$in: entityIds,
-					}
+				// if (result.data && result.data.length > 0) {
+				// 	// fetch the entity ids to look for parent hierarchy
+				// 	const entityIds = _.map(result.data, (item) => ObjectId(item._id))
+				// 	// dynamically set the entityType to search inside the group
+				// 	const key = ['groups', type]
+				// 	// create filter for fetching the parent data using group
+				// 	let entityFilter = {}
+				// 	entityFilter[key.join('.')] = {
+				// 		$in: entityIds,
+				// 	}
 
-					// Retrieve all the entity documents with the entity ids in their gropu
-					const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
-						'entityType',
-						'metaInformation.name',
-						'childHierarchyPath',
-						key.join('.'),
-					])
-					// find out the state of the passed entityId
-					const stateEntity = entityDocuments.find((entity) => entity.entityType == 'state')
-					// fetch the child hierarchy path of the state
-					const stateChildHierarchy = stateEntity.childHierarchyPath
-					let upperLevelsOfType = type != 'state' ? ['state'] : [] // add state as default if type != state
-					// fetch all the upper levels of the type from state hierarchy
-					upperLevelsOfType = [
-						...upperLevelsOfType,
-						...stateChildHierarchy.slice(0, stateChildHierarchy.indexOf(type)),
-					]
-					result.data = result.data.map((data) => {
-						let cloneData = { ...data }
-						cloneData[cloneData.entityType] = cloneData.name
-						// if we have upper levels to fetch
-						if (upperLevelsOfType.length > 0) {
-							// iterate through the data fetched to fetch the parent entity names
-							entityDocuments.forEach((eachEntity) => {
-								eachEntity[key[0]][key[1]].forEach((eachEntityGroup) => {
-									if (
-										ObjectId(eachEntityGroup).equals(cloneData._id) &&
-										upperLevelsOfType.includes(eachEntity.entityType)
-									) {
-										if (eachEntity?.entityType !== 'state') {
-											cloneData[eachEntity?.entityType] = eachEntity?.metaInformation?.name
-										}
-									}
-								})
-							})
-						}
-						cloneData['label'] = cloneData.name
-						cloneData['value'] = cloneData._id
-						return cloneData
-					})
-				}
+				// 	entityFilter['tenantId'] = tenantId
+
+				// 	// Retrieve all the entity documents with the entity ids in their gropu
+				// 	const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
+				// 		'entityType',
+				// 		'metaInformation.name',
+				// 		'childHierarchyPath',
+				// 		key.join('.'),
+				// 	])
+				// 	// find out the state of the passed entityId
+				// 	const stateEntity = entityDocuments.find((entity) => entity.entityType == 'state')
+				// 	// fetch the child hierarchy path of the state
+				// 	const stateChildHierarchy = stateEntity.childHierarchyPath
+				// 	let upperLevelsOfType = type != 'state' ? ['state'] : [] // add state as default if type != state
+				// 	// fetch all the upper levels of the type from state hierarchy
+				// 	upperLevelsOfType = [
+				// 		...upperLevelsOfType,
+				// 		...stateChildHierarchy.slice(0, stateChildHierarchy.indexOf(type)),
+				// 	]
+				// 	result.data = result.data.map((data) => {
+				// 		let cloneData = { ...data }
+				// 		cloneData[cloneData.entityType] = cloneData.name
+				// 		// if we have upper levels to fetch
+				// 		if (upperLevelsOfType.length > 0) {
+				// 			// iterate through the data fetched to fetch the parent entity names
+				// 			entityDocuments.forEach((eachEntity) => {
+				// 				eachEntity[key[0]][key[1]].forEach((eachEntityGroup) => {
+				// 					if (
+				// 						ObjectId(eachEntityGroup).equals(cloneData._id) &&
+				// 						upperLevelsOfType.includes(eachEntity.entityType)
+				// 					) {
+				// 						if (eachEntity?.entityType !== 'state') {
+				// 							cloneData[eachEntity?.entityType] = eachEntity?.metaInformation?.name
+				// 						}
+				// 					}
+				// 				})
+				// 			})
+				// 		}
+				// 		cloneData['label'] = cloneData.name
+				// 		cloneData['value'] = cloneData._id
+				// 		return cloneData
+				// 	})
+				// }
 
 				resolve({
 					message: CONSTANTS.apiResponses.ENTITIES_FETCHED,
@@ -315,9 +326,10 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageSize - page pageSize.
 	 * @param {params} pageNo - page no.
 	 * @param {String} type - Entity type
+	 * @param {String} tenantId - user's tenantId
 	 * @returns {Promise<Object>} A promise that resolves to the response containing the fetched roles or an error object.
 	 */
-	static targetedRoles(entityId, pageNo = '', pageSize = '', paginate, type = '') {
+	static targetedRoles(entityId, pageNo = '', pageSize = '', paginate, type = '', language, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Construct the filter to retrieve entities based on provided entity IDs
@@ -325,6 +337,7 @@ module.exports = class UserProjectsHelper {
 					_id: {
 						$in: entityId,
 					},
+					tenantId: tenantId,
 				}
 				const projectionFields = ['childHierarchyPath', 'entityType']
 				// Retrieve entityDetails based on provided entity IDs
@@ -361,6 +374,7 @@ module.exports = class UserProjectsHelper {
 					name: {
 						$in: filteredHierarchyPaths,
 					},
+					tenantId: tenantId,
 					isDeleted: false,
 				}
 				const entityTypeProjection = ['_id']
@@ -385,6 +399,7 @@ module.exports = class UserProjectsHelper {
 						$in: userRoleFilter,
 					},
 					status: CONSTANTS.common.ACTIVE_STATUS,
+					tenantId: tenantId,
 				}
 
 				// Specify the fields to include in the result set
@@ -432,10 +447,11 @@ module.exports = class UserProjectsHelper {
 	 * @method
 	 * @name subEntities
 	 * @param {body} entitiesData
+	 * @param {String} tenantId
 	 * @returns {Array} - List of all immediate entities or traversal data.
 	 */
 
-	static subEntities(entitiesData, language) {
+	static subEntities(entitiesData, language, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entitiesDocument
@@ -448,7 +464,8 @@ module.exports = class UserProjectsHelper {
 						entitiesData.search,
 						entitiesData.limit,
 						entitiesData.pageNo,
-						language
+						language,
+						tenantId
 					)
 				} else {
 					// Retrieve immediate entities
@@ -457,7 +474,8 @@ module.exports = class UserProjectsHelper {
 						entitiesData.search,
 						entitiesData.limit,
 						entitiesData.pageNo,
-						language
+						language,
+						tenantId
 					)
 				}
 
@@ -473,10 +491,14 @@ module.exports = class UserProjectsHelper {
 	 * @method
 	 * @name immediateEntities
 	 * @param {Object} entityId
+	 * @param {String} searchText
+	 * @param {String} pageSize
+	 * @param {String} pageNo
+	 * @param {String} tenantId - user's tenant id
 	 * @returns {Array} - List of all immediateEntities based on entityId.
 	 */
 
-	static immediateEntities(entityId, searchText = '', pageSize = '', pageNo = '') {
+	static immediateEntities(entityId, searchText = '', pageSize = '', pageNo = '', tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Define projection fields for entity retrieval
@@ -485,6 +507,7 @@ module.exports = class UserProjectsHelper {
 				let entitiesDocument = await entitiesQueries.entityDocuments(
 					{
 						_id: entityId,
+						tenantId: tenantId,
 					},
 					projection
 				)
@@ -498,6 +521,7 @@ module.exports = class UserProjectsHelper {
 					let getImmediateEntityTypes = await entityTypesHelper.entityTypesDocument(
 						{
 							name: entitiesDocument[0].entityType,
+							tenantId: tenantId,
 						},
 						['immediateChildrenEntityType']
 					)
@@ -537,10 +561,11 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageSize - total page size.
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} searchText - Search Text.
+	 * @param {String} tenantId - user's tenant id
 	 * @returns {Array} - List of all immediateEntities based on entityId.
 	 */
 
-	static entityTraversal(entityId, entityTraversalType = '', searchText = '', pageSize, pageNo, language) {
+	static entityTraversal(entityId, entityTraversalType = '', searchText = '', pageSize, pageNo, language, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entityTraversal = `groups.${entityTraversalType}`
@@ -550,6 +575,7 @@ module.exports = class UserProjectsHelper {
 						_id: entityId,
 						groups: { $exists: true },
 						[entityTraversal]: { $exists: true },
+						tenantId: tenantId,
 					},
 					[entityTraversal]
 				)
@@ -565,7 +591,8 @@ module.exports = class UserProjectsHelper {
 						pageSize,
 						pageNo,
 						entitiesDocument[0].groups[entityTraversalType],
-						language
+						language,
+						tenantId
 					)
 
 					result = entityTraversalData[0]
@@ -585,15 +612,18 @@ module.exports = class UserProjectsHelper {
 	 * @param {String} language - language Code.
 	 * @param {Number} pageSize - total page size.
 	 * @param {Number} pageNo - Page no.
+	 * @param {String} tenantId - user's tenantId
 	 * @param {Array} [entityIds = false] - Array of entity ids.
 	 */
 
-	static search(searchText, pageSize, pageNo, entityIds = false, language) {
+	static search(searchText, pageSize, pageNo, entityIds = false, language, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let queryObject = {}
 				// Configure match criteria based on search text and entity IDs (if provided)
-				queryObject['$match'] = {}
+				queryObject['$match'] = {
+					tenantId: tenantId,
+				}
 
 				if (entityIds && entityIds.length > 0) {
 					queryObject['$match']['_id'] = {}
@@ -877,10 +907,11 @@ module.exports = class UserProjectsHelper {
 	 * @param {String} entityTypeId - entity type id.
 	 * @param {String} entityType - entity type.
 	 * @param {Array} [projection = "all"] - total fields to be projected.
+	 * @param {String} tenantId - user's tenant id
 	 * @returns {Array} - returns an array of related entities data.
 	 */
 
-	static relatedEntities(entityId, entityTypeId, entityType, projection = 'all') {
+	static relatedEntities(entityId, entityTypeId, entityType, projection = 'all', tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// if (
@@ -892,7 +923,9 @@ module.exports = class UserProjectsHelper {
 				// 	return resolve(this.entityMapProcessData.relatedEntities[entityId.toString()])
 				// }
 
-				let relatedEntitiesQuery = {}
+				let relatedEntitiesQuery = {
+					tenantId,
+				}
 
 				if (entityTypeId && entityId && entityType) {
 					relatedEntitiesQuery[`groups.${entityType}`] = entityId
@@ -925,12 +958,12 @@ module.exports = class UserProjectsHelper {
 	 * Sub entity type list.
 	 * @method
 	 * @name subEntityListBasedOnRoleAndLocation
-	 * @param role - role code
+	 * @param userDetails - loggedin user's details
 	 * @param stateLocationId - state location id.
 	 * @returns {Array} List of sub entity type.
 	 */
 
-	static subEntityListBasedOnRoleAndLocation(stateLocationId) {
+	static subEntityListBasedOnRoleAndLocation(stateLocationId, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// let rolesDocument = await userRolesHelper.roleDocuments({
@@ -943,9 +976,11 @@ module.exports = class UserProjectsHelper {
 				//         message: CONSTANTS.apiResponses.USER_ROLES_NOT_FOUND
 				//     }
 				// }
+				let tenantId = userDetails.userInformation.tenantId
 
 				let filterQuery = {
 					'registryDetails.code': stateLocationId,
+					tenantId: tenantId,
 				}
 
 				// Check if stateLocationId is a valid UUID and update the filterQuery accordingly
@@ -1008,12 +1043,15 @@ module.exports = class UserProjectsHelper {
 	 * @method
 	 * @name listByLocationIds
 	 * @param {Object} locationIds - locationIds
+	 * @param {Object} userDetails - loggedin user's details
 	 * @returns {Object} entity Document
 	 */
 
-	static listByLocationIds(locationIds) {
+	static listByLocationIds(locationIds, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let tenantId = userDetails.userInformation.tenantId
+
 				// Constructing the filter query to find entities based on locationIds
 				let filterQuery = {
 					$or: [
@@ -1024,6 +1062,7 @@ module.exports = class UserProjectsHelper {
 							'registryDetails.locationId': { $in: locationIds },
 						},
 					],
+					tenantId: tenantId,
 				}
 
 				// Retrieving entities that match the filter query
@@ -1060,18 +1099,146 @@ module.exports = class UserProjectsHelper {
 	 * @name find
 	 * @param {Object} bodyQuery - body data
 	 * @param {Object} projection - projection to filter data
+	 * @param {Number} pageNo - page number
+	 * @param {Number} pageSize - page limit
+	 * @param {String} searchText - Text string used for filtering entities using a search.
+	 * @param {String} aggregateValue - Path to the field to aggregate (e.g., 'groups.school') used for grouping or lookups.
+	 * @param {Boolean} aggregateStaging - Flag indicating whether aggregation stages should be used in the pipeline (true = include stages).
+	 * @param {Boolean} aggregateSort - Flag indicating whether sorting is required within the aggregation pipeline.
+	 * @param {Array} aggregateProjection - Array of projection fields to apply within the aggregation pipeline (used when `aggregateStaging` is true).
+	 * @returns {Array} Entity Documents
 	 */
 
-	static find(bodyQuery, projection) {
+	static find(
+		bodyQuery,
+		projection,
+		pageNo,
+		pageSize,
+		searchText,
+		aggregateValue,
+		aggregateStaging,
+		aggregateSort,
+		aggregateProjection = []
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Fetch entities based on the provided query and projection
-				const result = await entitiesQueries.entityDocuments(bodyQuery, projection)
-				if (result.length < 1) {
-					throw {
-						status: HTTP_STATUS_CODE.not_found.status,
-						message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+				let aggregateData
+				bodyQuery = UTILS.convertMongoIds(bodyQuery)
+
+				if (aggregateStaging == true) {
+					let skip = (pageNo - 1) * pageSize
+					let projection1 = {}
+					if (aggregateProjection.length > 0) {
+						aggregateProjection.forEach((value) => {
+							projection1[value] = 1
+						})
 					}
+					aggregateData = [
+						{
+							$match: bodyQuery,
+						},
+						{
+							$project: {
+								groupIds: aggregateValue,
+							},
+						},
+						// Unwind the array so we don't hold all in memory
+						{
+							$unwind: '$groupIds',
+						},
+						// Replace the root so we can lookup directly
+						{
+							$replaceRoot: { newRoot: { _id: '$groupIds' } },
+						},
+						// Lookup actual school entity details
+						{
+							$lookup: {
+								from: 'entities',
+								localField: '_id',
+								foreignField: '_id',
+								as: 'groupEntityData',
+							},
+						},
+						{
+							$unwind: '$groupEntityData',
+						},
+						...(searchText
+							? [
+									{
+										$match: {
+											'groupEntityData.metaInformation.name': {
+												$regex: searchText,
+												$options: 'i', // case-insensitive search
+											},
+										},
+									},
+							  ]
+							: []),
+						{
+							$skip: skip,
+						},
+						{
+							$limit: pageSize,
+						},
+						{
+							$replaceRoot: { newRoot: '$groupEntityData' },
+						},
+						...(aggregateProjection.length > 0 ? [{ $project: projection1 }] : []),
+					]
+				} else {
+					// Create facet object to attain pagination
+					let facetQuery = {}
+					facetQuery['$facet'] = {}
+					facetQuery['$facet']['totalCount'] = [{ $count: 'count' }]
+					if (pageSize === '' && pageNo === '') {
+						facetQuery['$facet']['data'] = [{ $skip: 0 }]
+					} else {
+						facetQuery['$facet']['data'] = [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }]
+					}
+
+					// add search filter to the bodyQuery
+					if (searchText != '') {
+						let searchData = [
+							{
+								'metaInformation.name': new RegExp(searchText, 'i'),
+							},
+						]
+						bodyQuery['$and'] = searchData
+					}
+
+					// Create projection object
+					let projection1
+					if (Array.isArray(projection) && projection.length > 0) {
+						projection1 = {}
+						projection.forEach((projectedData) => {
+							projection1[projectedData] = 1
+						})
+						aggregateData = [{ $match: bodyQuery }, { $project: projection1 }, facetQuery]
+					} else {
+						aggregateData = [{ $match: bodyQuery }, facetQuery]
+					}
+				}
+
+				if (aggregateSort == true) {
+					aggregateData.push({ $sort: { updateAt: -1 } })
+				}
+
+				let result = await entitiesQueries.getAggregate(aggregateData)
+				if (aggregateStaging == true) {
+					if (!Array.isArray(result) || !(result.length > 0)) {
+						throw {
+							status: HTTP_STATUS_CODE.not_found.status,
+							message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+						}
+					}
+				} else {
+					if (!(result.length > 0) || !result[0].data || !(result[0].data.length > 0)) {
+						throw {
+							status: HTTP_STATUS_CODE.not_found.status,
+							message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+						}
+					}
+					result = result[0].data
 				}
 				return resolve({
 					success: true,
@@ -1092,19 +1259,18 @@ module.exports = class UserProjectsHelper {
 	 * @param {string} pageNo - pageNo for pagination
 	 * @param {string} language - language Code
 	 * @param {string} pageSize - pageSize for pagination
+	 * @param {Object} userDetails - user decoded token details
 	 * @returns {Promise<Object>} Promise that resolves with fetched documents or rejects with an error.
 	 */
 
-	static entityListBasedOnEntityType(type, pageNo, pageSize, paginate, language) {
+	static entityListBasedOnEntityType(type, pageNo, pageSize, paginate, language, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let query = {}
+				query['tenantId'] = userDetails.userInformation.tenantId
+				query['name'] = type
 				// Fetch the list of entity types available
-				const entityList = await entityTypeQueries.entityTypesDocument(
-					{
-						name: type,
-					},
-					['name']
-				)
+				const entityList = await entityTypeQueries.entityTypesDocument(query, ['name'])
 				// Check if entity list is empty
 				if (!entityList.length > 0) {
 					throw {
@@ -1113,21 +1279,20 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 				const projection = ['_id', 'metaInformation.name', 'metaInformation.externalId', 'translations']
+				delete query.name
+				query['entityType'] = type
 				// Fetch documents for the matching entity type
 				let fetchList = await entitiesQueries.entityDocuments(
-					{
-						entityType: type,
-					},
+					query,
 					projection,
 					pageSize,
 					pageSize * (pageNo - 1),
 					'',
 					paginate
 				)
-				const count = await entitiesQueries.countEntityDocuments({ entityType: type })
 
 				// Check if fetchList list is empty
-				if (count <= 0) {
+				if (!(fetchList.length > 0)) {
 					throw {
 						status: HTTP_STATUS_CODE.not_found.status,
 						message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
@@ -1162,8 +1327,8 @@ module.exports = class UserProjectsHelper {
 				return resolve({
 					success: true,
 					message: CONSTANTS.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
-					result: result,
-					count,
+					result,
+					count: result.length,
 				})
 			} catch (error) {
 				return reject(error)
@@ -1178,7 +1343,6 @@ module.exports = class UserProjectsHelper {
 	 * @param {Object} queryParams - requested query data.
 	 * @param {Object} data - requested entity data.
 	 * @param {Object} userDetails - Logged in user information.
-	 * @param {String} userDetails.id - Logged in user id.
 	 * @returns {JSON} - Created entity information.
 	 */
 
@@ -1186,16 +1350,24 @@ module.exports = class UserProjectsHelper {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Find the entities document based on the entityType in queryParams
-				let entityTypeDocument = await entityTypeQueries.findOne({ name: queryParams.type }, { _id: 1 })
+
+				let tenantId = userDetails.tenantAndOrgInfo.tenantId
+				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
+				let entityTypeDocument = await entityTypeQueries.findOne(
+					{ name: queryParams.type, tenantId: tenantId },
+					{ _id: 1 }
+				)
 				if (!entityTypeDocument) {
-					throw CONSTANTS.apiResponses.ENTITY_NOT_FOUND
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+					}
 				}
 				let entityDocuments = []
 				let dataArray = Array.isArray(data) ? data : [data]
 
 				for (let pointer = 0; pointer < dataArray.length; pointer++) {
 					let singleEntity = dataArray[pointer]
-
 					if (singleEntity.createdByProgramId) {
 						singleEntity.createdByProgramId = ObjectId(singleEntity.createdByProgramId)
 					}
@@ -1219,6 +1391,7 @@ module.exports = class UserProjectsHelper {
 								name: {
 									$in: singleEntity.childHierarchyPath,
 								},
+								tenantId: tenantId,
 							},
 							// Specify to return only the 'name' field of matching documents
 
@@ -1232,7 +1405,12 @@ module.exports = class UserProjectsHelper {
 						// Convert the names in 'validatedChildHierarchy' to strings and assign them to 'childHierarchyPath'
 						childHierarchyPath = validatedChildHierarchy.map(String)
 					}
-
+					singleEntity.targetedEntityTypes = Array.isArray(singleEntity.targetedEntityTypes)
+						? await populateTargetedEntityTypesData(
+								singleEntity.targetedEntityTypes.map((item) => item.trim()),
+								tenantId
+						  )
+						: []
 					// Construct the entity document to be created
 					let entityDoc = {
 						entityTypeId: entityTypeDocument._id,
@@ -1241,9 +1419,11 @@ module.exports = class UserProjectsHelper {
 						registryDetails: registryDetails,
 						groups: {},
 						metaInformation: _.omit(singleEntity, ['locationId', 'code']),
-						updatedBy: userDetails.userId,
-						createdBy: userDetails.userId,
-						userId: userDetails.userId,
+						updatedBy: userDetails.userInformation.userId,
+						createdBy: userDetails.userInformation.userId,
+						userId: userDetails.userInformation.userId,
+						tenantId: tenantId,
+						orgId: orgId,
 					}
 
 					entityDocuments.push(entityDoc)
@@ -1286,14 +1466,13 @@ module.exports = class UserProjectsHelper {
 	 * @param {ObjectId} entityId - entity Id.
 	 * @param {Object} requestData - requested data.
 	 * @param {String} language - language code.
+	 * @param {Object} userDetails -  user decoded token details
 	 * @returns {JSON} - provide the details.
 	 */
 
-	static details(entityId, requestData = {}, language) {
+	static details(entityId, requestData = {}, language, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// // let entityIdNum = parseInt(entityId)
-				// let entityIdNum = entityId.replace(/"/, '');
 				let entityIds = []
 				let externalIds = []
 
@@ -1353,9 +1532,18 @@ module.exports = class UserProjectsHelper {
 						},
 					})
 				}
+				// add tenantId to the query
+				query['tenantId'] = userDetails.userInformation.tenantId
 
 				// Fetch entity documents based on constructed query
 				let entityDocument = await entitiesQueries.entityDocuments(query, 'all')
+
+				if (!entityDocument.length) {
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+					}
+				}
 
 				// Initialize variables for parent entity details
 				let entityDocumentForParent
@@ -1503,22 +1691,30 @@ module.exports = class UserProjectsHelper {
 				// }
 
 				// Find the entity type document based on the provided entityType
+				let tenantId = userDetails.tenantAndOrgInfo.tenantId
+				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
 				let entityTypeDocument = await entityTypeQueries.findOne(
 					{
 						name: entityType,
+						tenantId: tenantId,
 					},
-					{ _id: 1 }
+					{ _id: 1, tenantId: 1 }
 				)
 				if (!entityTypeDocument) {
-					throw CONSTANTS.apiResponses.INVALID_ENTITY_TYPE
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.INVALID_ENTITY_TYPE,
+					}
 				}
-
 				// Process each entity in the entityCSVData array to create new entities
 				const entityUploadedData = await Promise.all(
 					entityCSVData.map(async (singleEntity) => {
 						singleEntity = UTILS.valueParser(singleEntity)
 						addTagsInEntities(singleEntity)
-						const userId = userDetails && userDetails.id ? userDetails.id : CONSTANTS.common.SYSTEM
+						const userId =
+							userDetails && userDetails.userInformation.userId
+								? userDetails.userInformation.userId
+								: CONSTANTS.common.SYSTEM
 						let entityCreation = {
 							entityTypeId: entityTypeDocument._id,
 							entityType: entityType,
@@ -1526,11 +1722,26 @@ module.exports = class UserProjectsHelper {
 							groups: {},
 							updatedBy: userId,
 							createdBy: userId,
+							tenantId: tenantId,
+							orgId: orgId,
 						}
 						// if (singleEntity.allowedRoles && singleEntity.allowedRoles.length > 0) {
 						// 	entityCreation['allowedRoles'] = await allowedRoles(singleEntity.allowedRoles)
 						// 	delete singleEntity.allowedRoles
 						// }
+						let entityTypesArray = []
+						if (singleEntity.targetedEntityTypes) {
+							entityTypesArray = singleEntity.targetedEntityTypes
+								.replace(/^"(.*)"$/, '$1') // remove starting and ending quotes
+								.split(',')
+								.map((type) => type.trim())
+						}
+
+						singleEntity.targetedEntityTypes =
+							Array.isArray(entityTypesArray) && entityTypesArray.length > 0
+								? await populateTargetedEntityTypesData(entityTypesArray, tenantId)
+								: []
+
 						if (singleEntity.childHierarchyPath) {
 							entityCreation['childHierarchyPath'] = JSON.parse(singleEntity['childHierarchyPath'])
 						}
@@ -1623,9 +1834,10 @@ module.exports = class UserProjectsHelper {
 	 * @returns {Array} - Array of updated entity data.
 	 */
 
-	static bulkUpdate(entityCSVData, translationFile) {
+	static bulkUpdate(entityCSVData, translationFile, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				const entityUploadedData = await Promise.all(
 					entityCSVData.map(async (singleEntity) => {
 						singleEntity = UTILS.valueParser(singleEntity)
@@ -1683,9 +1895,18 @@ module.exports = class UserProjectsHelper {
 							updateData['translations'] = translationFile[updateData['metaInformation.name']]
 						}
 
+						let targetedEntityTypes = entityCSVData[0].targetedEntityTypes
+							.split(',')
+							.map((item) => item.trim())
+
+						updateData['metaInformation.targetedEntityTypes'] =
+							Array.isArray(targetedEntityTypes) && targetedEntityTypes.length > 0
+								? await populateTargetedEntityTypesData(targetedEntityTypes, tenantId)
+								: []
+
 						if (Object.keys(updateData).length > 0) {
 							let updateEntity = await entitiesQueries.findOneAndUpdate(
-								{ _id: singleEntity['_SYSTEM_ID'] },
+								{ _id: singleEntity['_SYSTEM_ID'], tenantId: tenantId },
 								{ $set: updateData },
 								{ _id: 1 }
 							)
@@ -1722,15 +1943,21 @@ module.exports = class UserProjectsHelper {
 	 * @name update
 	 * @param {String} entityId - entity id.
 	 * @param {Object} data - entity information that need to be updated.
+	 * @param {Object} userDetails - loggedin user's info
 	 * @returns {JSON} - Updated entity information.
 	 */
 
-	static update(entityId, bodyData) {
+	static update(entityId, bodyData, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let tenantId = userDetails.tenantAndOrgInfo.tenantId
+
 				if (bodyData.translations) {
 					// Fetch existing entity document
-					let entityDocuments = await entitiesQueries.entityDocuments({ _id: ObjectId(entityId) }, 'all')
+					let entityDocuments = await entitiesQueries.entityDocuments(
+						{ _id: ObjectId(entityId), tenantId: tenantId },
+						'all'
+					)
 
 					if (entityDocuments && entityDocuments.length > 0) {
 						const existingTranslations = entityDocuments[0].translations || {}
@@ -1743,10 +1970,22 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 
+				if (bodyData['targetedEntityTypes']) {
+					bodyData.targetedEntityTypes = bodyData.targetedEntityTypes.map((item) => item.trim())
+					bodyData['metaInformation.targetedEntityTypes'] = await populateTargetedEntityTypesData(
+						bodyData.targetedEntityTypes,
+						tenantId
+					)
+					delete bodyData.targetedEntityTypes
+				}
 				// Update the entity using findOneAndUpdate
-				let entityInformation = await entitiesQueries.findOneAndUpdate({ _id: ObjectId(entityId) }, bodyData, {
-					new: true,
-				})
+				let entityInformation = await entitiesQueries.findOneAndUpdate(
+					{ _id: ObjectId(entityId), tenantId: tenantId },
+					bodyData,
+					{
+						new: true,
+					}
+				)
 
 				// Check if entityInformation is null (not found)
 				if (!entityInformation) {
@@ -1796,7 +2035,7 @@ module.exports = class UserProjectsHelper {
 			try {
 				// Retrieve the schema meta information key
 				let schemaMetaInformation = this.entitiesSchemaData().SCHEMA_METAINFORMATION
-
+				let tenantId = req.userDetails.userInformation.tenantId
 				// Define projection for entity document fields to retrieve
 				let projection = [
 					schemaMetaInformation + '.externalId',
@@ -1811,6 +2050,7 @@ module.exports = class UserProjectsHelper {
 				let entityDocuments = await entitiesQueries.entityDocuments(
 					{
 						entityTypeId: ObjectId(req.params._id),
+						tenantId: tenantId,
 					},
 					projection,
 					req.pageSize,
@@ -1862,21 +2102,24 @@ module.exports = class UserProjectsHelper {
 	 * @param {String} entityId - requested entity id.
 	 * @param {String} [limitingValue = ""] - Limiting value if required.
 	 * @param {String} [skippingValue = ""] - Skipping value if required.
+	 * @param {Object} userDetails - loggedin user's details
 	 * @returns {JSON} - Details of entity.
 	 */
 
 	static list(
 		entityType,
-		entityTypeId,
+		entityId,
 		limitingValue = '',
 		skippingValue = '',
 		schoolTypes = '',
-		administrationTypes = ''
+		administrationTypes = '',
+		userDetails
 	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Query for the specified entity type within the given entity type ID document
-				let queryObject = { _id: ObjectId(entityTypeId) }
+				let tenantId = userDetails.userInformation.tenantId
+				let queryObject = { _id: ObjectId(entityId), tenantId: tenantId }
 				let projectObject = { [`groups.${entityType}`]: 1 }
 				let result = await entitiesQueries.findOne(queryObject, projectObject)
 				if (!result) {
@@ -1885,8 +2128,7 @@ module.exports = class UserProjectsHelper {
 						message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
 					})
 				}
-
-				// Check if the specified entity group within the document is not found
+				// Check if the specified entity group within the document is present or not
 				if (!result.groups || !result.groups[entityType]) {
 					return resolve({
 						status: HTTP_STATUS_CODE.bad_request.status,
@@ -1898,13 +2140,12 @@ module.exports = class UserProjectsHelper {
 				let entityIds = result.groups[entityType]
 
 				const entityTypesArray = await entityTypesHelper.list(
-					{},
+					{ tenantId: tenantId },
 					{
 						name: 1,
 						immediateChildrenEntityType: 1,
 					}
 				)
-
 				let enityTypeToImmediateChildrenEntityMap = {}
 
 				// Build a map of entity types to their immediate child entity types
@@ -1918,7 +2159,7 @@ module.exports = class UserProjectsHelper {
 				}
 
 				let filteredQuery = {
-					$match: { _id: { $in: entityIds } },
+					$match: { _id: { $in: entityIds }, tenantId: tenantId },
 				}
 
 				let schoolOrAdministrationTypes = []
@@ -2079,4 +2320,26 @@ function addTagsInEntities(entityMetaInformation) {
 		}
 	}
 	return entityMetaInformation
+}
+
+async function populateTargetedEntityTypesData(targetedEntityTypes, tenantId) {
+	try {
+		const formattedTargetedEntityTypes = await entityTypeQueries.entityTypesDocument(
+			{
+				name: { $in: targetedEntityTypes },
+				tenantId: tenantId,
+			},
+			['name', '_id']
+		)
+
+		formattedTargetedEntityTypes.forEach((entityType) => {
+			entityType['entityTypeId'] = entityType._id.toString()
+			entityType['entityType'] = entityType.name
+			delete entityType._id
+			delete entityType.name
+		})
+		return formattedTargetedEntityTypes
+	} catch (err) {
+		return []
+	}
 }

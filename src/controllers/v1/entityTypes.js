@@ -57,12 +57,23 @@ module.exports = class EntityTypes extends Abstract {
 	}
 	]
 */
-	async list() {
+	async list(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Call 'entityTypesHelper.list' to retrieve a list of entity types
-				// 'all' parameter retrieves all entity types, and { name: 1 } specifies projection to include only 'name' field
-				let result = await entityTypesHelper.list('all', { name: 1 })
+				let organizationId
+				let query = {}
+
+				// create query to fetch assets
+				query['tenantId'] = req.userDetails.tenantAndOrgInfo
+					? req.userDetails.tenantAndOrgInfo.tenantId
+					: req.userDetails.userInformation.tenantId
+
+				// handle currentOrgOnly filter
+				if (req.query['currentOrgOnly'] && req.query['currentOrgOnly'] == 'true') {
+					organizationId = req.userDetails.userInformation.organizationId
+					query['orgId'] = { $in: [organizationId] }
+				}
+				let result = await entityTypesHelper.list(query, ['name'], req.pageNo, req.pageSize, req.searchText)
 
 				return resolve(result)
 			} catch (error) {
@@ -99,8 +110,15 @@ module.exports = class EntityTypes extends Abstract {
 	async find(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				req.body.query = UTILS.stripOrgIds(req.body.query)
 				// Call 'entityTypesHelper.list' to find entity types based on provided query, projection, and skipFields
-				let result = await entityTypesHelper.list(req.body.query, req.body.projection, req.body.skipFields)
+				let result = await entityTypesHelper.list(
+					req.body.query,
+					req.body.projection,
+					req.pageNo,
+					req.pageSize,
+					req.searchText
+				)
 
 				return resolve(result)
 			} catch (error) {
@@ -123,7 +141,6 @@ module.exports = class EntityTypes extends Abstract {
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @param {Object} req -request data.
-	 * @param {Object} req.files.entityTypes -entityTypes data.
 	 * @returns {CSV}  create single  entity Types data.
 	 * 
 	 * "result": {
@@ -166,9 +183,6 @@ module.exports = class EntityTypes extends Abstract {
 	 * @apiUse successBody
 	 * @apiUse errorBody
 	 * @param {Object} req - requested entityType data.
-	 * @param {String} req.query.type - entityType type.
-	 * @param {String} req.params._id - entityType id.
-	 * @param {Object} req.body - entityType information that need to be updated.
 	 * @returns {JSON} - Updated entityType information.
 	 *  "result": {
         "profileForm": [],
@@ -199,7 +213,7 @@ module.exports = class EntityTypes extends Abstract {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Call 'entityTypesHelper.update' to update an existing entity type
-				let result = await entityTypesHelper.update(req.params._id, req.body, req.userDetails.userInformation)
+				let result = await entityTypesHelper.update(req.params._id, req.body, req.userDetails)
 
 				return resolve(result)
 			} catch (error) {
@@ -223,7 +237,6 @@ module.exports = class EntityTypes extends Abstract {
 	 * @apiUse errorBody
 	 * @apiParamExample {json} Response:
 	 * @param {Object} req -request data.
-	 * @param {Object} req.files.entityTypes -entityTypes data.
 	 * @returns {CSV} Bulk create entity Types data.
 	 */
 	async bulkCreate(req) {
@@ -288,7 +301,6 @@ module.exports = class EntityTypes extends Abstract {
 	 * @apiUse errorBody
 	 * @apiParamExample {json} Response:
 	 * @param {Object} req -request data.
-	 * @param {Object} req.files.entityTypes -entityTypes data.
 	 * @returns {CSV} Bulk update entity Types data.
 	 */
 	async bulkUpdate(req) {

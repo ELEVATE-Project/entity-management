@@ -238,6 +238,72 @@ function generateUniqueId() {
 	return uuidV4()
 }
 
+// Helper function to convert mongo ids to objectIds to facilitate proper query in aggregate function
+function convertMongoIds(query) {
+	const keysToConvert = ['_id', 'entityTypeId'] // Add other fields if needed
+
+	const convertValue = (value) => {
+		if (Array.isArray(value)) {
+			return value.map((v) => (isValidObjectId(v) ? new ObjectId(v) : v))
+		} else if (isValidObjectId(value)) {
+			return new ObjectId(value)
+		}
+		return value
+	}
+
+	const isValidObjectId = (id) => {
+		return typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id)
+	}
+
+	const recurse = (obj) => {
+		for (const key in obj) {
+			if (keysToConvert.includes(key)) {
+				if (typeof obj[key] === 'object' && obj[key] !== null && '$in' in obj[key]) {
+					obj[key]['$in'] = convertValue(obj[key]['$in'])
+				} else {
+					obj[key] = convertValue(obj[key])
+				}
+			} else if (typeof obj[key] === 'object' && obj[key] !== null) {
+				recurse(obj[key])
+			}
+		}
+	}
+
+	recurse(query)
+	return query
+}
+
+/**
+ * Strip orgIds from query object and log a warning.
+ * @function
+ * @name stripOrgIds
+ * @param {Object} query - The query object containing orgIds.
+ * @returns {Object} - The query object without orgIds.
+ * @deprecated orgIds is deprecated and should not be used in queries.
+ */
+
+function stripOrgIds(query) {
+	const { orgIds, orgId, ...rest } = query
+	if (orgIds || orgId) {
+		console.warn('orgIds/orgId deprecated.')
+	}
+	return rest
+}
+
+/**
+ * Convert an array of organization objects to an array of stringified org IDs.
+ * @function
+ * @name convertOrgIdsToString
+ * @param {Array<{code: number|string}>} array - Array of objects each containing a `code` property.
+ * @returns {string[]} - Array of stringified `code` values.
+ */
+
+function convertOrgIdsToString(array) {
+	return array.map((data) => {
+		return data.code.toString()
+	})
+}
+
 module.exports = {
 	camelCaseToTitleCase: camelCaseToTitleCase,
 	lowerCase: lowerCase,
@@ -251,4 +317,7 @@ module.exports = {
 	noOfElementsInArray: noOfElementsInArray,
 	operatorValidation: operatorValidation,
 	generateUniqueId: generateUniqueId,
+	convertMongoIds: convertMongoIds,
+	stripOrgIds: stripOrgIds,
+	convertOrgIdsToString: convertOrgIdsToString,
 }

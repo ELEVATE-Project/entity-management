@@ -47,6 +47,24 @@ let enviromentVariables = {
 		optional: true,
 		default: '../keycloakPublicKeys',
 	},
+	ADMIN_TOKEN_HEADER_NAME: {
+		message: 'Required admin access token header name',
+		optional: true,
+		default: 'admin-auth-token',
+	},
+	ADMIN_ACCESS_TOKEN: {
+		message: 'Required admin access token',
+		optional: false,
+	},
+	INTERFACE_SERVICE_URL: {
+		message: 'Required  interface service url',
+		optional: false,
+	},
+	USER_SERVICE_BASE_URL: {
+		message: 'Required  user service base url',
+		optional: true,
+		default: '/user',
+	},
 }
 
 let success = true

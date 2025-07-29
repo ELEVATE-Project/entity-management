@@ -26,12 +26,15 @@ module.exports = class UserProjectsHelper {
 	 * @returns {JSON} - uploaded entity information.
 	 */
 	static bulkCreate(entityTypesCSVData, userDetails) {
+		console.log(userDetails, '<--userDetails in bulkCreate entityTypesCSVData')
 		return new Promise(async (resolve, reject) => {
 			try {
 				const entityTypesUploadedData = await Promise.all(
 					entityTypesCSVData.map(async (entityType) => {
 						try {
 							entityType = UTILS.valueParser(entityType)
+							entityType['tenantId'] = userDetails.tenantAndOrgInfo.tenantId
+							entityType['orgId'] = userDetails.tenantAndOrgInfo.orgId[0]
 							entityType.registryDetails = {}
 							let removedKeys = []
 
@@ -83,8 +86,8 @@ module.exports = class UserProjectsHelper {
 
 							// Set userId based on userDetails
 							const userId =
-								userDetails && userDetails.userInformation.id
-									? userDetails && userDetails.userInformation.id
+								userDetails && userDetails.userInformation.userId
+									? userDetails && userDetails.userInformation.userId
 									: CONSTANTS.common.SYSTEM
 
 							if (!entityType.name) {
@@ -131,7 +134,7 @@ module.exports = class UserProjectsHelper {
 	 * create single entity.
 	 * @method
 	 * @name create
-	 * @param {Object} data - requested entity data.
+	 * @param {Object} body - requested entity data.
 	 * @param {Object} userDetails - Logged in user information.
 	 * @returns {JSON} - create single entity.
 	 */
@@ -139,6 +142,8 @@ module.exports = class UserProjectsHelper {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entityType = body
+				entityType['tenantId'] = userDetails.tenantAndOrgInfo.tenantId
+				entityType['orgId'] = userDetails.tenantAndOrgInfo.orgId[0]
 
 				if (entityType.profileFields) {
 					entityType.profileFields = entityType.profileFields.split(',') || []
@@ -170,9 +175,10 @@ module.exports = class UserProjectsHelper {
 
 				// Determine userId based on userDetails or default to SYSTEM
 				const userId =
-					userDetails && userDetails.userInformation.id
-						? userDetails.userInformation.id
+					userDetails && userDetails.userInformation.userId
+						? userDetails.userInformation.userId
 						: CONSTANTS.common.SYSTEM
+
 				let newEntityType = await entityTypeQueries.create(
 					_.merge(
 						{
@@ -187,6 +193,7 @@ module.exports = class UserProjectsHelper {
 
 				if (newEntityType._id) {
 					entityType.status = CONSTANTS.common.SUCCESS
+					entityType._id = newEntityType._id
 				} else {
 					entityType.status = CONSTANTS.common.FAILURE
 				}
@@ -200,21 +207,28 @@ module.exports = class UserProjectsHelper {
 		})
 	}
 	/**
-	 * update single entity.
+	 * update single entityType.
 	 * @method
 	 * @name update
-	 * @param {Object} data - requested entity data.
+	 * @param {Object} entityTypeId - entity type id.
+	 * @param {Object} bodyData - requested entity data.
 	 * @param {Object} userDetails - Logged in user information.
 	 * @returns {JSON} - update single entity.
 	 *
 	 */
 
-	static update(entityTypeId, bodyData) {
+	static update(entityTypeId, bodyData, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				// avoid adding manupulative data
+				delete bodyData.tenantId
+				delete bodyData.orgIds
+
+				let tenantId = userDetails.tenantAndOrgInfo.tenantId
+
 				// Find and update the entity type by ID with the provided bodyData
 				let entityInformation = await entityTypeQueries.findOneAndUpdate(
-					{ _id: ObjectId(entityTypeId) },
+					{ _id: ObjectId(entityTypeId), tenantId: tenantId },
 					bodyData,
 					{ new: true }
 				)
@@ -246,6 +260,7 @@ module.exports = class UserProjectsHelper {
 	static bulkUpdate(entityTypesCSVData, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				// Process each entity type in the provided array asynchronously
 				const entityTypesUploadedData = await Promise.all(
 					entityTypesCSVData.map(async (entityType) => {
@@ -313,6 +328,7 @@ module.exports = class UserProjectsHelper {
 							let updateEntityType = await entityTypeQueries.findOneAndUpdate(
 								{
 									_id: ObjectId(entityType._SYSTEM_ID),
+									tenantId: tenantId,
 								},
 
 								_.merge(
@@ -353,25 +369,70 @@ module.exports = class UserProjectsHelper {
 	 * List enitity Type.
 	 * @method
 	 * @name list
-	 * @param {String} entityType - entity type.
-	 * @param {String} entityId - requested entity id.
-	 * @param {String} [queryParameter = ""] - queryParameter value if required.
+	 * @param {Object} [bodyQuery = {}] - query value if required.
+	 * @param {Object} [projection = {}] - mongodb query project object
+	 * @param {Number} [pageNo] - page no
+	 * @param {Number} [pageSize] - page size
+	 * @param {String} [searchText] - search text
 	 * @returns {JSON} - Details of entity.
 	 */
 
-	static list(queryParameter = 'all', projection = {}) {
+	static list(bodyQuery = {}, projection = [], pageNo, pageSize, searchText = '') {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Convert 'all' to an empty object for querying all entity types
-				if (queryParameter === 'all') {
-					queryParameter = {}
+				// Create facet object to attain pagination
+				let facetQuery = {}
+				facetQuery['$facet'] = {}
+				facetQuery['$facet']['totalCount'] = [{ $count: 'count' }]
+				if (pageSize === '' && pageNo === '') {
+					facetQuery['$facet']['data'] = [{ $skip: 0 }]
+				} else {
+					facetQuery['$facet']['data'] = [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }]
 				}
 
-				// Retrieve entity type data based on the provided queryParameter and projection
-				let entityTypeData = await entityTypeQueries.entityTypesDocument(queryParameter, projection)
+				bodyQuery = UTILS.convertMongoIds(bodyQuery)
+
+				// add search filter to the bodyQuery
+				if (searchText != '') {
+					let searchData = [
+						{
+							name: new RegExp(searchText, 'i'),
+						},
+					]
+					bodyQuery['$and'] = searchData
+				}
+
+				// Create projection object
+				let projection1 = {}
+				let aggregateData
+				if (Array.isArray(projection) && projection.length > 0) {
+					projection1 = {}
+					projection.forEach((projectedData) => {
+						projection1[projectedData] = 1
+					})
+					aggregateData = [
+						{ $match: bodyQuery },
+						{
+							$sort: { updatedAt: -1 },
+						},
+						{ $project: projection1 },
+						facetQuery,
+					]
+				} else {
+					aggregateData = [
+						{ $match: bodyQuery },
+						{
+							$sort: { updatedAt: -1 },
+						},
+						facetQuery,
+					]
+				}
+
+				// Retrieve entity type data based on the provided query and projection
+				const result = await entityTypeQueries.getAggregate(aggregateData)
 				return resolve({
 					message: CONSTANTS.apiResponses.ENTITY_TYPES_FETCHED,
-					result: entityTypeData,
+					result: result[0].data,
 				})
 			} catch (error) {
 				return reject(error)

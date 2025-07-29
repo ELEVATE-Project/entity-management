@@ -15,8 +15,9 @@ module.exports = {
 		},
 		groups: Object,
 		metaInformation: {
-			externalId: { type: String, index: true, unique: true },
+			externalId: { type: String, index: true },
 			name: { type: String, index: true },
+			targetedEntityTypes: { type: Array },
 		},
 		childHierarchyPath: Array,
 		userId: {
@@ -37,5 +38,21 @@ module.exports = {
 			type: String,
 			default: 'SYSTEM',
 		},
+		tenantId: {
+			type: String,
+			index: true,
+			require: true,
+		},
+		orgId: {
+			type: String,
+			require: true,
+			index: true,
+		},
 	},
+	compoundIndex: [
+		{
+			name: { 'metaInformation.externalId': 1, tenantId: 1 },
+			indexType: { unique: true },
+		},
+	],
 }
