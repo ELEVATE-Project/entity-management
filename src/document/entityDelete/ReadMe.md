@@ -22,10 +22,10 @@ DELETE /entity-management/v1/admin/deleteEntity/:id?allowRecursiveDelete=true
 
 ## 🧾 Parameters
 
-| Parameter              | Type    | Description                                                                                                                                           |
-| ---------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `:id`                  | String  | ID of the entity to delete                                                                                                                            |
-| `allowRecursiveDelete` | Boolean | If `true`, deletes this entity and all its children. If `false`Delete only the specified entity.Remove that from higher entity groups as well `false` |
+| Parameter              | Type    | Description                                                                                                                                        |
+| ---------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `:id`                  | String  | ID of the entity to delete                                                                                                                         |
+| `allowRecursiveDelete` | Boolean | If `true`, deletes this entity and all its children. If `false`, delete only the specified entity and remove it from higher entity groups as well. |
 
 ---
 
@@ -40,7 +40,7 @@ DELETE /entity-management/v1/admin/deleteEntity/:id?allowRecursiveDelete=true
 
 ---
 
-## 📤 Example cURL
+## 📤 Example cURL (Recursive Delete)
 
 ```bash
 curl --location --request POST 'http://localhost:5001/entity-management/v1/admin/deleteEntity/6825950197b5680013e6a17c?allowRecursiveDelete=true' \
@@ -54,7 +54,35 @@ curl --location --request POST 'http://localhost:5001/entity-management/v1/admin
 
 ---
 
-## ✅ Success Response
+## 📤 Example cURL (Non-Recursive Delete)
+
+```bash
+curl --location --request POST 'http://localhost:5001/entity-management/v1/admin/deleteEntity/6825952497b5680013e6a184?allowRecursiveDelete=false' \
+--header 'content-type: application/json' \
+--header 'internal-access-token: 8wE*tM*y(5)' \
+--header 'x-auth-token: <JWT-TOKEN>' \
+--header 'admin-auth-token: rwwee3$123' \
+--header 'tenantId: shikshalokam' \
+--header 'orgid: SoT'
+```
+
+### ✅ Sample Response (Non-Recursive)
+
+```json
+{
+	"message": "ENTITIES_DELETED_SUCCESSFULLY",
+	"status": 200,
+	"result": {
+		"deletedEntities": "6825952497b5680013e6a184",
+		"deletedEntitiesCount": 1,
+		"unLinkedEntitiesCount": 0
+	}
+}
+```
+
+---
+
+## ✅ Success Response (Recursive)
 
 ```json
 {
