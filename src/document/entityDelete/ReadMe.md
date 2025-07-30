@@ -47,7 +47,7 @@ curl --location --request POST 'http://localhost:5001/entity-management/v1/admin
 --header 'content-type: application/json' \
 --header 'internal-access-token: 8wE*tM*y(5)' \
 --header 'x-auth-token: <JWT-TOKEN>' \
---header 'admin-auth-token: rwwee3$123' \
+--header 'admin-auth-token: <admin-token>' \
 --header 'tenantId: shikshalokam' \
 --header 'orgid: SoT'
 ```
@@ -61,7 +61,7 @@ curl --location --request POST 'http://localhost:5001/entity-management/v1/admin
 --header 'content-type: application/json' \
 --header 'internal-access-token: 8wE*tM*y(5)' \
 --header 'x-auth-token: <JWT-TOKEN>' \
---header 'admin-auth-token: rwwee3$123' \
+--header 'admin-auth-token: <admin-token>' \
 --header 'tenantId: shikshalokam' \
 --header 'orgid: SoT'
 ```
