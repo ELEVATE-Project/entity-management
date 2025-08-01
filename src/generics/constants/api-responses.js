@@ -76,4 +76,6 @@ module.exports = {
 	TENANT_ID_MISSING_MESSAGE: 'Require tenantId in header',
 	ROLE_PERMISSION_DENIED_ERR: 'ERR_INVALID_ROLE',
 	ROLE_PERMISSION_DENIED_MSG: 'Invalid role provided for resource creation',
+	ENTITIES_DELETED_SUCCESSFULLY: 'ENTITIES_DELETED_SUCCESSFULLY',
+	ADMIN_ROLE_REQUIRED: 'Access denied: Admin role required',
 }

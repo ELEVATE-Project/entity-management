@@ -13,6 +13,10 @@ module.exports = {
 			enabled: true,
 			url: process.env.MONGODB_URL,
 		},
+		kafka: {
+			enabled: true,
+			url: process.env.KAFKA_URL,
+		},
 		microservices: [
 			{
 				name: 'UserService',

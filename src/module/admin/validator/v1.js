@@ -11,6 +11,9 @@ module.exports = (req) => {
 			req.checkParams('_id').exists().withMessage('required collection name')
 			req.checkBody('keys').exists().withMessage('keys required')
 		},
+		deleteEntity: function () {
+			req.checkParams('_id').exists().withMessage('required entity _id')
+		},
 	}
 
 	if (adminValidator[req.params.method]) {
