@@ -14,7 +14,8 @@ const adminQueries = require(DB_QUERY_BASE_PATH + '/admin')
 const entitiesQueries = require(DB_QUERY_BASE_PATH + '/entities')
 const deletionAuditQueries = require(DB_QUERY_BASE_PATH + '/deletionAuditLogs')
 const kafkaProducersHelper = require(PROJECT_ROOT_DIRECTORY + '/generics/kafka/producers')
-const { ObjectId } = require('mongodb')
+const mongoose = require('mongoose')
+const ObjectId = mongoose.Types.ObjectId
 module.exports = class AdminHelper {
 	/**
 	 * create index in the model.

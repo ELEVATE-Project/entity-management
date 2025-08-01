@@ -70,7 +70,7 @@ module.exports = class Admin {
     		}
 		}
 	 */
-	async deleteEntity(req) {
+	deleteEntity(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let deletedEntity

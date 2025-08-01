@@ -46,7 +46,7 @@ const pushDeletedEntityToKafka = function (message) {
 const pushMessageToKafka = function (payload) {
 	return new Promise((resolve, reject) => {
 		if (kafkaCommunicationsOnOff != 'ON') {
-			throw reject('Kafka configuration is not done')
+			return reject(new Error('Kafka configuration is not done'))
 		}
 
 		console.log('-------Kafka producer log starts here------------------')

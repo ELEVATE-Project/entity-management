@@ -19,8 +19,8 @@ module.exports = {
 			index: true,
 		},
 		deletedAt: {
-			type: String,
-			default: 'SYSTEM',
+			type: Date,
+			default: Date.now,
 			index: true,
 		},
 	},

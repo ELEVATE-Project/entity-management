@@ -17,7 +17,7 @@ const RESOURCE_DELETION_TOPIC = process.env.RESOURCE_DELETION_TOPIC
 
 const connect = function () {
 	const Producer = kafka.Producer
-	KeyedMessage = kafka.KeyedMessage
+	const KeyedMessage = kafka.KeyedMessage
 
 	const client = new kafka.KafkaClient({
 		kafkaHost: process.env.KAFKA_URL,
@@ -75,9 +75,7 @@ var _sendToKafkaConsumers = function (topic, host) {
 		})
 
 		consumer.on('error', async function (error) {
-			if (error.topics && error.topics[0] === RESOURCE_DELETION_TOPIC) {
-				submissionsConsumer.errorTriggered(error)
-			}
+			console.log('Kafka consumer error for topic:', RESOURCE_DELETION_TOPIC, error)
 		})
 	}
 }
