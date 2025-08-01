@@ -142,7 +142,7 @@ module.exports = class AdminHelper {
 						result = {
 							deletedEntities: entityId,
 							deletedEntitiesCount: deletedEntities.deletedCount,
-							unLinkedEntitiesCount: unlinkResult.nModified,
+							unLinkedEntitiesCount: unlinkResult.nModified || unlinkResult.nModified,
 						}
 					}
 					resolve({
@@ -151,8 +151,8 @@ module.exports = class AdminHelper {
 					})
 				}
 			} catch (error) {
-				resolve({
-					status: error.status || HTTP_STATUS_CODE.internal_server_error.status,
+				return resolve({
+					status: error.status ? error.status : HTTP_STATUS_CODE.internal_server_error.status,
 					success: false,
 					message: error.message,
 					data: {},
