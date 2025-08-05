@@ -73,7 +73,7 @@ let enviromentVariables = {
 	RESOURCE_DELETION_TOPIC: {
 		message: 'Required  resource deletion topic',
 		optional: true,
-		default: 'resource-deletion-topic',
+		default: 'resource_deletion_opic',
 	},
 	KAFKA_COMMUNICATIONS_ON_OFF: {
 		message: 'Required kafka communication',

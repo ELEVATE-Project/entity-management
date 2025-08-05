@@ -80,74 +80,78 @@ module.exports = class AdminHelper {
 			try {
 				//Fetch the entity document to validate existence and get its metadata
 				const filter = { _id: entityId, tenantId: tenantId }
-				const entityDocs = await entitiesQueries.entityDocuments(filter, ['groups', 'entityType'])
+				const entityDoc = await entitiesQueries.entityDocuments(filter, ['groups', 'entityType'])
 
-				if (!entityDocs.length) {
+				if (!entityDoc.length) {
 					throw {
 						status: HTTP_STATUS_CODE.bad_request.status,
 						message: CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
 					}
 				}
-
 				// Extract entity type and prepare entityObjectId
-				const entityType = entityDocs[0].entityType
+				const entityType = entityDoc[0].entityType
 				const entityObjectId = typeof entityId === 'string' ? new ObjectId(entityId) : entityId
 				//If allowRecursiveDelete is true, delete this entity and all nested group entities
 				if (UTILS.convertStringToBoolean(allowRecursiveDelete)) {
-					// Gather all nested group IDs + self
+					// Initialize a Set to collect entity IDs to delete (ensures uniqueness)
 					const relatedEntityIds = new Set()
+					// Add the root entity itself
+					relatedEntityIds.add(entityObjectId)
 
-					// Traverse all group relationships and collect nested entity IDs
-					for (const entity of entityDocs) {
-						const groups = entity.groups || {}
-						Object.values(groups).forEach((ids) => {
-							if (Array.isArray(ids)) {
-								ids.forEach((id) => relatedEntityIds.add(id.toString()))
-							}
-						})
-					}
+					// Extract group relationships (if any) from the entity
+					const groups = entityDoc[0].groups || {}
+					// Traverse group values and collect all nested entity IDs
+					Object.values(groups).forEach((ids) => {
+						if (Array.isArray(ids)) {
+							ids.forEach((id) => relatedEntityIds.add(id))
+						}
+					})
 
-					// Include the root entity's ID in deletion
-					relatedEntityIds.add(entityObjectId.toString())
+					// Convert Set to Array for MongoDB `$in` filter
+					const relatedEntityObjectIds = Array.from(relatedEntityIds)
 
-					// Convert all to ObjectId type
-					const relatedEntityObjectIds = Array.from(relatedEntityIds).map((id) => new ObjectId(id))
+					// Delete all entities collected (root + nested groups)
 					const deletedEntities = await entitiesQueries.removeDocuments({
 						_id: { $in: relatedEntityObjectIds },
 					})
-					// Insert logs into deletionAuditLogs collection
-					await this.logDeletion(Array.from(relatedEntityIds), deletedBy)
-					for (const id of relatedEntityObjectIds) {
-						await this.pushEntityDeleteKafkaEvent(id, deletedBy, tenantId)
-					}
 
-					let result = {
-						deletedEntitiesCount: deletedEntities.deletedCount,
-						deletedEntities: relatedEntityObjectIds,
-					}
-					resolve({
+					// Perform post-deletion tasks: unlinking, logging, and pushing Kafka events
+					const { unLinkedEntitiesCount } = await this.handlePostEntityDeletionTasks(
+						relatedEntityObjectIds,
+						entityType,
+						deletedBy,
+						tenantId
+					)
+
+					// Return deletion response
+					return resolve({
 						message: CONSTANTS.apiResponses.ENTITIES_DELETED_SUCCESSFULLY,
-						result: result,
+						result: {
+							unLinkedEntitiesCount,
+							deletedEntitiesCount: deletedEntities.deletedCount,
+							deletedEntities: relatedEntityObjectIds,
+						},
 					})
 				} else {
-					//Delete the document with _id
+					// If recursive deletion is not allowed, delete only the single entity
 					const deletedEntities = await entitiesQueries.removeDocuments({ _id: entityObjectId })
-					//Remove from other entities' groups
-					const unlinkResult = await adminQueries.pullEntityFromGroups(entityType, entityObjectId)
-					// Insert logs into deletionAuditLogs collection
-					await this.logDeletion([entityObjectId], deletedBy)
-					await this.pushEntityDeleteKafkaEvent(entityObjectId, deletedBy, tenantId)
-					let result
-					if (deletedEntities && unlinkResult) {
-						result = {
+
+					// Perform post-deletion tasks: unlinking, logging, and pushing Kafka event
+					const { unLinkedEntitiesCount } = await this.handlePostEntityDeletionTasks(
+						[entityObjectId],
+						entityType,
+						deletedBy,
+						tenantId
+					)
+
+					// Return deletion response
+					return resolve({
+						message: CONSTANTS.apiResponses.ENTITIES_DELETED_SUCCESSFULLY,
+						result: {
 							deletedEntities: entityId,
 							deletedEntitiesCount: deletedEntities.deletedCount,
-							unLinkedEntitiesCount: unlinkResult.nModified || unlinkResult.nModified,
-						}
-					}
-					resolve({
-						message: CONSTANTS.apiResponses.ENTITIES_DELETED_SUCCESSFULLY,
-						result: result,
+							unLinkedEntitiesCount,
+						},
 					})
 				}
 			} catch (error) {
@@ -158,6 +162,39 @@ module.exports = class AdminHelper {
 					data: {},
 				})
 			}
+		})
+	}
+
+	/**
+	 * Handles post-deletion operations for entities such as:
+	 * - Unlinking from other entities' groups
+	 * - Logging the deletion
+	 * - Pushing Kafka events for each deleted entity
+	 *
+	 * @param {ObjectId[]} deletedIds - Array of ObjectIds for deleted entities
+	 * @param {String} entityType - Type of the entity (e.g., "school", "block", etc.)
+	 * @param {String|ObjectId} deletedBy - User ID or "SYSTEM" who performed the deletion
+	 * @param {String} tenantId - Tenant code for the environment (e.g., "shikshalokam")
+	 * @returns {Promise<Object>} Result containing number of unlinked entities
+	 */
+	static handlePostEntityDeletionTasks(deletedIds, entityType, deletedBy, tenantId) {
+		return new Promise(async (resolve, reject) => {
+			// Remove from other entities' groups
+			const unlinkResult = await adminQueries.pullEntityFromGroups(entityType, deletedIds[0])
+
+			// Insert logs into deletionAuditLogs collection
+			await this.logDeletion(deletedIds, deletedBy)
+
+			// Message:  {"topic":"RESOURCE_DELETION_TOPIC","value":"{\"entity\":\"resource\",\"type\":\"entity\",\"eventType
+			// 	\":\"delete\",\"entityId\":\"6852c9027248c20014b38b88\",\"deleted_By\":1,\"tenant_code\":\"shikshalokam\"}
+			// Push Kafka events
+			for (const id of deletedIds) {
+				await this.pushEntityDeleteKafkaEvent(id, deletedBy, tenantId)
+			}
+
+			resolve({
+				unLinkedEntitiesCount: unlinkResult?.nModified || 0,
+			})
 		})
 	}
 

@@ -5,8 +5,6 @@
  * Description : Kafka Producer related information.
  */
 
-const kafkaCommunicationsOnOff =
-	!process.env.KAFKA_COMMUNICATIONS_ON_OFF || process.env.KAFKA_COMMUNICATIONS_ON_OFF != 'OFF' ? 'ON' : 'OFF'
 const pushDeletedEntityTopic =
 	process.env.RESOURCE_DELETION_TOPIC && process.env.RESOURCE_DELETION_TOPIC != 'OFF'
 		? process.env.RESOURCE_DELETION_TOPIC
@@ -45,10 +43,6 @@ const pushDeletedEntityToKafka = function (message) {
 
 const pushMessageToKafka = function (payload) {
 	return new Promise((resolve, reject) => {
-		if (kafkaCommunicationsOnOff != 'ON') {
-			return reject(new Error('Kafka configuration is not done'))
-		}
-
 		console.log('-------Kafka producer log starts here------------------')
 		console.log('Topic Name: ', payload[0].topic)
 		console.log('Message: ', JSON.stringify(payload))

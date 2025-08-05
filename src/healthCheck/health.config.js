@@ -5,6 +5,7 @@
  * Description : Health check config file
  */
 
+const kafkaEnabled = process.env.KAFKA_COMMUNICATIONS_ON_OFF === 'ON'
 module.exports = {
 	name: process.env.SERVICE_NAME,
 	version: '1.0.0',
@@ -13,10 +14,12 @@ module.exports = {
 			enabled: true,
 			url: process.env.MONGODB_URL,
 		},
-		kafka: {
-			enabled: true,
-			url: process.env.KAFKA_URL,
-		},
+		...(kafkaEnabled && {
+			kafka: {
+				enabled: true,
+				url: process.env.KAFKA_URL,
+			},
+		}),
 		microservices: [
 			{
 				name: 'UserService',
