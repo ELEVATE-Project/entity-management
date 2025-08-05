@@ -33,6 +33,37 @@ module.exports = class Admin {
 	}
 
 	/**
+	 * Unlink an entity ID from all parent documents that reference it in their groups.
+	 *
+	 * @param {String} entityType - Type of the entity (e.g., 'block', 'cluster').
+	 * @param {ObjectId} entityId - MongoDB ObjectId of the entity to remove from groups.
+	 * @returns {Promise<Object>} - MongoDB updateMany result containing modified count.
+	 */
+	static pullEntityFromGroups(entityType, entityId) {
+		return new Promise(async (resolve, reject) => {
+			try {
+				//Build the $pull query to remove the entityId from group arrays
+				const updateQuery = {
+					$pull: {
+						[`groups.${entityType}`]: entityId,
+					},
+				}
+				const result = await database.models.entities.updateMany(
+					{ [`groups.${entityType}`]: entityId },
+					updateQuery
+				)
+				return resolve(result)
+			} catch (error) {
+				return reject({
+					status: error.status || HTTP_STATUS_CODE.bad_request.status,
+					message: error.message || HTTP_STATUS_CODE.bad_request.message,
+					errorObject: error,
+				})
+			}
+		})
+	}
+
+	/**
 	 * create index
 	 * @method
 	 * @name createIndex
