@@ -185,13 +185,12 @@ module.exports = class AdminHelper {
 			// Insert logs into deletionAuditLogs collection
 			await this.logDeletion(deletedIds, deletedBy)
 
-			// Message:  {"topic":"RESOURCE_DELETION_TOPIC","value":"{\"entity\":\"resource\",\"type\":\"entity\",\"eventType
-			// 	\":\"delete\",\"entityId\":\"6852c9027248c20014b38b88\",\"deleted_By\":1,\"tenant_code\":\"shikshalokam\"}
+			// Message:  {"topic":"RESOURCE_DELETION_TOPIC","value":"{\"entity\":\"resource\",\"type\":\"entity\",\"eventType\":\"delete\
+			// 	",\"entityIds\":[\"6852c9027248c20014b38b69\",\"6852c9227248c20014b3957d\",\"6852c9227248c20014b3957e\",\"6852c9227248c20014b3957f\
+			// 	",\"6852c9227248c20014b39580\",\"6852c9227248c20014b39581\",\"6852c9227248c20014b39582\",\"6852c9227248c20014b39583\",
+			// 	\"deleted_By\":1,\"tenant_code\":\"shikshalokam\"}"
 			// Push Kafka events
-			for (const id of deletedIds) {
-				await this.pushEntityDeleteKafkaEvent(id, deletedBy, tenantId)
-			}
-
+			await this.pushEntityDeleteKafkaEvent(deletedIds, deletedBy, tenantId)
 			resolve({
 				unLinkedEntitiesCount: unlinkResult?.nModified || 0,
 			})
@@ -240,7 +239,7 @@ module.exports = class AdminHelper {
 	 * @param {string|null} [organizationId=null] - (Optional) Organization ID associated with the entity.
 	 * @returns {Promise<void>} - Resolves when the Kafka event is pushed or logs an error if it fails.
 	 */
-	static pushEntityDeleteKafkaEvent(entityId, deletedBy, tenantId) {
+	static pushEntityDeleteKafkaEvent(entityIds, deletedBy, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Construct the Kafka message payload with essential metadata
@@ -248,13 +247,13 @@ module.exports = class AdminHelper {
 					entity: 'resource',
 					type: 'entity',
 					eventType: 'delete',
-					entityId: entityId.toString(),
+					entityIds: entityIds,
 					deleted_By: parseInt(deletedBy) || deletedBy,
 					tenant_code: tenantId,
 				}
 
 				// Push the message to Kafka topic using helper
-				const kafkaPushed = await kafkaProducersHelper.pushDeletedEntityToKafka(kafkaMessage)
+				await kafkaProducersHelper.pushDeletedEntityToKafka(kafkaMessage)
 				return resolve()
 			} catch (err) {
 				console.error(`Kafka push failed for entityId ${entityId}:`, err.message)
