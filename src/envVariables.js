@@ -78,7 +78,7 @@ let enviromentVariables = {
 	KAFKA_COMMUNICATIONS_ON_OFF: {
 		message: 'Required kafka communication',
 		optional: true,
-		default: 'on',
+		default: 'ON',
 	},
 	KAFKA_URL: {
 		message: 'Required  kafka url',
