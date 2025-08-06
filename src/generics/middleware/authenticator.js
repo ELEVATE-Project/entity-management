@@ -245,6 +245,7 @@ module.exports = async function (req, res, next, token = '') {
 		// performing default token data extraction
 		if (defaultTokenExtraction) {
 			if (!decodedToken.data.organization_ids || !decodedToken.data.tenant_id) {
+				console.log(defaultTokenExtraction, 'line no 248')
 				rspObj.errCode = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 				rspObj.errMsg = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_MESSAGE
 				rspObj.responseCode = HTTP_STATUS_CODE['bad_request'].status
@@ -316,6 +317,8 @@ module.exports = async function (req, res, next, token = '') {
 			!decodedToken.data.organization_id ||
 			!(decodedToken.data.organization_id.toString().length > 0)
 		) {
+			console.log(decodedToken.data, 'line no 320')
+
 			rspObj.errCode = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 			rspObj.errMsg = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_MESSAGE
 			rspObj.responseCode = HTTP_STATUS_CODE['bad_request'].status
@@ -362,6 +365,8 @@ module.exports = async function (req, res, next, token = '') {
 				validOrgIds = orgIdArr.filter((id) => relatedOrgIds.includes(id))
 
 				if (!(validOrgIds.length > 0)) {
+					console.log(orgIdArr, 'line no 368')
+
 					rspObj.errCode = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 					rspObj.errMsg = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_MESSAGE
 					rspObj.responseCode = HTTP_STATUS_CODE['bad_request'].status
@@ -386,12 +391,16 @@ module.exports = async function (req, res, next, token = '') {
 				// Check if orgIdFromHeader is provided and valid
 				if (orgIdFromHeader && orgIdFromHeader != '') {
 					if (!orgIdArr.includes(orgIdFromHeader)) {
+						console.log(orgIdFromHeader, 'line no 394')
+
 						throw CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 					}
 
 					let validateOrgsResult = await validateIfOrgsBelongsToTenant(tenantId, orgIdFromHeader, token)
 
 					if (!validateOrgsResult.success) {
+						console.log(validateOrgsResult, 'line no 402')
+
 						throw CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 					}
 
@@ -403,6 +412,8 @@ module.exports = async function (req, res, next, token = '') {
 					return { success: true, orgId: orgIdArr[0] }
 				}
 
+				console.log(orgIdArr, 'line no 415')
+
 				// If no orgId is found, throw error
 				throw CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 			} catch (err) {
@@ -410,6 +421,7 @@ module.exports = async function (req, res, next, token = '') {
 				if (orgIdArr.length > 0) {
 					return { success: true, orgId: orgIdArr[0] }
 				}
+				console.log(err, 'line no 424')
 
 				rspObj.errCode = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
 				rspObj.errMsg = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_MESSAGE

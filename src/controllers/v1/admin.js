@@ -73,6 +73,8 @@ module.exports = class Admin {
 	deleteEntity(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				console.log(req.userDetails, 'line no 76')
+
 				let deletedEntity
 				if (
 					req.userDetails &&

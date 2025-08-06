@@ -79,6 +79,8 @@ const fetchTenantDetails = function (tenantId, userToken) {
 				},
 			}
 
+			console.log(url, 'line no 82')
+
 			request.get(url, options, userReadCallback)
 			let result = {
 				success: true,
@@ -88,6 +90,8 @@ const fetchTenantDetails = function (tenantId, userToken) {
 					result.success = false
 				} else {
 					let response = JSON.parse(data.body)
+					console.log(response.result, 'line no 93')
+
 					if (response.responseCode === HTTP_STATUS_CODE['ok'].code) {
 						result['data'] = response.result
 						result.success = true
