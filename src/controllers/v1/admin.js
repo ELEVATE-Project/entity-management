@@ -73,25 +73,12 @@ module.exports = class Admin {
 	deleteEntity(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				let deletedEntity
-				if (
-					req.userDetails &&
-					req.userDetails.userInformation &&
-					req.userDetails.userInformation.roles &&
-					req.userDetails.userInformation.roles.includes(CONSTANTS.common.ADMIN_ROLE)
-				) {
-					deletedEntity = await adminHelper.allowRecursiveDelete(
-						req.params._id,
-						req.query.allowRecursiveDelete == 'true' ? 'true' : 'false',
-						req.userDetails.tenantAndOrgInfo.tenantId,
-						req.userDetails.userInformation.userId
-					)
-				} else {
-					throw {
-						status: HTTP_STATUS_CODE.forbidden.status,
-						message: CONSTANTS.apiResponses.ADMIN_ROLE_REQUIRED,
-					}
-				}
+				let deletedEntity = await adminHelper.allowRecursiveDelete(
+					req.params._id,
+					req.query.allowRecursiveDelete == 'true' ? 'true' : 'false',
+					req.userDetails.tenantAndOrgInfo.tenantId,
+					req.userDetails.userInformation.userId
+				)
 				return resolve(deletedEntity)
 			} catch (error) {
 				return reject({

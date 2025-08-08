@@ -37,9 +37,10 @@ module.exports = class Admin {
 	 *
 	 * @param {String} entityType - Type of the entity (e.g., 'block', 'cluster').
 	 * @param {ObjectId} entityId - MongoDB ObjectId of the entity to remove from groups.
+	 * @param {String} tenantId - Tenant ID to scope the operation.
 	 * @returns {Promise<Object>} - MongoDB updateMany result containing modified count.
 	 */
-	static pullEntityFromGroups(entityType, entityId) {
+	static pullEntityFromGroups(entityType, entityId, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				//Build the $pull query to remove the entityId from group arrays
@@ -49,7 +50,7 @@ module.exports = class Admin {
 					},
 				}
 				const result = await database.models.entities.updateMany(
-					{ [`groups.${entityType}`]: entityId },
+					{ [`groups.${entityType}`]: entityId, tenantId: tenantId },
 					updateQuery
 				)
 				return resolve(result)
