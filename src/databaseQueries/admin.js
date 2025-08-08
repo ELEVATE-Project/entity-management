@@ -37,6 +37,7 @@ module.exports = class Admin {
 	 *
 	 * @param {String} entityType - Type of the entity (e.g., 'block', 'cluster').
 	 * @param {ObjectId} entityId - MongoDB ObjectId of the entity to remove from groups.
+	 * @param {String} tenantId - Tenant ID to scope the operation.
 	 * @returns {Promise<Object>} - MongoDB updateMany result containing modified count.
 	 */
 	static pullEntityFromGroups(entityType, entityId, tenantId) {
