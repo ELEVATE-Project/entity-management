@@ -80,6 +80,7 @@ module.exports = class AdminHelper {
 			try {
 				//Fetch the entity document to validate existence and get its metadata
 				const filter = { _id: entityId, tenantId: tenantId }
+
 				const entityDoc = await entitiesQueries.entityDocuments(filter, ['groups', 'entityType'])
 
 				if (!entityDoc.length) {
@@ -113,6 +114,7 @@ module.exports = class AdminHelper {
 					// Delete all entities collected (root + nested groups)
 					const deletedEntities = await entitiesQueries.removeDocuments({
 						_id: { $in: relatedEntityObjectIds },
+						tenantId: tenantId,
 					})
 
 					// Perform post-deletion tasks: unlinking, logging, and pushing Kafka events
@@ -134,7 +136,10 @@ module.exports = class AdminHelper {
 					})
 				} else {
 					// If recursive deletion is not allowed, delete only the single entity
-					const deletedEntities = await entitiesQueries.removeDocuments({ _id: entityObjectId })
+					const deletedEntities = await entitiesQueries.removeDocuments({
+						_id: entityObjectId,
+						tenantId: tenantId,
+					})
 
 					// Perform post-deletion tasks: unlinking, logging, and pushing Kafka event
 					const { unLinkedEntitiesCount } = await this.handlePostEntityDeletionTasks(
@@ -180,10 +185,10 @@ module.exports = class AdminHelper {
 	static handlePostEntityDeletionTasks(deletedIds, entityType, deletedBy, tenantId) {
 		return new Promise(async (resolve, reject) => {
 			// Remove from other entities' groups
-			const unlinkResult = await adminQueries.pullEntityFromGroups(entityType, deletedIds[0])
+			const unlinkResult = await adminQueries.pullEntityFromGroups(entityType, deletedIds[0], tenantId)
 
 			// Insert logs into deletionAuditLogs collection
-			await this.logDeletion(deletedIds, deletedBy)
+			await this.create(deletedIds, deletedBy)
 
 			// Message:  {"topic":"RESOURCE_DELETION_TOPIC","value":"{\"entity\":\"resource\",\"type\":\"entity\",\"eventType\":\"delete\
 			// 	",\"entityIds\":[\"6852c9027248c20014b38b69\",\"6852c9227248c20014b3957d\",\"6852c9227248c20014b3957e\",\"6852c9227248c20014b3957f\
@@ -191,7 +196,7 @@ module.exports = class AdminHelper {
 			// 	\"deleted_By\":1,\"tenant_code\":\"shikshalokam\"}"
 			// Push Kafka events
 			await this.pushEntityDeleteKafkaEvent(deletedIds, deletedBy, tenantId)
-			resolve({
+			return resolve({
 				unLinkedEntitiesCount: unlinkResult?.nModified || 0,
 			})
 		})
@@ -201,13 +206,13 @@ module.exports = class AdminHelper {
 	 * Logs deletion entries for one or more entities into the `deletionAuditLogs` collection.
 	 *
 	 * @method
-	 * @name logDeletion
+	 * @name create
 	 * @param {Array<String|ObjectId>} entityIds - Array of entity IDs (as strings or ObjectIds) to log deletion for.
 	 * @param {String|Number} deletedBy - User ID (or 'SYSTEM') who performed the deletion.
 	 *
 	 * @returns {Promise<Object>} - Returns success status or error information.
 	 */
-	static logDeletion(entityIds, deletedBy) {
+	static create(entityIds, deletedBy) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Prepare log entries
@@ -216,8 +221,8 @@ module.exports = class AdminHelper {
 					deletedBy: deletedBy || 'SYSTEM',
 					deletedAt: new Date().toISOString(),
 				}))
-				// Insert logs into deletionAuditLogs collection
-				await deletionAuditQueries.deletionAuditLogs(logs)
+				// Insert logs into create collection
+				await deletionAuditQueries.create(logs)
 				return resolve({ success: true })
 			} catch (error) {
 				resolve({
