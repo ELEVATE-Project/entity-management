@@ -6,10 +6,20 @@
  */
 
 const jwt = require('jsonwebtoken')
+const path = require('path')
+const fs = require('fs')
+const _ = require('lodash')
+var respUtil = function (resp) {
+	return {
+		status: resp.errCode,
+		message: resp.errMsg,
+		currentDate: new Date().toISOString(),
+	}
+}
 
 module.exports = async function (req, res, next) {
 	// Define paths that require admin role validation
-	let adminPath = ['admin/deleteResource']
+	let adminPath = ['admin/deleteEntity']
 	// Initialize response object for error formatting
 	let rspObj = {}
 	// Flag to check if the current request path needs admin validation
@@ -118,18 +128,36 @@ module.exports = async function (req, res, next) {
 			)
 		}
 
-		if (!decodedToken.data?.organizations?.[0]?.roles) {
-			return next({
-				status: HTTP_STATUS_CODE.forbidden.status,
-				message: CONSTANTS.apiResponses.TOKEN_INVALID_CODE,
-			})
+		// Path to config.json
+		const configFilePath = path.resolve(__dirname, '../../config.json')
+		// Initialize variables
+		let configData = {}
+		let defaultRoleExtraction
+		// Check if config.json exists
+		if (fs.existsSync(configFilePath)) {
+			// Read and parse the config.json file
+			const rawData = fs.readFileSync(configFilePath)
+			try {
+				configData = JSON.parse(rawData)
+				if (!configData.userRolesInformationKey) {
+					defaultRoleExtraction = decodedToken.data.organizations[0].roles
+				} else {
+					defaultRoleExtraction = _.get({ decodedToken }, configData.userRolesInformationKey)
+				}
+			} catch (error) {
+				console.error('Error parsing config.json:', error)
+			}
 		}
 
-		// Extract roles from decoded token payload
-		let fetchRoleFromToken = decodedToken.data.organizations[0].roles
+		if (!defaultRoleExtraction) {
+			rspObj.errCode = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_CODE
+			rspObj.errMsg = CONSTANTS.apiResponses.TENANTID_AND_ORGID_REQUIRED_IN_TOKEN_MESSAGE
+			rspObj.responseCode = HTTP_STATUS_CODE['unauthorized'].status
+			return res.status(HTTP_STATUS_CODE['unauthorized'].status).send(respUtil(rspObj))
+		}
 
 		// Convert roles array to list of role titles
-		let roles = fetchRoleFromToken.map((roles) => {
+		let roles = defaultRoleExtraction.map((roles) => {
 			return roles.title
 		})
 
