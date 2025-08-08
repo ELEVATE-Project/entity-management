@@ -13,20 +13,20 @@ module.exports = async function (req, res, next) {
 	// Initialize response object for error formatting
 	let rspObj = {}
 	// Flag to check if the current request path needs admin validation
-	let checkAdminRole = false
+	let requiresAdminValidation = false
 	// Check if the incoming request path matches any admin paths
 	await Promise.all(
 		adminPath.map(async function (path) {
 			if (req.path.includes(path)) {
-				checkAdminRole = true
+				requiresAdminValidation = true
 			}
 		})
 	)
 
 	// If path needs admin check, validate the user's role using JWT token
-	if (checkAdminRole) {
+	if (requiresAdminValidation) {
 		// Get token from request headers
-		token = req.headers['x-auth-token']
+		const token = req.headers['x-auth-token']
 
 		// If no token found, return unauthorized error
 		if (!token) {
