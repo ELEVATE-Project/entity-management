@@ -147,6 +147,8 @@ module.exports = async function (req, res, next) {
 			} catch (error) {
 				console.error('Error parsing config.json:', error)
 			}
+		} else {
+			defaultRoleExtraction = decodedToken.data.organizations[0].roles
 		}
 
 		if (!defaultRoleExtraction) {
