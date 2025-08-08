@@ -51,6 +51,13 @@ module.exports = async function (req, res, next) {
 			)
 		}
 
+		if (!decodedToken.data?.organizations?.[0]?.roles) {
+			return next({
+				status: HTTP_STATUS_CODE.forbidden.status,
+				message: CONSTANTS.apiResponses.TOKEN_INVALID_CODE,
+			})
+		}
+
 		// Extract roles from decoded token payload
 		let fetchRoleFromToken = decodedToken.data.organizations[0].roles
 
