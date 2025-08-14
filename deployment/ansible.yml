@@ -45,7 +45,7 @@
       shell: cd {{release_path}}/src && npm i && npm i redoc-cli
 
     - name: Get config.json
-      shell: "curl --location --request GET '{{ vaultAddress }}projectSurveyEntityConfig' --header 'X-Vault-Token: {{ slurpfile['content'] | b64decode }}' | jq '.data.data' > '{{ release_path }}/config.json'"
+      shell: "curl --location --request GET '{{ vaultAddress }}projectSurveyEntityConfig' --header 'X-Vault-Token: {{ slurpfile['content'] | b64decode }}' | jq '.data.data' > '{{ release_path }}/src/config.json'"
     
     - name: Delete Old Folder 
       shell: rm -rf {{ current_path }} &&  cd {{ project_path }} && mkdir entity-management
