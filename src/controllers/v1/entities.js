@@ -911,7 +911,8 @@ module.exports = class Entities extends Abstract {
 					req.pageSize,
 					req.pageNo,
 					req.query.language ? req.query.language : '',
-					req.userDetails
+					req.userDetails,
+					req.query.additionalFields ? req.query.additionalFields : false
 				)
 				return resolve(entityDocuments)
 			} catch (error) {

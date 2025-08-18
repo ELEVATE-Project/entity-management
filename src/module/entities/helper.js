@@ -224,7 +224,17 @@ module.exports = class UserProjectsHelper {
 	 * @returns {Array} - List of all sub list entities.
 	 */
 
-	static subEntityList(entities, entityId, type, search, limit, pageNo, language, userDetails) {
+	static subEntityList(
+		entities,
+		entityId,
+		type,
+		search,
+		limit,
+		pageNo,
+		language,
+		userDetails,
+		additionalFields = false
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let tenantId = userDetails.userInformation.tenantId
@@ -254,60 +264,70 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Modify data properties (e.g., 'label') of retrieved entities if necessary
-				// if (result.data && result.data.length > 0) {
-				// 	// fetch the entity ids to look for parent hierarchy
-				// 	const entityIds = _.map(result.data, (item) => ObjectId(item._id))
-				// 	// dynamically set the entityType to search inside the group
-				// 	const key = ['groups', type]
-				// 	// create filter for fetching the parent data using group
-				// 	let entityFilter = {}
-				// 	entityFilter[key.join('.')] = {
-				// 		$in: entityIds,
-				// 	}
+				if (additionalFields && result.data && result.data.length > 0) {
+					// fetch the entity ids to look for parent hierarchy
+					const entityIds = result.data.map((item) => ObjectId(item._id))
+					// dynamically set the entityType to search inside the group
+					const key = ['groups', type]
 
-				// 	entityFilter['tenantId'] = tenantId
+					// create filter for fetching the parent data using group
+					const entityFilter = {
+						[key.join('.')]: { $in: entityIds },
+						tenantId,
+					}
 
-				// 	// Retrieve all the entity documents with the entity ids in their gropu
-				// 	const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
-				// 		'entityType',
-				// 		'metaInformation.name',
-				// 		'childHierarchyPath',
-				// 		key.join('.'),
-				// 	])
-				// 	// find out the state of the passed entityId
-				// 	const stateEntity = entityDocuments.find((entity) => entity.entityType == 'state')
-				// 	// fetch the child hierarchy path of the state
-				// 	const stateChildHierarchy = stateEntity.childHierarchyPath
-				// 	let upperLevelsOfType = type != 'state' ? ['state'] : [] // add state as default if type != state
-				// 	// fetch all the upper levels of the type from state hierarchy
-				// 	upperLevelsOfType = [
-				// 		...upperLevelsOfType,
-				// 		...stateChildHierarchy.slice(0, stateChildHierarchy.indexOf(type)),
-				// 	]
-				// 	result.data = result.data.map((data) => {
-				// 		let cloneData = { ...data }
-				// 		cloneData[cloneData.entityType] = cloneData.name
-				// 		// if we have upper levels to fetch
-				// 		if (upperLevelsOfType.length > 0) {
-				// 			// iterate through the data fetched to fetch the parent entity names
-				// 			entityDocuments.forEach((eachEntity) => {
-				// 				eachEntity[key[0]][key[1]].forEach((eachEntityGroup) => {
-				// 					if (
-				// 						ObjectId(eachEntityGroup).equals(cloneData._id) &&
-				// 						upperLevelsOfType.includes(eachEntity.entityType)
-				// 					) {
-				// 						if (eachEntity?.entityType !== 'state') {
-				// 							cloneData[eachEntity?.entityType] = eachEntity?.metaInformation?.name
-				// 						}
-				// 					}
-				// 				})
-				// 			})
-				// 		}
-				// 		cloneData['label'] = cloneData.name
-				// 		cloneData['value'] = cloneData._id
-				// 		return cloneData
-				// 	})
-				// }
+					// Retrieve all the entity documents with the entity ids in their gropu
+					const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
+						'entityType',
+						'metaInformation.name',
+						'childHierarchyPath',
+						key.join('.'),
+					])
+
+					if (entityDocuments?.length > 0) {
+						// Find top hierarchy
+						const topEntity = entityDocuments.find(
+							(entity) =>
+								entity.childHierarchyPath &&
+								Array.isArray(entity.childHierarchyPath) &&
+								entity.childHierarchyPath.length > 0
+						)
+
+						const topEntityHierarchy = topEntity?.childHierarchyPath || []
+						let hierarchyLevels = topEntityHierarchy.slice(0, topEntityHierarchy.indexOf(type) + 1)
+
+						// Pre-index entityDocuments for faster lookup
+						const groupEntityMap = {}
+						for (const entity of entityDocuments) {
+							const group = entity?.groups?.[type]
+							if (!Array.isArray(group)) continue
+							for (const childId of group) {
+								const idStr = childId.toString()
+								if (!groupEntityMap[idStr]) groupEntityMap[idStr] = []
+								groupEntityMap[idStr].push(entity)
+							}
+						}
+
+						// Enrich results safely
+						result.data = result.data.map((data) => {
+							let cloneData = { ...data }
+							cloneData[cloneData.entityType] = cloneData.name
+
+							// If there are hierarchy levels to fetch
+							if (hierarchyLevels.length > 0) {
+								const relatedEntities = groupEntityMap[data._id.toString()] || []
+								for (const entity of relatedEntities) {
+									if (hierarchyLevels.includes(entity.entityType)) {
+										cloneData[entity.entityType] = entity?.metaInformation?.name
+									}
+								}
+							}
+							cloneData['label'] = cloneData.name
+							cloneData['value'] = cloneData._id
+							return cloneData
+						})
+					}
+				}
 
 				resolve({
 					message: CONSTANTS.apiResponses.ENTITIES_FETCHED,
