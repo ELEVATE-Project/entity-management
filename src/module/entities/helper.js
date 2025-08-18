@@ -389,72 +389,51 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 
-				// Construct the filter to retrieve entity type IDs based on child hierarchy paths
-				const entityTypeFilter = {
-					name: {
-						$in: filteredHierarchyPaths,
-					},
+				// Construct the filter
+				const roleFilter = {
+					entityType: CONSTANTS.common.SUBROLE_ENTITY_TYPE,
 					tenantId: tenantId,
-					isDeleted: false,
-				}
-				const entityTypeProjection = ['_id']
-				// Retrieve entity type IDs based on child hierarchy paths
-				const fetchEntityTypeId = await entityTypeQueries.entityTypesDocument(
-					entityTypeFilter,
-					entityTypeProjection
-				)
-				// Check if entity type IDs are retrieved successfully
-				if (fetchEntityTypeId.length < 0) {
-					throw {
-						status: HTTP_STATUS_CODE.not_found.status,
-						message: CONSTANTS.apiResponses.ENTITY_TYPE_DETAILS_NOT_FOUND,
-					}
-				}
-				// Extract the _id fields from the fetched entity types to use as a filter for user roles
-				const userRoleFilter = fetchEntityTypeId.map((entityType) => entityType._id)
-
-				// Construct the filter for finding user roles based on entityTypeIds and status
-				const userRoleExtensionFilter = {
-					'entityTypes.entityTypeId': {
-						$in: userRoleFilter,
-					},
-					status: CONSTANTS.common.ACTIVE_STATUS,
-					tenantId: tenantId,
+					deleted: false,
+					'metaInformation.targetedEntityTypes.entityType': { $in: filteredHierarchyPaths },
 				}
 
-				// Specify the fields to include in the result set
-				const userRoleExtensionProjection = ['_id', 'title', 'code', 'userRoleId']
+				const roleProjection = [
+					'_id',
+					'metaInformation.name',
+					'metaInformation.externalId',
+					'registryDetails.code',
+				]
 
 				// Fetch the user roles based on the filter and projection
-				const fetchUserRoles = await userRoleExtensionHelper.find(
-					userRoleExtensionFilter,
-					userRoleExtensionProjection,
+				const fetchRoles = await entitiesQueries.entityDocuments(
+					roleFilter,
+					roleProjection,
 					pageSize,
 					pageSize * (pageNo - 1),
+					'',
 					paginate
 				)
 
 				// Check if the fetchUserRoles operation was successful and returned data
-				if (!fetchUserRoles.success || !fetchUserRoles.result || fetchUserRoles.result.length < 0) {
+				if (!fetchRoles || fetchRoles.length === 0) {
 					throw {
 						status: HTTP_STATUS_CODE.not_found.status,
 						message: CONSTANTS.apiResponses.ROLES_NOT_FOUND,
 					}
 				}
+
 				// Transforming the data
-				const transformedData = fetchUserRoles.result.map((item) => {
-					// For each item in the result array, create a new object with modified keys
-					return {
-						_id: item._id,
-						value: item.userRoleId,
-						label: item.title,
-						code: item.code,
-					}
-				})
+				const transformedData = fetchRoles.map((item) => ({
+					_id: item._id,
+					value: item.metaInformation?.externalId || item.registryDetails?.code,
+					label: item.metaInformation?.name,
+					code: item.registryDetails?.code,
+				}))
+
 				return resolve({
 					message: CONSTANTS.apiResponses.ROLES_FETCHED_SUCCESSFULLY,
-					result: transformedData,
-					count: fetchUserRoles.count,
+					result: transformedData || [],
+					count: fetchRoles.length || 0,
 				})
 			} catch (error) {
 				return reject(error)
