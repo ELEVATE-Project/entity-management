@@ -65,6 +65,25 @@ let enviromentVariables = {
 		optional: true,
 		default: '/user',
 	},
+	KAFKA_GROUP_ID: {
+		message: 'Required  kafka group id',
+		optional: true,
+		default: 'entity',
+	},
+	RESOURCE_DELETION_TOPIC: {
+		message: 'Required  resource deletion topic',
+		optional: true,
+		default: 'resource_deletion_opic',
+	},
+	KAFKA_COMMUNICATIONS_ON_OFF: {
+		message: 'Required kafka communication',
+		optional: true,
+		default: 'ON',
+	},
+	KAFKA_URL: {
+		message: 'Required  kafka url',
+		optional: true,
+	},
 }
 
 let success = true
