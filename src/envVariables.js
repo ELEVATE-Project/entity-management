@@ -84,6 +84,11 @@ let enviromentVariables = {
 		message: 'Required  kafka url',
 		optional: true,
 	},
+	KAFKA_HEALTH_CHECK_TOPIC: {
+		message: 'Required KAFKA_HEALTH_CHECK_TOPIC',
+		optional: false,
+		default: 'entity-health-check-topic-check',
+	},
 }
 
 let success = true
