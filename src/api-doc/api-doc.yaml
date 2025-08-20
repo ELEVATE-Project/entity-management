@@ -3,9 +3,9 @@ info:
   title: Entity-Management-Service
   version: 1.0.0
   description: >-
-    * This Service enables the creation and management of various entities and entityType .It
-    provides functionalities for entities, ensuring seamless integration and
-    maintenance of entity-related data across the platform.
+    * This Service enables the creation and management of various entities and
+    entityType .It provides functionalities for entities, ensuring seamless
+    integration and maintenance of entity-related data across the platform.
   contact:
     email: tech-infra@shikshalokam.org
 servers:
@@ -23,8 +23,9 @@ paths:
         This api is use to create entity types in bulk by passing a csv file
         which contain entity type information
 
-        * The API Endpoint for creating entity types in bulk by passing a csv file
-        which contain entity type information is `/v1/entityType/bulkCreate`
+        * The API Endpoint for creating entity types in bulk by passing a csv
+        file which contain entity type information is
+        `/v1/entityType/bulkCreate`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -97,7 +98,6 @@ paths:
                         param: entityTypes
                         msg: EntityTypes file is required
     parameters: []
-
   /v1/entityTypes/bulkUpdate:
     post:
       summary: 'BulkUpdate create entityType '
@@ -107,7 +107,8 @@ paths:
         You can use this API to update entityType by passing CSV file.
 
 
-        * The API Endpoint for updating entityType by passing CSV file is `/v1/entityTypes/bulkUpdate`
+        * The API Endpoint for updating entityType by passing CSV file is
+        `/v1/entityTypes/bulkUpdate`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -202,7 +203,8 @@ paths:
         You can use this API to create a single entityType data.
 
 
-        * The API Endpoint to create a single entityType data is `/v1/entityTypes/create`
+        * The API Endpoint to create a single entityType data is
+        `/v1/entityTypes/create`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -303,11 +305,12 @@ paths:
       tags:
         - entityType-API's
       description: >-
-        You can use this API to update single entities based on the entityType id .
+        You can use this API to update single entities based on the entityType
+        id .
 
 
-        * The API Endpoint to update single entities based on the entityType id is
-        `/v1/entityTypes/update/{_id}`
+        * The API Endpoint to update single entities based on the entityType id
+        is `/v1/entityTypes/update/{_id}`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -329,7 +332,9 @@ paths:
           required: true
         - in: query
           name: _id
-          description: 'The unique identifier for the data that needs to be updated. This id ensures the correct record is matched for the update operation.'
+          description: >-
+            The unique identifier for the data that needs to be updated. This id
+            ensures the correct record is matched for the update operation.
           schema: &ref_3
             type: string
           required: true
@@ -542,7 +547,8 @@ paths:
       tags:
         - entityType-API's
       description: >-
-        Use this API to get the details of entityType data based on the request body passed.
+        Use this API to get the details of entityType data based on the request
+        body passed.
 
 
         * The API Endpoint for reading the details of the entity type is
@@ -654,13 +660,12 @@ paths:
       tags:
         - entities-API's
       description: >-
-        You can use this API to create bulk create entities based on type and CSV file
-        we pass.
+        You can use this API to create bulk create entities based on type and
+        CSV file we pass.
 
 
         * The API Endpoint for creating bulk entities based on type and CSV file
-        we pass.
-        `/v1/entities/bulkCreate`
+        we pass. `/v1/entities/bulkCreate`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -746,8 +751,8 @@ paths:
       tags:
         - entities-API's
       description: >-
-        You can use this API to update entities data based on the type and entity id we pass
-        through CSV file  that contain information to update.
+        You can use this API to update entities data based on the type and
+        entity id we pass through CSV file  that contain information to update.
 
 
         * The API Endpoint for updating entities by passing csv file
@@ -778,7 +783,6 @@ paths:
           schema:
             type: string
           required: true
-
       responses:
         '200':
           description: ok
@@ -1033,7 +1037,9 @@ paths:
                     - block
   /v1/entities/details/{_id}?&language={code}:
     get:
-      summary: Provide details of an entity based on the entity id. This API returns the details of a single entity at a time.
+      summary: >-
+        Provide details of an entity based on the entity id. This API returns
+        the details of a single entity at a time.
       tags:
         - entities-API's
       description: >-
@@ -1138,7 +1144,8 @@ paths:
       description: >-
         You can use this API to update the entity data based on entiy id.
 
-        * The API Endpoint to update single entities : `/v1/entities/update/{_id}`
+        * The API Endpoint to update single entities :
+        `/v1/entities/update/{_id}`
 
         * It is mandatory to provide values for parameters marked with
         `required`
@@ -1397,7 +1404,6 @@ paths:
                       - location: body
                         param: entityMap
                         msg: entityMap file is required
-
   /v1/entities/createMappingCsv:
     post:
       summary: This endpoint will create mapping CSV .
@@ -1743,11 +1749,12 @@ paths:
       tags:
         - entities-API's
       description: >-
-        You can use this API to list the entities based on entity id and entity Type
+        You can use this API to list the entities based on entity id and entity
+        Type
 
 
-        * The API Endpoint for listing the entities based on entity id and entity Type:
-        `/v1/entities/list`
+        * The API Endpoint for listing the entities based on entity id and
+        entity Type: `/v1/entities/list`
 
         * It is mandatory to provide values for parameters marked with
         `required`
@@ -1781,7 +1788,7 @@ paths:
           required: false
         - in: path
           name: type
-          description: 'Please pass entity type value for the entity'
+          description: Please pass entity type value for the entity
           schema: null
           required: true
         - in: header
@@ -1981,7 +1988,7 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema: &ref_4
+          schema: &ref_7
             type: string
       responses:
         '200':
@@ -2086,7 +2093,7 @@ paths:
   /v1/entities/subEntityListBasedOnRoleAndLocation/{_id}:
     get:
       summary: List all the entities based on location id
-      tags: &ref_5
+      tags: &ref_8
         - entities-API's
       description: >-
         You can use this API to list entity based on location id
@@ -2100,7 +2107,7 @@ paths:
 
         * Mandatory parameter cannot be empty or null
       parameters:
-        - &ref_6
+        - &ref_9
           name: X-auth-token
           in: header
           description: >-
@@ -2113,20 +2120,20 @@ paths:
           name: _id
           required: true
           description: Please append a valid entity Id To the Request URL
-          schema: &ref_7
+          schema: &ref_10
             type: string
           example: 1
-        - &ref_8
+        - &ref_11
           in: header
           name: internal-access-token
           description: ''
-          schema: *ref_4
+          schema: *ref_7
       responses:
         '200':
           description: Accepted
           content:
             application.json:
-              schema: &ref_9
+              schema: &ref_12
                 type: object
                 properties:
                   message:
@@ -2216,20 +2223,20 @@ paths:
           example: 2
         - in: path
           name: type
-          description: 'Please pass entity type value for the entity'
-          schema: *ref_4
+          description: Please pass entity type value for the entity
+          schema: *ref_7
         - in: path
           name: serach
           description: ''
-          schema: *ref_4
+          schema: *ref_7
         - in: header
           name: internal-access-token
           description: ''
-          schema: *ref_4
+          schema: *ref_7
           required: true
         - in: path
           name: _id
-          description: 'Please append a valid entity id'
+          description: Please append a valid entity id
           schema: *ref_3
           required: true
       responses:
@@ -2325,7 +2332,7 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema: *ref_4
+          schema: *ref_7
       responses:
         '200':
           description: Accepted
@@ -2392,7 +2399,7 @@ paths:
   /v1/entities/entityListBasedOnEntityType?entityType={entity_Type}&language={code}:
     get:
       summary: List all the entities based on entity type.
-      tags: *ref_5
+      tags: *ref_8
       description: >-
         You can use this API to list entity based on entity type
 
@@ -2405,20 +2412,20 @@ paths:
 
         * Mandatory parameter cannot be empty or null
       parameters:
-        - *ref_6
+        - *ref_9
         - in: path
           name: entityType
           required: true
           description: Please pass entity type value for the entity.
-          schema: *ref_7
+          schema: *ref_10
           example: 1
-        - *ref_8
+        - *ref_11
       responses:
         '200':
           description: Accepted
           content:
             application.json:
-              schema: *ref_9
+              schema: *ref_12
               examples:
                 SuccessResponse:
                   value:
@@ -2453,13 +2460,12 @@ paths:
   /v1/entities/targetedRoles?{entity_id}:
     get:
       summary: Fetch Targeted Roles
-      tags: *ref_5
+      tags: *ref_8
       description: >-
         You can use this API to fetch targeted roles based on the provided
         entity id in the request parameters.
 
-        \*Endpoint to fetch targeted roles based on the provided
-        entity id
+        \*Endpoint to fetch targeted roles based on the provided entity id
         `/v1/entities/targetedRoles?{entity_id}`
 
 
@@ -2474,7 +2480,7 @@ paths:
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
           required: false
-          schema: *ref_7
+          schema: *ref_10
         - in: path
           name: entity_id
           description: Please append a valid entity Id to the Request URL.
@@ -2483,7 +2489,9 @@ paths:
           required: true
         - in: query
           name: entityType
-          description: Please append a valid entity type to retrieve the roles associated with its higher-level entity types.
+          description: >-
+            Please append a valid entity type to retrieve the roles associated
+            with its higher-level entity types.
           schema:
             type: string
           required: true
@@ -2587,7 +2595,7 @@ paths:
 
         * Mandatory parameter cannot be empty or null
       operationId: ''
-      tags: &ref_10
+      tags: &ref_13
         - userRoleExtension-API's
       parameters:
         - in: header
@@ -2595,7 +2603,7 @@ paths:
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
-          schema: &ref_11
+          schema: &ref_14
             type: string
           required: false
       requestBody:
@@ -2634,7 +2642,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: &ref_12 {}
+          headers: &ref_15 {}
           content:
             application/json:
               schema:
@@ -2703,7 +2711,7 @@ paths:
                       __v: 0
         '400':
           description: Bad Request.
-          headers: &ref_13 {}
+          headers: &ref_16 {}
           content:
             application/json:
               schema:
@@ -2757,14 +2765,14 @@ paths:
 
         * Mandatory parameter cannot be empty or null
       operationId: ''
-      tags: *ref_10
+      tags: *ref_13
       parameters:
         - in: header
           name: X-auth-token
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
-          schema: *ref_11
+          schema: *ref_14
           required: false
       requestBody:
         content:
@@ -2782,7 +2790,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: *ref_12
+          headers: *ref_15
           content:
             application/json:
               schema:
@@ -2852,10 +2860,10 @@ paths:
                       __v: 0
         '400':
           description: Bad Request.
-          headers: *ref_13
+          headers: *ref_16
           content:
             application/json:
-              schema: &ref_14
+              schema: &ref_17
                 $schema: http://json-schema.org/draft-04/schema#
                 type: object
                 properties:
@@ -2884,9 +2892,8 @@ paths:
     post:
       summary: Find the user role extension data.
       description: >-
-        Use this API to get the details of user role extension data based on the request
-        body passed.
-        `/v1/userRoleExtension/find`
+        Use this API to get the details of user role extension data based on the
+        request body passed. `/v1/userRoleExtension/find`
 
 
         * It is mandatory to provide values for parameters marked with
@@ -2894,19 +2901,19 @@ paths:
 
         * Mandatory parameter cannot be empty or null
       operationId: ''
-      tags: *ref_10
+      tags: *ref_13
       parameters:
         - in: header
           name: X-auth-token
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
-          schema: *ref_11
+          schema: *ref_14
           required: false
         - in: header
           name: internal-access-token
           description: ''
-          schema: &ref_15
+          schema: &ref_18
             type: string
           required: true
       requestBody:
@@ -2946,7 +2953,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: *ref_12
+          headers: *ref_15
           content:
             application/json:
               schema:
@@ -2985,10 +2992,10 @@ paths:
                         title: EducationMinister
         '400':
           description: Bad Request.
-          headers: *ref_13
+          headers: *ref_16
           content:
             application/json:
-              schema: *ref_14
+              schema: *ref_17
               examples:
                 FailureResponse:
                   value:
@@ -3010,19 +3017,19 @@ paths:
 
         * Mandatory parameter cannot be empty or null
       operationId: ''
-      tags: *ref_10
+      tags: *ref_13
       parameters:
         - in: header
           name: X-auth-token
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
-          schema: *ref_11
+          schema: *ref_14
           required: true
       responses:
         '200':
           description: Accepted
-          headers: *ref_12
+          headers: *ref_15
           content:
             application/json:
               schema:
@@ -3040,10 +3047,10 @@ paths:
                     status: 200
         '400':
           description: Bad Request.
-          headers: *ref_13
+          headers: *ref_16
           content:
             application/json:
-              schema: *ref_14
+              schema: *ref_17
               examples:
                 FailureResponse:
                   value:
@@ -3079,12 +3086,12 @@ paths:
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
-          schema: *ref_11
+          schema: *ref_14
           required: true
         - in: header
           name: internal-access-token
           description: You require an internal-access-token to use this API.
-          schema: *ref_15
+          schema: *ref_18
           required: true
         - in: header
           name: collection_name
@@ -3112,7 +3119,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: *ref_12
+          headers: *ref_15
           content:
             application/json:
               schema:
@@ -3129,7 +3136,7 @@ paths:
                     status: 200
         '400':
           description: Bad Request.
-          headers: *ref_13
+          headers: *ref_16
           content:
             application/json:
               schema:
@@ -3163,6 +3170,122 @@ paths:
                       - location: body
                         param: keys
                         msg: keys required
+  /v1/admin/deleteEntity/{_id}?allowRecursiveDelete=true:
+    post:
+      summary: Delete Entities Data
+      description: >-
+        This endpoint allows an admin to delete the Entities and its child
+        Entities
+
+        * The endpoint allows a user to delete the Entities and its child
+        Entities
+         is `/v1/admin/deleteEntity`.
+        * It is mandatory to provide values for parameters which are marked as
+
+        `required`
+
+        * This is a mandatory parameter and cannot be empty or null.
+      operationId: ''
+      tags:
+        - Admin-API's
+      parameters:
+        - in: path
+          name: _id
+          description: Valid Entities Id to be passed
+          schema: &ref_19
+            type: string
+          required: true
+        - in: path
+          name: allowRecursiveDelete
+          description: ''
+          schema:
+            type: boolean
+        - in: header
+          name: x-auth-token
+          description: >-
+            To use this API, you require an X-auth-token. This is available in
+            the login API Response.
+          schema: *ref_19
+          required: true
+        - in: header
+          name: internal-access-token
+          description: internal-access-token
+          schema: *ref_19
+          required: true
+        - in: header
+          name: admin-auth-token
+          description: admin-auth-token
+          schema: *ref_19
+          required: true
+        - in: header
+          name: tenantId
+          description: tenantId
+          schema: *ref_19
+          required: true
+        - in: header
+          name: orgId
+          description: orgId
+          schema: *ref_19
+          required: true
+      responses:
+        '200':
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  status:
+                    type: number
+                  result:
+                    type: object
+                    properties:
+                      deletedEntities:
+                        type: string
+                      deletedEntitiesCount:
+                        type: number
+                      unLinkedEntitiesCount:
+                        type: number
+              examples:
+                SuccessResponse:
+                  value:
+                    message: ENTITIES_DELETED_SUCCESSFULLY
+                    status: 200
+                    result:
+                      deletedEntities: 6825952497b5680013e6a184
+                      deletedEntitiesCount: 1
+                      unLinkedEntitiesCount: 0
+        '400':
+          description: Bad Request
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                  message:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                        param:
+                          type: string
+                        msg:
+                          type: string
+              examples:
+                Bad Request:
+                  value:
+                    status: 400
+                    message:
+                      - location: params
+                        param: _id
+                        msg: required entity _id
 tags:
   - name: userRoleExtension-API's
     description: ''
