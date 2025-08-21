@@ -1482,8 +1482,11 @@ module.exports = class UserProjectsHelper {
 				let queryToParent = {}
 				queryToParent['$or'] = []
 
+				// Strict ObjectId validator (only 24-char hex strings)
+				const isStrictObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id)
+
 				// Prepare entityIds based on entityId and requestData
-				if (ObjectId.isValid(entityId)) {
+				if (isStrictObjectId(entityId)) {
 					entityIds.push(entityId)
 				} else {
 					externalIds.push(entityId)
