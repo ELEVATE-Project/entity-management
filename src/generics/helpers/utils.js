@@ -309,7 +309,7 @@ function convertOrgIdsToString(array) {
  * @param {string} _id - The value to validate.
  * @returns {boolean} - True if the value is a 24-character hex string, false otherwise.
  */
-function StrictObjectIdCheck(_id) {
+function strictObjectIdCheck(_id) {
 	return /^[a-fA-F0-9]{24}$/.test(_id)
 }
 
@@ -329,5 +329,5 @@ module.exports = {
 	convertMongoIds: convertMongoIds,
 	stripOrgIds: stripOrgIds,
 	convertOrgIdsToString: convertOrgIdsToString,
-	StrictObjectIdCheck: StrictObjectIdCheck,
+	strictObjectIdCheck: strictObjectIdCheck,
 }

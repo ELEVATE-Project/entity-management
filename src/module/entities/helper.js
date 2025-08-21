@@ -1483,7 +1483,7 @@ module.exports = class UserProjectsHelper {
 				queryToParent['$or'] = []
 
 				// Prepare entityIds based on entityId and requestData
-				if (UTILS.StrictObjectIdCheck(entityId)) {
+				if (UTILS.strictObjectIdCheck(entityId)) {
 					entityIds.push(entityId)
 				} else {
 					externalIds.push(entityId)
@@ -1759,7 +1759,7 @@ module.exports = class UserProjectsHelper {
 						if (entityCreation.metaInformation.externalId) {
 							const externalId = entityCreation.metaInformation.externalId
 
-							if (UTILS.StrictObjectIdCheck(externalId)) {
+							if (UTILS.strictObjectIdCheck(externalId)) {
 								entityCreation.status = CONSTANTS.apiResponses.ENTITIES_FAILED
 								entityCreation.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
 								return entityCreation
@@ -1895,7 +1895,7 @@ module.exports = class UserProjectsHelper {
 							singleEntity.message = CONSTANTS.apiResponses.FIELD_MISSING
 							return singleEntity
 						}
-						if (UTILS.StrictObjectIdCheck(updateData['metaInformation.externalId'])) {
+						if (UTILS.strictObjectIdCheck(updateData['metaInformation.externalId'])) {
 							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
 							singleEntity.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
 							return singleEntity
