@@ -1895,8 +1895,6 @@ module.exports = class UserProjectsHelper {
 							singleEntity.message = CONSTANTS.apiResponses.FIELD_MISSING
 							return singleEntity
 						}
-						console.log(updateData, 'line no 1788')
-
 						if (/^[0-9a-fA-F]{24}$/.test(updateData['metaInformation.externalId'])) {
 							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
 							singleEntity.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
