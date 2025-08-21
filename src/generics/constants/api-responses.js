@@ -56,6 +56,7 @@ module.exports = {
 	USER_ROLE_DELETED: 'USER_ROLE_DELETED',
 	ENTITY_UPDATED: 'ENTITY_UPDATED',
 	ENTITIES_FAILED: 'The creation of this entities was skipped due to missing required data.',
+	ENTITIES_UPDATE_FAILED: 'The update of this entities was skipped due to missing required data.',
 	ENTITY_TYPE_FAILED: 'The creation of this entity type was skipped due to missing required data.',
 	FIELD_MISSING: 'Fields are missing',
 	ENTITY_TYPE_CREATION_FAILED: 'ENTITY TYPE CREATION FAILED',
@@ -78,4 +79,5 @@ module.exports = {
 	ROLE_PERMISSION_DENIED_MSG: 'Invalid role provided for resource creation',
 	ENTITIES_DELETED_SUCCESSFULLY: 'ENTITIES_DELETED_SUCCESSFULLY',
 	ADMIN_ROLE_REQUIRED: 'Access denied: Admin role required',
+	NOT_A_VALID_MONGOID: 'externalId cannot be a Mongo ObjectId',
 }

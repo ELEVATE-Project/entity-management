@@ -17,6 +17,13 @@ module.exports = (req) => {
 				.withMessage('The externalId field cannot be empty.')
 				.matches(/^\S+$/)
 				.withMessage('The externalId field should not contain spaces.')
+				.custom((value) => {
+					// Check if it's a valid Mongo ObjectId (24 hex characters)
+					if (/^[0-9a-fA-F]{24}$/.test(value)) {
+						throw new Error('externalId cannot be a Mongo ObjectId')
+					}
+					return true
+				})
 			req.checkBody('name')
 				.exists()
 				.withMessage('The name field is required.')
@@ -42,6 +49,13 @@ module.exports = (req) => {
 					.trim()
 					.notEmpty()
 					.withMessage('The name field cannot be empty.')
+					.custom((value) => {
+						// Check if it's a valid Mongo ObjectId (24 hex characters)
+						if (/^[0-9a-fA-F]{24}$/.test(value)) {
+							throw new Error('externalId cannot be a Mongo ObjectId')
+						}
+						return true
+					})
 			}
 		},
 		subEntityList: function () {
