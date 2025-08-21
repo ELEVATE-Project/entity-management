@@ -304,6 +304,15 @@ function convertOrgIdsToString(array) {
 	})
 }
 
+/**
+ * Strictly validates whether the given value is a valid MongoDB ObjectId string.
+ * @param {string} _id - The value to validate.
+ * @returns {boolean} - True if the value is a 24-character hex string, false otherwise.
+ */
+function StrictObjectIdCheck(_id) {
+	return /^[a-fA-F0-9]{24}$/.test(_id)
+}
+
 module.exports = {
 	camelCaseToTitleCase: camelCaseToTitleCase,
 	lowerCase: lowerCase,
@@ -320,4 +329,5 @@ module.exports = {
 	convertMongoIds: convertMongoIds,
 	stripOrgIds: stripOrgIds,
 	convertOrgIdsToString: convertOrgIdsToString,
+	StrictObjectIdCheck: StrictObjectIdCheck,
 }

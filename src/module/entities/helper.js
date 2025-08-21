@@ -1482,11 +1482,8 @@ module.exports = class UserProjectsHelper {
 				let queryToParent = {}
 				queryToParent['$or'] = []
 
-				// Strict ObjectId validator (only 24-char hex strings)
-				const isStrictObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id)
-
 				// Prepare entityIds based on entityId and requestData
-				if (isStrictObjectId(entityId)) {
+				if (UTILS.StrictObjectIdCheck(entityId)) {
 					entityIds.push(entityId)
 				} else {
 					externalIds.push(entityId)
@@ -1762,7 +1759,7 @@ module.exports = class UserProjectsHelper {
 						if (entityCreation.metaInformation.externalId) {
 							const externalId = entityCreation.metaInformation.externalId
 
-							if (/^[0-9a-fA-F]{24}$/.test(externalId)) {
+							if (UTILS.StrictObjectIdCheck(externalId)) {
 								entityCreation.status = CONSTANTS.apiResponses.ENTITIES_FAILED
 								entityCreation.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
 								return entityCreation
@@ -1898,7 +1895,7 @@ module.exports = class UserProjectsHelper {
 							singleEntity.message = CONSTANTS.apiResponses.FIELD_MISSING
 							return singleEntity
 						}
-						if (/^[0-9a-fA-F]{24}$/.test(updateData['metaInformation.externalId'])) {
+						if (UTILS.StrictObjectIdCheck(updateData['metaInformation.externalId'])) {
 							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
 							singleEntity.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
 							return singleEntity
