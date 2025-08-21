@@ -424,7 +424,7 @@ paths:
           description: >-
             The unique identifier for the data that needs to be updated. This id
             ensures the correct record is matched for the update operation.
-          schema: &ref_5
+          schema: &ref_13
             type: string
           required: true
         - in: header
@@ -775,33 +775,31 @@ paths:
         - in: query
           name: type
           description: Please pass entity type value for the entity.
-          schema: *ref_5
           required: true
         - in: header
           name: internal-access-token
           description: ''
-          schema: *ref_5
           required: true
         - in: header
           name: admin-auth-token
           description: >-
             This header should be passed when system admin wants to create
             resources
-          schema: &ref_6
+          schema: &ref_5
             type: string
         - in: header
           name: tenantId
           description: >-
             This header specifies the tenant data of the resource creator. This
             header should be passed when system admin wants to create resources
-          schema: *ref_6
+          schema: *ref_5
         - in: header
           name: orgId
           description: >-
             This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
-          schema: *ref_6
+          schema: *ref_5
       requestBody:
         required: true
         content:
@@ -904,21 +902,21 @@ paths:
           description: >-
             This header should be passed when system admin wants to create
             resources
-          schema: &ref_7
+          schema: &ref_6
             type: string
         - in: header
           name: tenantId
           description: >-
             This header specifies the tenant data of the resource creator. This
             header should be passed when system admin wants to create resources
-          schema: *ref_7
+          schema: *ref_6
         - in: header
           name: orgId
           description: >-
             This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
-          schema: *ref_7
+          schema: *ref_6
       responses:
         '200':
           description: ok
@@ -1372,28 +1370,28 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema: *ref_6
+          schema: *ref_5
           required: true
         - in: header
           name: admin-auth-token
           description: >-
             This header should be passed when system admin wants to create
             resources
-          schema: &ref_8
+          schema: &ref_7
             type: string
         - in: header
           name: tenantId
           description: >-
             This header specifies the tenant data of the resource creator. This
             header should be passed when system admin wants to create resources
-          schema: *ref_8
+          schema: *ref_7
         - in: header
           name: orgId
           description: >-
             This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
-          schema: *ref_8
+          schema: *ref_7
       responses:
         '200':
           description: Accepted
@@ -1620,7 +1618,7 @@ paths:
           description: >-
             This header should be passed when system admin wants to create
             resources
-          schema: &ref_9
+          schema: &ref_8
             type: string
           required: true
         - in: header
@@ -1628,7 +1626,7 @@ paths:
           description: >-
             This header specifies the tenant data of the resource creator. This
             header should be passed when system admin wants to create resources
-          schema: *ref_9
+          schema: *ref_8
           required: true
         - in: header
           name: orgId
@@ -1636,7 +1634,7 @@ paths:
             This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
-          schema: *ref_9
+          schema: *ref_8
           required: true
       requestBody:
         required: true
@@ -1923,30 +1921,30 @@ paths:
       - in: query
         name: page
         description: Page number for pagination
-        schema: &ref_10
+        schema: &ref_9
           type: number
       - in: query
         name: limit
         description: Number of documents to return per page
-        schema: *ref_10
+        schema: *ref_9
       - in: query
         name: search
         description: Optional search string for text-based filtering
-        schema: &ref_11
+        schema: &ref_10
           type: string
       - in: query
         name: aggregateValue
         description: Field path to be used for aggregation
-        schema: *ref_11
+        schema: *ref_10
       - in: query
         name: aggregateStaging
         description: Whether to apply aggregation stages in the pipeline
-        schema: &ref_12
+        schema: &ref_11
           type: boolean
       - in: query
         name: aggregateSort
         description: Whether to apply sorting within the aggregation pipeline
-        schema: *ref_12
+        schema: *ref_11
   /v1/entities/list/_id?page={page_no}&limit={page_limit}&type={entity_type}:
     get:
       summary: List entities based on entity id
@@ -2192,7 +2190,7 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema: &ref_13
+          schema: &ref_12
             type: string
       responses:
         '200':
@@ -2331,7 +2329,7 @@ paths:
           in: header
           name: internal-access-token
           description: ''
-          schema: *ref_13
+          schema: *ref_12
       responses:
         '200':
           description: Accepted
@@ -2428,20 +2426,20 @@ paths:
         - in: path
           name: type
           description: Please pass entity type value for the entity
-          schema: *ref_13
+          schema: *ref_12
         - in: path
           name: serach
           description: ''
-          schema: *ref_13
+          schema: *ref_12
         - in: header
           name: internal-access-token
           description: ''
-          schema: *ref_13
+          schema: *ref_12
           required: true
         - in: path
           name: _id
           description: Please append a valid entity id
-          schema: *ref_4
+          schema: *ref_13
           required: true
       responses:
         '200':
@@ -2536,7 +2534,7 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema: *ref_13
+          schema: *ref_12
       responses:
         '200':
           description: Accepted
@@ -2871,7 +2869,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: {}
+          headers: &ref_22 {}
           content:
             application/json:
               schema:
@@ -2983,32 +2981,7 @@ paths:
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
           schema: *ref_21
-          required: true
-        - in: header
-          name: internal-access-token
-          description: ''
-          schema: &ref_22
-            type: string
-          required: true
-        - in: header
-          name: admin-access-token
-          description: >-
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_22
-        - in: header
-          name: tenantId
-          description: >-
-            This header specifies the tenant data of the resource creator. This
-            header should be passed when system admin wants to create resources
-          schema: *ref_22
-        - in: header
-          name: orgId
-          description: >-
-            This header specifies the organization data of the resource creator.
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_22
+          required: false
       requestBody:
         content:
           application/json:
@@ -3025,7 +2998,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: *ref_23
+          headers: *ref_22
           content:
             application/json:
               schema:
@@ -3078,7 +3051,7 @@ paths:
           headers: *ref_23
           content:
             application/json:
-              schema:
+              schema: &ref_25
                 $schema: http://json-schema.org/draft-04/schema#
                 type: object
                 properties:
@@ -3128,7 +3101,7 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema:
+          schema: &ref_27
             type: string
           required: true
         - in: header
@@ -3188,7 +3161,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: *ref_23
+          headers: *ref_22
           content:
             application/json:
               schema:
@@ -3245,7 +3218,7 @@ paths:
           headers: *ref_23
           content:
             application/json:
-              schema: *ref_23
+              schema: *ref_25
               examples:
                 FailureResponse:
                   value:
@@ -3279,7 +3252,7 @@ paths:
         - in: header
           name: internal-access-token
           description: ''
-          schema: &ref_25
+          schema: &ref_26
             type: string
           required: true
         - in: header
@@ -3287,24 +3260,24 @@ paths:
           description: >-
             This header should be passed when system admin wants to create
             resources
-          schema: *ref_25
+          schema: *ref_26
         - in: header
           name: tenantId
           description: >-
             This header specifies the tenant data of the resource creator. This
             header should be passed when system admin wants to create resources
-          schema: *ref_25
+          schema: *ref_26
         - in: header
           name: orgId
           description: >-
             This header specifies the organization data of the resource creator.
             This header should be passed when system admin wants to create
             resources
-          schema: *ref_25
+          schema: *ref_26
       responses:
         '200':
           description: Accepted
-          headers: *ref_23
+          headers: *ref_22
           content:
             application/json:
               schema:
@@ -3325,7 +3298,7 @@ paths:
           headers: *ref_23
           content:
             application/json:
-              schema: *ref_23
+              schema: *ref_25
               examples:
                 FailureResponse:
                   value:
@@ -3361,10 +3334,12 @@ paths:
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
+          schema: *ref_21
           required: true
         - in: header
           name: internal-access-token
           description: You require an internal-access-token to use this API.
+          schema: *ref_27
           required: true
         - in: header
           name: collection_name
@@ -3392,6 +3367,7 @@ paths:
       responses:
         '200':
           description: Accepted
+          headers: *ref_22
           content:
             application/json:
               schema:
@@ -3408,6 +3384,7 @@ paths:
                     status: 200
         '400':
           description: Bad Request.
+          headers: *ref_23
           content:
             application/json:
               schema:
@@ -3443,7 +3420,17 @@ paths:
                         msg: keys required
   /entity-management/health:
     get:
-      description: ''
+      description: >-
+        This endpoint is used to verify the health status of the Entity Service
+        and
+                its dependencies. 
+        * The API Endpoint for health check is
+         is `/entity-management/health`.
+        * It is mandatory to provide values for parameters which are marked as
+
+        `required`
+
+        * This is a mandatory parameter and cannot be empty or null.
       operationId: ''
       tags:
         - healthCheck-API
@@ -3576,6 +3563,122 @@ paths:
                       errMsg: "Missing 'url' for enabled service: mongodb"
                     status: 400
                     result: {}
+  /v1/admin/deleteEntity/{_id}?allowRecursiveDelete=true:
+    post:
+      summary: Delete Entities Data
+      description: >-
+        This endpoint allows an admin to delete the Entities and its child
+        Entities
+
+        * The endpoint allows a user to delete the Entities and its child
+        Entities
+         is `/v1/admin/deleteEntity`.
+        * It is mandatory to provide values for parameters which are marked as
+
+        `required`
+
+        * This is a mandatory parameter and cannot be empty or null.
+      operationId: ''
+      tags:
+        - Admin-API's
+      parameters:
+        - in: path
+          name: _id
+          description: Valid Entities Id to be passed
+          schema: &ref_28
+            type: string
+          required: true
+        - in: path
+          name: allowRecursiveDelete
+          description: ''
+          schema:
+            type: boolean
+        - in: header
+          name: x-auth-token
+          description: >-
+            To use this API, you require an X-auth-token. This is available in
+            the login API Response.
+          schema: *ref_28
+          required: true
+        - in: header
+          name: internal-access-token
+          description: internal-access-token
+          schema: *ref_28
+          required: true
+        - in: header
+          name: admin-auth-token
+          description: admin-auth-token
+          schema: *ref_28
+          required: true
+        - in: header
+          name: tenantId
+          description: tenantId
+          schema: *ref_28
+          required: true
+        - in: header
+          name: orgId
+          description: orgId
+          schema: *ref_28
+          required: true
+      responses:
+        '200':
+          description: SuccessResponse
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  status:
+                    type: number
+                  result:
+                    type: object
+                    properties:
+                      deletedEntities:
+                        type: string
+                      deletedEntitiesCount:
+                        type: number
+                      unLinkedEntitiesCount:
+                        type: number
+              examples:
+                SuccessResponse:
+                  value:
+                    message: ENTITIES_DELETED_SUCCESSFULLY
+                    status: 200
+                    result:
+                      deletedEntities: 6825952497b5680013e6a184
+                      deletedEntitiesCount: 1
+                      unLinkedEntitiesCount: 0
+        '400':
+          description: Bad Request
+          headers: {}
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                  message:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        location:
+                          type: string
+                        param:
+                          type: string
+                        msg:
+                          type: string
+              examples:
+                Bad Request:
+                  value:
+                    status: 400
+                    message:
+                      - location: params
+                        param: _id
+                        msg: required entity _id
 tags:
   - name: userRoleExtension-API's
     description: ''

@@ -1227,6 +1227,59 @@
 						"description": "Generated from cURL: curl --location 'https://dev.sunbirdsaas.com/project/project/v1/admin/createIndex/solutions' \\\n--header 'X-auth-token: {{devToken}}' \\\n--header 'internal-access-token: {internal-access-token}' \\\n--header 'Content-Type: application/json' \\\n--data '{\n    \"keys\": [\n        \"scope.state\",\"scope.district\",\"scope.block\",\"scope.cluster\",\"scope.school\",\"scope.roles\"\n    ]\n}'"
 					},
 					"response": []
+				},
+				{
+					"name": "deleteEntity",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "internal-access-token",
+								"value": "{{internalToken}}",
+								"type": "text"
+							},
+							{
+								"key": "x-auth-token",
+								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/entity/v1/admin/deleteEntity/6825b78bcfa7cfe32cd835b6?allowRecursiveDelete=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["entity", "v1", "admin", "deleteEntity", "6825b78bcfa7cfe32cd835b6"],
+							"query": [
+								{
+									"key": "allowRecursiveDelete",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
