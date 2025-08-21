@@ -1759,6 +1759,12 @@ module.exports = class UserProjectsHelper {
 						if (entityCreation.metaInformation.externalId) {
 							const externalId = entityCreation.metaInformation.externalId
 
+							if (/^[0-9a-fA-F]{24}$/.test(externalId)) {
+								entityCreation.status = CONSTANTS.apiResponses.ENTITIES_FAILED
+								entityCreation.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
+								return entityCreation
+							}
+
 							entityCreation.registryDetails = {
 								code: externalId,
 								locationId: externalId,
@@ -1885,11 +1891,17 @@ module.exports = class UserProjectsHelper {
 						})
 
 						if (!updateData['metaInformation.name'] || !updateData['metaInformation.externalId']) {
-							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_FAILED
+							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
 							singleEntity.message = CONSTANTS.apiResponses.FIELD_MISSING
 							return singleEntity
 						}
-						// let data =
+						console.log(updateData, 'line no 1788')
+
+						if (/^[0-9a-fA-F]{24}$/.test(updateData['metaInformation.externalId'])) {
+							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
+							singleEntity.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
+							return singleEntity
+						}
 
 						if (translationFile) {
 							updateData['translations'] = translationFile[updateData['metaInformation.name']]
