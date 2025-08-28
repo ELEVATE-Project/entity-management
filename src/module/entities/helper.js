@@ -397,12 +397,7 @@ module.exports = class UserProjectsHelper {
 					'metaInformation.targetedEntityTypes.entityType': { $in: filteredHierarchyPaths },
 				}
 
-				const roleProjection = [
-					'_id',
-					'metaInformation.name',
-					'metaInformation.externalId',
-					'registryDetails.code',
-				]
+				const roleProjection = ['_id', 'metaInformation.name', 'metaInformation.externalId']
 
 				// Fetch the user roles based on the filter and projection
 				const fetchRoles = await entitiesQueries.entityDocuments(
@@ -425,9 +420,9 @@ module.exports = class UserProjectsHelper {
 				// Transforming the data
 				const transformedData = fetchRoles.map((item) => ({
 					_id: item._id,
-					value: item.metaInformation?.externalId || item.registryDetails?.code,
+					value: item.metaInformation?.externalId,
 					label: item.metaInformation?.name,
-					code: item.registryDetails?.code,
+					code: item.metaInformation?.externalId,
 				}))
 
 				return resolve({
