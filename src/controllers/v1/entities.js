@@ -368,7 +368,7 @@ module.exports = class Entities extends Abstract {
 
 	/**
 	 * Handles the request to fetch targeted roles based on the provided entity IDs in the request parameters.
-	  * @api {GET} v1/entities/targetedRoles/5f33c3d85f637784791cd831
+	  * @api {GET} v1/entities/targetedRoles/5f33c3d85f637784791cd831?roleLevel=professional_subroles&entityType=state&language=en&paginate=true all the API based on projection
 	  * @apiVersion 1.0.0
 	  * @apiName targetedRoles
 	  * @apiGroup Entities
@@ -382,32 +382,20 @@ module.exports = class Entities extends Abstract {
     "message": "ROLES_FETCHED_SUCCESSFULLY",
     "status": 200,
     "result": [
-        {
-            "_id": "66a8df494efa6ccce9113da6",
-            "userRoleId": 10,
-            "title": "headmaster",
-            "userType": 1
+         {
+            "_id": "682301254e2812081f34266c",
+            "value": "teacher-class-11-12",
+            "label": "Teacher (Class 11-12)",
+            "code": "teacher-class-11-12"
         },
         {
-            "_id": "66a8df824efa6ccce9113dac",
-            "userRoleId": 12,
-            "title": "BEO",
-            "userType": 1
-        },
-        {
-            "_id": "66a8df654efa6ccce9113da9",
-            "userRoleId": 11,
-            "title": "AMO",
-            "userType": 1
-        },
-        {
-            "_id": "66a8dfc44efa6ccce9113db5",
-            "userRoleId": 13,
-            "title": "EducationMinister",
-            "userType": 1
+            "_id": "682301424e2812081f342670",
+            "value": "special-educators",
+            "label": "Special Educators",
+            "code": "special-educators"
         }
     ],
-    "count": 5
+    "count": 2
     }
     */
 	targetedRoles(req) {
@@ -421,6 +409,7 @@ module.exports = class Entities extends Abstract {
 					req?.query?.paginate?.toLowerCase() == 'true' ? true : false,
 					req.query.entityType ? req.query.entityType : '',
 					req.query.language ? req.query.language : '',
+					req.query.roleLevel ? req.query.roleLevel : '',
 					req.userDetails.userInformation.tenantId
 				)
 				// Resolves the promise with the retrieved entity data
@@ -855,12 +844,12 @@ module.exports = class Entities extends Abstract {
 	}
 
 	/**
-     * @api {GET} v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100
+     * @api {GET} v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&additionalFields=true
      * Get sub entity list for the given entity. 
      * @apiVersion 1.0.0
      * @apiGroup Entities
      * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100
+     * @apiSampleRequest v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&additionalFields=true
      * @apiUse successBody
      * @apiUse errorBody
      * @apiParamExample {json} Response:
@@ -873,7 +862,9 @@ module.exports = class Entities extends Abstract {
                 "entityType": "school",
                 "externalId": "entity123",
                 "label": "undefined - entity123",
-                "value": "627a13928ce12806f5803f57"
+                "value": "627a13928ce12806f5803f57",
+				"cluster": "CHOLACHAGUDDA",
+				"district": "BAGALKOT",
             }
         ],
         "count": 1

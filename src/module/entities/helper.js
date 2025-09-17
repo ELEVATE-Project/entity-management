@@ -221,6 +221,7 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageNo - page no.
 	 * @param {params} language - language Code
 	 * @param {Object} userDetails - loggedin user's details
+	 * @param {Boolean} additionalFields - additional fields to be fetched if true
 	 * @returns {Array} - List of all sub list entities.
 	 */
 
@@ -276,56 +277,83 @@ module.exports = class UserProjectsHelper {
 						tenantId,
 					}
 
-					// Retrieve all the entity documents with the entity ids in their gropu
-					const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
-						'entityType',
-						'metaInformation.name',
-						'childHierarchyPath',
-						key.join('.'),
+					let entityDocuments = await entitiesQueries.getAggregate([
+						{
+							$match: entityFilter,
+						},
+						{
+							$project: {
+								entityType: 1,
+								'metaInformation.name': 1,
+								childHierarchyPath: 1,
+								[key.join('.')]: 1,
+								childHierarchyPathSize: { $size: '$childHierarchyPath' },
+							},
+						},
+						{
+							$addFields: {
+								childHierarchyPathSize: {
+									$cond: {
+										if: { $isArray: '$childHierarchyPath' },
+										then: { $size: '$childHierarchyPath' },
+										else: 0,
+									},
+								},
+							},
+						},
+						{
+							$sort: {
+								childHierarchyPathSize: -1, // Sort by size in descending order
+							},
+						},
 					])
 
 					if (entityDocuments?.length > 0) {
-						// Find top hierarchy
-						const topEntity = entityDocuments.find(
-							(entity) =>
-								entity.childHierarchyPath &&
-								Array.isArray(entity.childHierarchyPath) &&
-								entity.childHierarchyPath.length > 0
-						)
+						// Get the first entity (will have the largest childHierarchyPath due to sort)
+						const topEntity = entityDocuments[0]
+						const topEntityHierarchy = Array.isArray(topEntity?.childHierarchyPath)
+							? topEntity.childHierarchyPath
+							: []
 
-						const topEntityHierarchy = topEntity?.childHierarchyPath || []
-						let hierarchyLevels = topEntityHierarchy.slice(0, topEntityHierarchy.indexOf(type) + 1)
+						if (topEntityHierarchy?.length > 0 && type) {
+							const hierarchyLevels = topEntityHierarchy.slice(
+								0,
+								topEntityHierarchy.indexOf(type) !== -1
+									? topEntityHierarchy.indexOf(type) + 1
+									: topEntityHierarchy.length
+							)
 
-						// Pre-index entityDocuments for faster lookup
-						const groupEntityMap = {}
-						for (const entity of entityDocuments) {
-							const group = entity?.groups?.[type]
-							if (!Array.isArray(group)) continue
-							for (const childId of group) {
-								const idStr = childId.toString()
-								if (!groupEntityMap[idStr]) groupEntityMap[idStr] = []
-								groupEntityMap[idStr].push(entity)
-							}
-						}
-
-						// Enrich results safely
-						result.data = result.data.map((data) => {
-							let cloneData = { ...data }
-							cloneData[cloneData.entityType] = cloneData.name
-
-							// If there are hierarchy levels to fetch
-							if (hierarchyLevels.length > 0) {
-								const relatedEntities = groupEntityMap[data._id.toString()] || []
-								for (const entity of relatedEntities) {
-									if (hierarchyLevels.includes(entity.entityType)) {
-										cloneData[entity.entityType] = entity?.metaInformation?.name
-									}
+							// Create an efficient lookup map for entities
+							const groupEntityMap = entityDocuments.reduce((map, entity) => {
+								const group = entity?.groups?.[type]
+								if (Array.isArray(group)) {
+									group.forEach((childId) => {
+										const idStr = childId.toString()
+										if (!map.has(idStr)) {
+											map.set(idStr, [])
+										}
+										map.get(idStr).push(entity)
+									})
 								}
-							}
-							cloneData['label'] = cloneData.name
-							cloneData['value'] = cloneData._id
-							return cloneData
-						})
+								return map
+							}, new Map())
+
+							// Process the results more efficiently
+							result.data = result.data.map((data) => ({
+								...data,
+								[data.entityType]: data.name,
+								label: data.name,
+								value: data._id,
+								...hierarchyLevels.reduce((acc, entityType) => {
+									const relatedEntities = groupEntityMap.get(data._id.toString()) || []
+									const matchingEntity = relatedEntities.find((e) => e.entityType === entityType)
+									if (matchingEntity) {
+										acc[entityType] = matchingEntity?.metaInformation?.name
+									}
+									return acc
+								}, {}),
+							}))
+						}
 					}
 				}
 
@@ -334,6 +362,7 @@ module.exports = class UserProjectsHelper {
 					result: result,
 				})
 			} catch (error) {
+				console.log(error)
 				return reject(error)
 			}
 		})
@@ -346,10 +375,20 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageSize - page pageSize.
 	 * @param {params} pageNo - page no.
 	 * @param {String} type - Entity type
+	 * @param {String} roleLevel - Role level to filter roles (e.g., 'professional_subroles').
 	 * @param {String} tenantId - user's tenantId
 	 * @returns {Promise<Object>} A promise that resolves to the response containing the fetched roles or an error object.
 	 */
-	static targetedRoles(entityId, pageNo = '', pageSize = '', paginate, type = '', language, tenantId) {
+	static targetedRoles(
+		entityId,
+		pageNo = '',
+		pageSize = '',
+		paginate,
+		type = '',
+		roleLevel = '',
+		language,
+		tenantId
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Construct the filter to retrieve entities based on provided entity IDs
@@ -391,7 +430,7 @@ module.exports = class UserProjectsHelper {
 
 				// Construct the filter
 				const roleFilter = {
-					entityType: CONSTANTS.common.SUBROLE_ENTITY_TYPE,
+					entityType: roleLevel ? roleLevel : CONSTANTS.common.SUBROLE_ENTITY_TYPE,
 					tenantId: tenantId,
 					deleted: false,
 					'metaInformation.targetedEntityTypes.entityType': { $in: filteredHierarchyPaths },
