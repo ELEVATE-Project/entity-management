@@ -362,7 +362,6 @@ module.exports = class UserProjectsHelper {
 					result: result,
 				})
 			} catch (error) {
-				console.log(error)
 				return reject(error)
 			}
 		})
