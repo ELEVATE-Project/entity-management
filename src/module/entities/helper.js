@@ -339,18 +339,18 @@ module.exports = class UserProjectsHelper {
 							}, new Map())
 
 							// Process the results more efficiently
-							result.data = result.data.map((data) => ({
-								...data,
-								[data.entityType]: data.name,
-								label: data.name,
-								value: data._id,
-								...hierarchyLevels.reduce((acc, entityType) => {
-									const relatedEntities = groupEntityMap.get(data._id.toString()) || []
+							result.data = result.data.map((entity) => ({
+								...entity,
+								[entity.entityType]: entity.name,
+								label: entity.name,
+								value: entity._id,
+								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
+									const relatedEntities = groupEntityMap.get(entity._id.toString()) || []
 									const matchingEntity = relatedEntities.find((e) => e.entityType === entityType)
 									if (matchingEntity) {
-										acc[entityType] = matchingEntity?.metaInformation?.name
+										entityTypeNameMap[entityType] = matchingEntity?.metaInformation?.name
 									}
-									return acc
+									return entityTypeNameMap
 								}, {}),
 							}))
 						}
