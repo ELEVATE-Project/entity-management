@@ -346,7 +346,7 @@ module.exports = class UserProjectsHelper {
 								value: entity._id,
 								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
 									const relatedEntities = groupEntityMap.get(entity._id.toString()) || []
-									const matchingEntity = relatedEntities.find((e) => e.entityType === entityType)
+									const matchingEntity = relatedEntities.find((relatedEntity) => relatedEntity.entityType === entityType)
 									if (matchingEntity) {
 										entityTypeNameMap[entityType] = matchingEntity?.metaInformation?.name
 									}
