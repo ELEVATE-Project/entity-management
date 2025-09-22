@@ -844,12 +844,12 @@ module.exports = class Entities extends Abstract {
 	}
 
 	/**
-     * @api {GET} v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&additionalFields=true
+     * @api {GET} v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&parentInfoRequired=true
      * Get sub entity list for the given entity. 
      * @apiVersion 1.0.0
      * @apiGroup Entities
      * @apiHeader {String} X-authenticated-user-token Authenticity token
-     * @apiSampleRequest v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&additionalFields=true
+     * @apiSampleRequest v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&parentInfoRequired=true
      * @apiUse successBody
      * @apiUse errorBody
      * @apiParamExample {json} Response:
@@ -903,7 +903,7 @@ module.exports = class Entities extends Abstract {
 					req.pageNo,
 					req.query.language ? req.query.language : '',
 					req.userDetails,
-					req.query.additionalFields ? req.query.additionalFields : false
+					req.query.parentInfoRequired ? req.query.parentInfoRequired : false
 				)
 				return resolve(entityDocuments)
 			} catch (error) {

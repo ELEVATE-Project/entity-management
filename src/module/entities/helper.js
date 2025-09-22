@@ -221,7 +221,7 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageNo - page no.
 	 * @param {params} language - language Code
 	 * @param {Object} userDetails - loggedin user's details
-	 * @param {Boolean} additionalFields - additional fields to be fetched if true
+	 * @param {Boolean} parentInfoRequired - additional fields to be fetched if true
 	 * @returns {Array} - List of all sub list entities.
 	 */
 
@@ -234,7 +234,7 @@ module.exports = class UserProjectsHelper {
 		pageNo,
 		language,
 		userDetails,
-		additionalFields = false
+		parentInfoRequired = false
 	) {
 		return new Promise(async (resolve, reject) => {
 			try {
@@ -265,7 +265,7 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Modify data properties (e.g., 'label') of retrieved entities if necessary
-				if (additionalFields && result.data && result.data.length > 0) {
+				if (parentInfoRequired && result.data && result.data.length > 0) {
 					// fetch the entity ids to look for parent hierarchy
 					const entityIds = result.data.map((item) => ObjectId(item._id))
 					// dynamically set the entityType to search inside the group

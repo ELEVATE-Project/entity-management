@@ -2442,8 +2442,8 @@ paths:
           schema: *ref_13
           required: true
         - in: query
-          name: additionalFields
-          description: Pass this paramater as true if need additional fields( parents details)
+          name: parentInfoRequired
+          description: Pass this paramater as true if need parents details
           default: false
           schema: *ref_14
           required: false
