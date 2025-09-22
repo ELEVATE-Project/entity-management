@@ -221,10 +221,21 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageNo - page no.
 	 * @param {params} language - language Code
 	 * @param {Object} userDetails - loggedin user's details
+	 * @param {Boolean} parentInfoRequired - additional fields to be fetched if true
 	 * @returns {Array} - List of all sub list entities.
 	 */
 
-	static subEntityList(entities, entityId, type, search, limit, pageNo, language, userDetails) {
+	static subEntityList(
+		entities,
+		entityId,
+		type,
+		search,
+		limit,
+		pageNo,
+		language,
+		userDetails,
+		parentInfoRequired = false
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let tenantId = userDetails.userInformation.tenantId
@@ -254,60 +265,97 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Modify data properties (e.g., 'label') of retrieved entities if necessary
-				// if (result.data && result.data.length > 0) {
-				// 	// fetch the entity ids to look for parent hierarchy
-				// 	const entityIds = _.map(result.data, (item) => ObjectId(item._id))
-				// 	// dynamically set the entityType to search inside the group
-				// 	const key = ['groups', type]
-				// 	// create filter for fetching the parent data using group
-				// 	let entityFilter = {}
-				// 	entityFilter[key.join('.')] = {
-				// 		$in: entityIds,
-				// 	}
+				if (parentInfoRequired && result.data && result.data.length > 0) {
+					// fetch the entity ids to look for parent hierarchy
+					const entityIds = result.data.map((item) => ObjectId(item._id))
+					// dynamically set the entityType to search inside the group
+					const key = ['groups', type]
 
-				// 	entityFilter['tenantId'] = tenantId
+					// create filter for fetching the parent data using group
+					const entityFilter = {
+						[key.join('.')]: { $in: entityIds },
+						tenantId,
+					}
 
-				// 	// Retrieve all the entity documents with the entity ids in their gropu
-				// 	const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
-				// 		'entityType',
-				// 		'metaInformation.name',
-				// 		'childHierarchyPath',
-				// 		key.join('.'),
-				// 	])
-				// 	// find out the state of the passed entityId
-				// 	const stateEntity = entityDocuments.find((entity) => entity.entityType == 'state')
-				// 	// fetch the child hierarchy path of the state
-				// 	const stateChildHierarchy = stateEntity.childHierarchyPath
-				// 	let upperLevelsOfType = type != 'state' ? ['state'] : [] // add state as default if type != state
-				// 	// fetch all the upper levels of the type from state hierarchy
-				// 	upperLevelsOfType = [
-				// 		...upperLevelsOfType,
-				// 		...stateChildHierarchy.slice(0, stateChildHierarchy.indexOf(type)),
-				// 	]
-				// 	result.data = result.data.map((data) => {
-				// 		let cloneData = { ...data }
-				// 		cloneData[cloneData.entityType] = cloneData.name
-				// 		// if we have upper levels to fetch
-				// 		if (upperLevelsOfType.length > 0) {
-				// 			// iterate through the data fetched to fetch the parent entity names
-				// 			entityDocuments.forEach((eachEntity) => {
-				// 				eachEntity[key[0]][key[1]].forEach((eachEntityGroup) => {
-				// 					if (
-				// 						ObjectId(eachEntityGroup).equals(cloneData._id) &&
-				// 						upperLevelsOfType.includes(eachEntity.entityType)
-				// 					) {
-				// 						if (eachEntity?.entityType !== 'state') {
-				// 							cloneData[eachEntity?.entityType] = eachEntity?.metaInformation?.name
-				// 						}
-				// 					}
-				// 				})
-				// 			})
-				// 		}
-				// 		cloneData['label'] = cloneData.name
-				// 		cloneData['value'] = cloneData._id
-				// 		return cloneData
-				// 	})
-				// }
+					let entityDocuments = await entitiesQueries.getAggregate([
+						{
+							$match: entityFilter,
+						},
+						{
+							$project: {
+								entityType: 1,
+								'metaInformation.name': 1,
+								childHierarchyPath: 1,
+								[key.join('.')]: 1,
+								childHierarchyPathSize: { $size: '$childHierarchyPath' },
+							},
+						},
+						{
+							$addFields: {
+								childHierarchyPathSize: {
+									$cond: {
+										if: { $isArray: '$childHierarchyPath' },
+										then: { $size: '$childHierarchyPath' },
+										else: 0,
+									},
+								},
+							},
+						},
+						{
+							$sort: {
+								childHierarchyPathSize: -1, // Sort by size in descending order
+							},
+						},
+					])
+
+					if (entityDocuments?.length > 0) {
+						// Get the first entity (will have the largest childHierarchyPath due to sort)
+						const topEntity = entityDocuments[0]
+						const topEntityHierarchy = Array.isArray(topEntity?.childHierarchyPath)
+							? topEntity.childHierarchyPath
+							: []
+
+						if (topEntityHierarchy?.length > 0 && type) {
+							const hierarchyLevels = topEntityHierarchy.slice(
+								0,
+								topEntityHierarchy.indexOf(type) !== -1
+									? topEntityHierarchy.indexOf(type) + 1
+									: topEntityHierarchy.length
+							)
+
+							// Create an efficient lookup map for entities
+							const groupEntityMap = entityDocuments.reduce((map, entity) => {
+								const group = entity?.groups?.[type]
+								if (Array.isArray(group)) {
+									group.forEach((childId) => {
+										const idStr = childId.toString()
+										if (!map.has(idStr)) {
+											map.set(idStr, [])
+										}
+										map.get(idStr).push(entity)
+									})
+								}
+								return map
+							}, new Map())
+
+							// Process the results more efficiently
+							result.data = result.data.map((entity) => ({
+								...entity,
+								[entity.entityType]: entity.name,
+								label: entity.name,
+								value: entity._id,
+								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
+									const relatedEntities = groupEntityMap.get(entity._id.toString()) || []
+									const matchingEntity = relatedEntities.find((relatedEntity) => relatedEntity.entityType === entityType)
+									if (matchingEntity) {
+										entityTypeNameMap[entityType] = matchingEntity?.metaInformation?.name
+									}
+									return entityTypeNameMap
+								}, {}),
+							}))
+						}
+					}
+				}
 
 				resolve({
 					message: CONSTANTS.apiResponses.ENTITIES_FETCHED,
@@ -326,10 +374,20 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageSize - page pageSize.
 	 * @param {params} pageNo - page no.
 	 * @param {String} type - Entity type
+	 * @param {String} roleLevel - Role level to filter roles (e.g., 'professional_subroles').
 	 * @param {String} tenantId - user's tenantId
 	 * @returns {Promise<Object>} A promise that resolves to the response containing the fetched roles or an error object.
 	 */
-	static targetedRoles(entityId, pageNo = '', pageSize = '', paginate, type = '', language, tenantId) {
+	static targetedRoles(
+		entityId,
+		pageNo = '',
+		pageSize = '',
+		paginate,
+		type = '',
+		roleLevel = '',
+		language,
+		tenantId
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Construct the filter to retrieve entities based on provided entity IDs
@@ -369,72 +427,46 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 
-				// Construct the filter to retrieve entity type IDs based on child hierarchy paths
-				const entityTypeFilter = {
-					name: {
-						$in: filteredHierarchyPaths,
-					},
+				// Construct the filter
+				const roleFilter = {
+					entityType: roleLevel ? roleLevel : CONSTANTS.common.SUBROLE_ENTITY_TYPE,
 					tenantId: tenantId,
-					isDeleted: false,
-				}
-				const entityTypeProjection = ['_id']
-				// Retrieve entity type IDs based on child hierarchy paths
-				const fetchEntityTypeId = await entityTypeQueries.entityTypesDocument(
-					entityTypeFilter,
-					entityTypeProjection
-				)
-				// Check if entity type IDs are retrieved successfully
-				if (fetchEntityTypeId.length < 0) {
-					throw {
-						status: HTTP_STATUS_CODE.not_found.status,
-						message: CONSTANTS.apiResponses.ENTITY_TYPE_DETAILS_NOT_FOUND,
-					}
-				}
-				// Extract the _id fields from the fetched entity types to use as a filter for user roles
-				const userRoleFilter = fetchEntityTypeId.map((entityType) => entityType._id)
-
-				// Construct the filter for finding user roles based on entityTypeIds and status
-				const userRoleExtensionFilter = {
-					'entityTypes.entityTypeId': {
-						$in: userRoleFilter,
-					},
-					status: CONSTANTS.common.ACTIVE_STATUS,
-					tenantId: tenantId,
+					deleted: false,
+					'metaInformation.targetedEntityTypes.entityType': { $in: filteredHierarchyPaths },
 				}
 
-				// Specify the fields to include in the result set
-				const userRoleExtensionProjection = ['_id', 'title', 'code', 'userRoleId']
+				const roleProjection = ['_id', 'metaInformation.name', 'metaInformation.externalId']
 
 				// Fetch the user roles based on the filter and projection
-				const fetchUserRoles = await userRoleExtensionHelper.find(
-					userRoleExtensionFilter,
-					userRoleExtensionProjection,
+				const fetchRoles = await entitiesQueries.entityDocuments(
+					roleFilter,
+					roleProjection,
 					pageSize,
 					pageSize * (pageNo - 1),
+					'',
 					paginate
 				)
 
 				// Check if the fetchUserRoles operation was successful and returned data
-				if (!fetchUserRoles.success || !fetchUserRoles.result || fetchUserRoles.result.length < 0) {
+				if (!fetchRoles || fetchRoles.length === 0) {
 					throw {
 						status: HTTP_STATUS_CODE.not_found.status,
 						message: CONSTANTS.apiResponses.ROLES_NOT_FOUND,
 					}
 				}
+
 				// Transforming the data
-				const transformedData = fetchUserRoles.result.map((item) => {
-					// For each item in the result array, create a new object with modified keys
-					return {
-						_id: item._id,
-						value: item.userRoleId,
-						label: item.title,
-						code: item.code,
-					}
-				})
+				const transformedData = fetchRoles.map((item) => ({
+					_id: item._id,
+					value: item.metaInformation?.externalId,
+					label: item.metaInformation?.name,
+					code: item.metaInformation?.externalId,
+				}))
+
 				return resolve({
 					message: CONSTANTS.apiResponses.ROLES_FETCHED_SUCCESSFULLY,
-					result: transformedData,
-					count: fetchUserRoles.count,
+					result: transformedData || [],
+					count: fetchRoles.length || 0,
 				})
 			} catch (error) {
 				return reject(error)

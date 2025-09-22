@@ -2428,7 +2428,7 @@ paths:
           description: Please pass entity type value for the entity
           schema: *ref_12
         - in: path
-          name: serach
+          name: search
           description: ''
           schema: *ref_12
         - in: header
@@ -2441,6 +2441,12 @@ paths:
           description: Please append a valid entity id
           schema: *ref_13
           required: true
+        - in: query
+          name: parentInfoRequired
+          description: Pass this paramater as true if need parents details
+          default: false
+          schema: *ref_14
+          required: false
       responses:
         '200':
           description: ok
@@ -2490,6 +2496,9 @@ paths:
                           externalId: entity123
                           label: undefined - entity123
                           value: 627a13928ce12806f5803f57
+                          district: BAGALKOT,
+                          block: BADAMI,
+                          cluster: CHOLACHAGUDDA
                       count: 1
         '400':
           description: 'Bad Request. '
@@ -2697,6 +2706,21 @@ paths:
           schema:
             type: string
           required: true
+        - in: query
+          name: paginate
+          description: >-
+            The data will be paginated and that will include count as well
+          schema:
+            type: string
+          default: true
+          required: false
+        - in: query
+          name: roleLevel
+          description: >-
+            Role level to filter roles
+          schema:
+            type: string
+          required: false
       responses:
         '200':
           description: Accepted
@@ -2720,23 +2744,17 @@ paths:
                           properties:
                             id:
                               type: number
-                            title:
+                            value:
                               type: string
-                            user_type:
-                              type: number
                             visibility:
                               type: string
-                            status:
+                            code:
                               type: string
-                            organization_id:
-                              type: number
                           required:
                             - id
-                            - title
-                            - user_type
-                            - visibility
-                            - status
-                            - organization_id
+                            - value
+                            - label
+                            - code
                       count:
                         type: number
               examples:
@@ -2746,31 +2764,12 @@ paths:
                     status: 200
                     result:
                       data:
-                        - id: 13
-                          title: AMO
-                          user_type: 1
-                          visibility: PUBLIC
-                          status: ACTIVE
-                          organization_id: 1
-                        - id: 15
-                          title: TEACHER
-                          user_type: 1
-                          visibility: PUBLIC
-                          status: ACTIVE
-                          organization_id: 1
-                        - id: 10
-                          title: headmaster
-                          user_type: 1
-                          visibility: PUBLIC
-                          status: ACTIVE
-                          organization_id: 1
-                        - id: 14
-                          title: BEO
-                          user_type: 1
-                          visibility: PUBLIC
-                          status: ACTIVE
-                          organization_id: 1
-                      count: 4
+                        - _id: 682301254e2812081f34266c
+                          value: teacher-class-11-12
+                          label: Teacher (Class 11-12)
+                          code: -class-11-12
+
+                      count: 1
         '400':
           description: Bad Request.
           content:
