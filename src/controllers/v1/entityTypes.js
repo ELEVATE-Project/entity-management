@@ -46,17 +46,17 @@ module.exports = class EntityTypes extends Abstract {
     * @apiUse successBody
     * @apiUse errorBody
     * @returns {JSON} - List of all entity types.
-    * "result": [
-	{
-		"_id": "5ce23d633c330302e720e661",
-		"name": "teacher"
-	},
-	{
-		"_id": "5ce23d633c330302e720e663",
-		"name": "schoolLeader"
+    * {
+    "message": "ENTITY_TYPES_FETCHED",
+    "status": 200,
+    "result": [
+        {
+            "_id": "68f849082be5592a62b67ad3",
+            "name": "subroles"
+        }
+    ]
 	}
-	]
-*/
+	*/
 	async list(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
@@ -99,13 +99,34 @@ module.exports = class EntityTypes extends Abstract {
 	 * @returns {JSON} - List of all entity types.
 	 *   "result": [
         {
-            "_id": "6613c1a761abff09406a7465",
-            "name": "hub"
-        },
+    "message": "ENTITY_TYPES_FETCHED",
+    "status": 200,
+    "result": [
         {
-            "_id": "661e2747e3bf510d130250e1",
-            "name": "hub"
-        },
+            "_id": "68f849082be5592a62b67ad3",
+            "profileForm": [],
+            "profileFields": [],
+            "types": [],
+            "callResponseTypes": [],
+            "isObservable": true,
+            "immediateChildrenEntityType": [],
+            "createdBy": "456",
+            "updatedBy": "456",
+            "deleted": false,
+            "isDeleted": false,
+            "name": "subroles",
+            "registryDetails": {
+                "name": "schoolRegistry"
+            },
+            "toBeMappedToParentEntities": true,
+            "tenantId": "shikshalokam",
+            "orgId": "slorg",
+            "updatedAt": "2025-10-22T03:06:00.696Z",
+            "createdAt": "2025-10-22T03:01:28.026Z",
+            "__v": 0
+        }
+    ]
+	}
 	 */
 	async find(req) {
 		return new Promise(async (resolve, reject) => {
@@ -143,18 +164,19 @@ module.exports = class EntityTypes extends Abstract {
 	 * @param {Object} req -request data.
 	 * @returns {CSV}  create single  entity Types data.
 	 * 
-	 * "result": {
-        "name": "PRAJWAL",
-        "registryDetails": {
-            "name": "pawan"
-        },
+	 * {
+    "message": "ENTITY_INFORMATION_CREATED",
+    "status": 200,
+    "result": {
+        "name": "professional_roles",
         "isObservable": true,
         "toBeMappedToParentEntities": true,
-        "immediateChildrenEntityType": [
-            "school",
-            "collage"
-        ]
+        "tenantId": "shikshalokam",
+        "orgId": "slorg",
+        "status": "SUCCESS",
+        "_id": "68f849082be5592a62b67ad3"
     }
+	}
 	 */
 
 	async create(req) {
@@ -184,29 +206,32 @@ module.exports = class EntityTypes extends Abstract {
 	 * @apiUse errorBody
 	 * @param {Object} req - requested entityType data.
 	 * @returns {JSON} - Updated entityType information.
-	 *  "result": {
+	 *  {
+    "status": 200,
+    "result": {
         "profileForm": [],
         "profileFields": [],
         "types": [],
         "callResponseTypes": [],
         "isObservable": true,
-        "immediateChildrenEntityType": [
-            "collage"
-        ],
-        "createdBy": "SYSTEM",
-        "updatedBy": "SYSTEM",
+        "immediateChildrenEntityType": [],
+        "createdBy": "456",
+        "updatedBy": "456",
         "deleted": false,
-        "_id": "661387f572fad002e57cce8f",
+        "_id": "68f849082be5592a62b67ad3",
         "isDeleted": false,
-        "name": "prajwal",
+        "name": "subroles",
         "registryDetails": {
-            "name": "bijapure"
+            "name": "schoolRegistry"
         },
         "toBeMappedToParentEntities": true,
-        "updatedAt": "2024-04-22T09:37:51.634Z",
-        "createdAt": "2024-04-08T06:00:21.695Z",
+        "tenantId": "shikshalokam",
+        "orgId": "slorg",
+        "updatedAt": "2025-10-22T03:06:00.696Z",
+        "createdAt": "2025-10-22T03:01:28.026Z",
         "__v": 0
     }
+	}
 	 */
 
 	update(req) {

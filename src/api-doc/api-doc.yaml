@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Entity-Management-Service
-  version: 1.0.0
+  version: 3.4
   description: >-
     * This Service enables the creation and management of various entities and
     entityType .It provides functionalities for entities, ensuring seamless
@@ -36,16 +36,15 @@ servers:
 paths:
   /v1/entityTypes/bulkCreate:
     post:
-      summary: 'BulkCreate create entity type '
+      summary: 'BulkCreate entityType '
       tags:
-        - entityType-API's
+        - Entity Type
       description: >-
-        This api is use to create entity types in bulk by passing a csv file
-        which contain entity type information
+        Enables bulk creation of entity types by uploading a CSV file
+        containing  entity type details.
 
-        * The API Endpoint for creating entity types in bulk by passing a csv
-        file which contain entity type information is
-        `/v1/entityType/bulkCreate`
+        * The API Endpoint for creating entity types by uploading a CSV file
+        containing  entity type details is `/v1/entityType/bulkCreate`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -147,15 +146,16 @@ paths:
     parameters: []
   /v1/entityTypes/bulkUpdate:
     post:
-      summary: 'BulkUpdate create entityType '
+      summary: 'BulkUpdate entityType '
       tags:
-        - entityType-API's
+        - Entity Type
       description: >-
-        You can use this API to update entityType by passing CSV file.
+        Allows bulk updating of entity types using a CSV file with updated 
+        records.
 
 
-        * The API Endpoint for updating entityType by passing CSV file is
-        `/v1/entityTypes/bulkUpdate`
+        * The API Endpoint for updating entity types using a CSV file with 
+        updated records is `/v1/entityTypes/bulkUpdate`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -270,9 +270,9 @@ paths:
                         msg: EntityTypes file is required
   /v1/entityTypes/create:
     post:
-      summary: This api will create's Single entity Type data
+      summary: Create single entity type
       tags:
-        - entityType-API's
+        - Entity Type
       description: >-
         You can use this API to create a single entityType data.
 
@@ -376,6 +376,19 @@ paths:
                         type: string
                       _id:
                         type: string
+              examples:
+                SuccessResponse:
+                  value:
+                    message: ENTITY_INFORMATION_CREATED
+                    status: 200
+                    result:
+                      name: professional_roles
+                      isObservable: true
+                      toBeMappedToParentEntities: true
+                      tenantId: shikshalokam
+                      orgId: slorg
+                      status: SUCCESS
+                      _id: 68f849082be5592a62b67ad3
         '400':
           description: Bad Request
           content:
@@ -390,16 +403,16 @@ paths:
                         msg: required name
   /v1/entityTypes/update/{_id}:
     post:
-      summary: Update single entities based on the entityType id
+      summary: Update single entity type
       tags:
-        - entityType-API's
+        - Entity Type
       description: >-
-        You can use this API to update single entities based on the entityType
+        You can use this API to update single entityType based on the entityType
         id .
 
 
-        * The API Endpoint to update single entities based on the entityType id
-        is `/v1/entityTypes/update/{_id}`
+        * The API Endpoint to update single entityType based on the entityType
+        id is `/v1/entityTypes/update/{_id}`
 
         * It is mandatory to provide values for parameters which are marked as
         `required`
@@ -542,6 +555,31 @@ paths:
                         type: string
                       __v:
                         type: number
+              examples:
+                SuccessResponse:
+                  value:
+                    status: 200
+                    result:
+                      profileForm: []
+                      profileFields: []
+                      types: []
+                      callResponseTypes: []
+                      isObservable: true
+                      immediateChildrenEntityType: []
+                      createdBy: '456'
+                      updatedBy: '456'
+                      deleted: false
+                      _id: 68f849082be5592a62b67ad3
+                      isDeleted: false
+                      name: subroles
+                      registryDetails:
+                        name: schoolRegistry
+                      toBeMappedToParentEntities: true
+                      tenantId: shikshalokam
+                      orgId: slorg
+                      updatedAt: '2025-10-22T03:06:00.696Z'
+                      createdAt: '2025-10-22T03:01:28.026Z'
+                      __v: 0
         '400':
           description: Bad Request. User Entity already exists.
           content:
@@ -552,12 +590,12 @@ paths:
                   value:
                     status: 400
                     message:
-                      - location: params
-                        param: _id
-                        msg: required _id
                       - location: body
                         param: name
-                        msg: required name
+                        msg: The name field is required.
+                      - location: body
+                        param: name
+                        msg: The name field cannot be empty.
     parameters:
       - in: path
         name: ''
@@ -568,7 +606,7 @@ paths:
     get:
       summary: This API can be used to list all entity types
       tags:
-        - entityType-API's
+        - Entity Type
       description: >-
         Use this API to list all entityTypes
 
@@ -637,7 +675,7 @@ paths:
     post:
       summary: Find the entityTypes
       tags:
-        - entityType-API's
+        - Entity Type
       description: >-
         Use this API to get the details of entityType data based on the request
         body passed.
@@ -695,10 +733,26 @@ paths:
                     message: ENTITY_TYPES_FETCHED
                     status: 200
                     result:
-                      - _id: 662f7dafcf215405591ce3af
-                        name: state
-                      - _id: 661387f572fad002e57cce8f
-                        name: block
+                      - _id: 68f849082be5592a62b67ad3
+                        profileForm: []
+                        profileFields: []
+                        types: []
+                        callResponseTypes: []
+                        isObservable: true
+                        immediateChildrenEntityType: []
+                        createdBy: '456'
+                        updatedBy: '456'
+                        deleted: false
+                        isDeleted: false
+                        name: subroles
+                        registryDetails:
+                          name: schoolRegistry
+                        toBeMappedToParentEntities: true
+                        tenantId: shikshalokam
+                        orgId: slorg
+                        updatedAt: '2025-10-22T03:06:00.696Z'
+                        createdAt: '2025-10-22T03:01:28.026Z'
+                        __v: 0
         '400':
           headers: {}
           content:
@@ -723,6 +777,8 @@ paths:
                   properties:
                     name:
                       type: string
+                    tenantId:
+                      type: string
                 projection:
                   type: object
                   properties:
@@ -739,7 +795,8 @@ paths:
               sampleBodyData:
                 value:
                   query:
-                    name: school
+                    name: subroles
+                    tenantId: shikshalokam
                   projection:
                     _id: 1
                     name: 1
@@ -750,7 +807,7 @@ paths:
     post:
       summary: Bulk creation of entities
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to create bulk create entities based on type and
         CSV file we pass.
@@ -863,11 +920,10 @@ paths:
     post:
       summary: Bulk updates of entities
       tags:
-        - entities-API's
+        - Entities
       description: >-
-        You can use this API to update entities data based on the type and
-        entity id we pass through CSV file  that contain information to update.
-
+        Updates entity data in bulk based on entity type and ID  provided in a
+        CSV file containing update details.
 
         * The API Endpoint for updating entities by passing csv file
         `/v1/entities/bulkUpdate`
@@ -979,9 +1035,9 @@ paths:
         description: ''
   /v1/entities/add?type={entity_type}:
     post:
-      summary: Add single entities
+      summary: Add entity
       tags:
-        - entities-API's
+        - Entities
       description: >-
         The API is used to create single entities based on entityType
 
@@ -1097,6 +1153,32 @@ paths:
                           type: string
                         __v:
                           type: number
+              examples:
+                SuccessResponse:
+                  value:
+                    message: ENTITY_ADDED
+                    status: 200
+                    result:
+                      - metaInformation:
+                          targetedEntityTypes: []
+                          externalId: KA280
+                          name: Karnataka
+                        childHierarchyPath: []
+                        createdBy: '456'
+                        updatedBy: '456'
+                        _id: 68f84c5be09cc92d37d26cce
+                        deleted: false
+                        entityTypeId: 68f849082be5592a62b67ad3
+                        entityType: subroles
+                        registryDetails:
+                          locationId: KA280
+                          code: KA280
+                        userId: '456'
+                        tenantId: shikshalokam
+                        orgId: slorg
+                        updatedAt: '2025-10-22T03:15:39.145Z'
+                        createdAt: '2025-10-22T03:15:39.145Z'
+                        __v: 0
         '400':
           description: Bad Request.
           content:
@@ -1153,9 +1235,10 @@ paths:
         Provide details of an entity based on the entity id. This API returns
         the details of a single entity at a time.
       tags:
-        - entities-API's
+        - Entities
       description: >-
-        You can use this API to get details based on entity id or externalId.
+        You can use this API to get entity details based on entity id or
+        externalId.
 
         * The API to get details of an entities based on entity id:
         `/v1/entities/details`
@@ -1221,10 +1304,12 @@ paths:
                         registryDetails:
                           type: object
                           properties:
-                            code:
-                              type: string
                             locationId:
                               type: string
+                            code:
+                              type: string
+                        userId:
+                          type: string
                         tenantId:
                           type: string
                         orgId:
@@ -1237,93 +1322,34 @@ paths:
                           type: number
                         parentInformation:
                           type: object
-                          properties:
-                            state:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  _id:
-                                    type: string
-                                  externalId:
-                                    type: string
-                                  name:
-                                    type: string
-                            district:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  _id:
-                                    type: string
-                                  externalId:
-                                    type: string
-                                  name:
-                                    type: string
-                            block:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  _id:
-                                    type: string
-                                  externalId:
-                                    type: string
-                                  name:
-                                    type: string
-                            cluster:
-                              type: array
-                              items:
-                                type: object
-                                properties:
-                                  _id:
-                                    type: string
-                                  externalId:
-                                    type: string
-                                  name:
-                                    type: string
+                          properties: {}
               examples:
-                example1:
+                SuccessResponse:
                   value:
                     message: ENTITY_INFORMATION_FETCHED
                     status: 200
                     result:
-                      - _id: 6852c9207248c20014b38dd3
+                      - _id: 68f84c5be09cc92d37d26cce
                         metaInformation:
                           targetedEntityTypes: []
-                          externalId: '16030100406'
-                          name: BALARAM BAZAR J. B. SCHOOL
+                          externalId: KA280
+                          name: Karnataka
                         childHierarchyPath: []
-                        createdBy: '20'
-                        updatedBy: '20'
+                        createdBy: '456'
+                        updatedBy: '456'
                         deleted: false
-                        entityTypeId: 6825915c97b5680013e6a148
-                        entityType: school
+                        entityTypeId: 68f849082be5592a62b67ad3
+                        entityType: subroles
                         registryDetails:
-                          code: '16030100406'
-                          locationId: '16030100406'
+                          locationId: KA280
+                          code: KA280
+                        userId: '456'
                         tenantId: shikshalokam
-                        orgId: sl
-                        updatedAt: '2025-06-18T14:11:49.122Z'
-                        createdAt: '2025-06-18T14:11:49.122Z'
+                        orgId: slorg
+                        updatedAt: '2025-10-22T03:15:39.145Z'
+                        createdAt: '2025-10-22T03:15:39.145Z'
                         __v: 0
-                        parentInformation:
-                          state:
-                            - _id: 6852c86c7248c20014b38a4d
-                              externalId: '16'
-                              name: Tripura
-                          district:
-                            - _id: 6852c8ae7248c20014b38a50
-                              externalId: dhalai
-                              name: Dhalai
-                          block:
-                            - _id: 6852c8de7248c20014b38a61
-                              externalId: '160301'
-                              name: AMBASSA
-                          cluster:
-                            - _id: 6852c9027248c20014b38af2
-                              externalId: '1603010007'
-                              name: BALARAM HIGH SCHOOL
+                        parentInformation: {}
         '400':
           description: 'Bad Request. '
           content:
@@ -1340,7 +1366,7 @@ paths:
     post:
       summary: Update an entity
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to update the entity data based on entiy id.
 
@@ -1453,6 +1479,34 @@ paths:
                         type: string
                       __v:
                         type: number
+              examples:
+                SuccessResponse:
+                  value:
+                    message: ENTITY_UPDATED
+                    status: 200
+                    result:
+                      metaInformation:
+                        targetedEntityTypes:
+                          - 'state '
+                          - block
+                        externalId: KA280
+                        name: Karnataka
+                      registryDetails:
+                        locationId: KA280
+                        code: KA280
+                      childHierarchyPath: []
+                      createdBy: '456'
+                      updatedBy: '456'
+                      deleted: false
+                      _id: 68f84c5be09cc92d37d26cce
+                      entityTypeId: 68f849082be5592a62b67ad3
+                      entityType: subroles
+                      userId: '456'
+                      tenantId: shikshalokam
+                      orgId: slorg
+                      updatedAt: '2025-10-22T04:06:35.790Z'
+                      createdAt: '2025-10-22T03:15:39.145Z'
+                      __v: 0
         '400':
           description: Bad Request.
           content:
@@ -1507,7 +1561,7 @@ paths:
     post:
       summary: This endpoint will map its childEntity to its parentEntity
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to map the childEntity to parentEntity
 
@@ -1587,7 +1641,7 @@ paths:
     post:
       summary: This endpoint will create mapping CSV .
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to create a mapping CSV
 
@@ -1706,7 +1760,7 @@ paths:
     get:
       summary: You can use this API to list entity based on id.
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to list entities based on its type
 
@@ -1812,7 +1866,7 @@ paths:
     post:
       summary: Find the entities based on queries
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to find entities based on query.
 
@@ -1949,7 +2003,7 @@ paths:
     get:
       summary: List entities based on entity id
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to list the entities based on entity id and entity
         Type
@@ -2059,7 +2113,7 @@ paths:
     get:
       summary: Get related entities based on entity id
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to get the realted entities data based on entity id
 
@@ -2166,7 +2220,7 @@ paths:
     post:
       summary: List the entities based on location id
       tags:
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to get entities based on locations Id
 
@@ -2296,7 +2350,7 @@ paths:
     get:
       summary: List all the entities based on location id
       tags: &ref_14
-        - entities-API's
+        - Entities
       description: >-
         You can use this API to list entity based on location id
 
@@ -2389,9 +2443,9 @@ paths:
                         msg: required state location id
   /v1/entities/subEntityList/{_id}?type={entity_type}&search=&page={page_no}&limit={page_limit}&language={code}:
     get:
-      summary: Will provide the sub entity based on types
+      summary: Get sub entity list
       tags:
-        - entities-API's
+        - Entities
       description: >-
         This API will help to get entities based on parent id and entity type we
         pass.
@@ -2519,7 +2573,7 @@ paths:
     post:
       summary: List the entities based on entity id
       tags:
-        - entities-API's
+        - Entities
       description: >-
         This API will help to list the entities based on entity id
 
@@ -2676,12 +2730,11 @@ paths:
         You can use this API to fetch targeted roles based on the provided
         entity id in the request parameters.
 
-        \*Endpoint to fetch targeted roles based on the provided entity id
+
+        * Endpoint to fetch targeted roles based on the provided entity id
         `/v1/entities/targetedRoles?{entity_id}`
 
-
-        * It is mandatory to provide values for parameters marked with
-        `required`
+        * It is manatory to provide values for parameters marked with `required`
 
         * Mandatory parameter cannot be empty or null
       parameters:
@@ -2708,16 +2761,14 @@ paths:
           required: true
         - in: query
           name: paginate
-          description: >-
-            The data will be paginated and that will include count as well
+          description: The data will be paginated and that will include count as well
           schema:
             type: string
           default: true
           required: false
         - in: query
           name: roleLevel
-          description: >-
-            Role level to filter roles
+          description: Role level to filter roles
           schema:
             type: string
           required: false
@@ -2767,8 +2818,7 @@ paths:
                         - _id: 682301254e2812081f34266c
                           value: teacher-class-11-12
                           label: Teacher (Class 11-12)
-                          code: -class-11-12
-
+                          code: '-class-11-12'
                       count: 1
         '400':
           description: Bad Request.
@@ -2783,536 +2833,12 @@ paths:
                       - location: params
                         param: _id
                         msg: The entity ID (_id) is required.
-  /v1/userRoleExtension/create:
-    post:
-      summary: To create a single user role extension data
-      description: >-
-        You can use this API to to create user role extension data.
-        `/v1/userRoleExtension/create`
-
-
-        * It is mandatory to provide values for parameters marked with
-        `required`
-
-        * Mandatory parameter cannot be empty or null
-      operationId: ''
-      tags: &ref_20
-        - userRoleExtension-API's
-      parameters:
-        - in: header
-          name: X-auth-token
-          description: >-
-            You require an X-auth-token to use this API. This token is available
-            in the login API Response.
-          schema: &ref_21
-            type: string
-          required: true
-        - in: header
-          name: internal-access-token
-          description: ''
-          schema: &ref_19
-            type: string
-          required: true
-        - in: header
-          name: admin-auth-token
-          description: >-
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_19
-        - in: header
-          name: tenantId
-          description: >-
-            This header specifies the tenant data of the resource creator. This
-            header should be passed when system admin wants to create resources
-          schema: *ref_19
-        - in: header
-          name: orgId
-          description: >-
-            This header specifies the organization data of the resource creator.
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_19
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                value:
-                  type: string
-                userRoleId:
-                  type: string
-                code:
-                  type: string
-                entityTypes:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      entityType:
-                        type: string
-                      entityTypeId:
-                        type: string
-            examples:
-              sampleBodyData:
-                value:
-                  title: ' Head Master'
-                  value: '19'
-                  userRoleId: '777'
-                  code: HH
-                  entityTypes:
-                    - entityType: 'state '
-                      entityTypeId: 6764e632073da91041b79aa7
-      responses:
-        '200':
-          description: Accepted
-          headers: &ref_22 {}
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  status:
-                    type: number
-                  result:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                      createdBy:
-                        type: string
-                      updatedBy:
-                        type: string
-                      _id:
-                        type: string
-                      deleted:
-                        type: boolean
-                      userRoleId:
-                        type: string
-                      title:
-                        type: string
-                      code:
-                        type: string
-                      entityTypes:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            entityType:
-                              type: string
-                            entityTypeId:
-                              type: string
-                      tenantId:
-                        type: string
-                      orgId:
-                        type: string
-                      updatedAt:
-                        type: string
-                      createdAt:
-                        type: string
-                      __v:
-                        type: number
-        '400':
-          description: Bad Request.
-          headers: &ref_23 {}
-          content:
-            application/json:
-              schema:
-                $schema: http://json-schema.org/draft-04/schema#
-                type: object
-                properties:
-                  status:
-                    type: number
-                  message:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        location:
-                          type: string
-                        param:
-                          type: string
-                        msg:
-                          type: string
-                      required:
-                        - location
-                        - param
-                        - msg
-              examples:
-                FailureResponse:
-                  value:
-                    status: 400
-                    message:
-                      - location: body
-                        param: title
-                        msg: 'required title '
-                      - location: body
-                        param: title
-                        msg: 'required title '
-                      - location: body
-                        param: entityTypes[0].entityType
-                        msg: 'entityType name '
-                      - location: body
-                        param: entityTypes[0].entityTypeId
-                        msg: 'entityTypeId name '
-  /v1/userRoleExtension/update/{_id}:
-    post:
-      summary: To update a single user role extension data
-      description: >-
-        You can use this API to update user role extension data by passing id in
-        the path param. `/v1/userRoleExtension/update/{_id}`
-
-
-        * It is mandatory to provide values for parameters marked with
-        `required`
-
-        * Mandatory parameter cannot be empty or null
-      operationId: ''
-      tags: *ref_20
-      parameters:
-        - in: header
-          name: X-auth-token
-          description: >-
-            You require an X-auth-token to use this API. This token is available
-            in the login API Response.
-          schema: *ref_21
-          required: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $schema: http://json-schema.org/draft-04/schema#
-              type: object
-              properties:
-                title:
-                  type: string
-            examples:
-              sampleBodyData:
-                value:
-                  title: Head Master
-      responses:
-        '200':
-          description: Accepted
-          headers: *ref_22
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  status:
-                    type: number
-                  result:
-                    type: object
-                    properties:
-                      status:
-                        type: string
-                      createdBy:
-                        type: string
-                      updatedBy:
-                        type: string
-                      deleted:
-                        type: boolean
-                      _id:
-                        type: string
-                      userRoleId:
-                        type: string
-                      title:
-                        type: string
-                      code:
-                        type: string
-                      entityTypes:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            entityType:
-                              type: string
-                            entityTypeId:
-                              type: string
-                      tenantId:
-                        type: string
-                      orgId:
-                        type: string
-                      updatedAt:
-                        type: string
-                      createdAt:
-                        type: string
-                      __v:
-                        type: number
-        '400':
-          description: Bad Request.
-          headers: *ref_23
-          content:
-            application/json:
-              schema: &ref_25
-                $schema: http://json-schema.org/draft-04/schema#
-                type: object
-                properties:
-                  status:
-                    type: number
-                  message:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        location:
-                          type: string
-                        param:
-                          type: string
-                        msg:
-                          type: string
-              examples:
-                FailureResponse:
-                  value:
-                    status: 400
-                    message:
-                      - location: params
-                        param: _id
-                        msg: required _id
-  /v1/userRoleExtension/find:
-    post:
-      summary: Find the user role extension data.
-      description: >-
-        Use this API to get the details of user role extension data based on the
-        request body passed. `/v1/userRoleExtension/find`
-
-
-        * It is mandatory to provide values for parameters marked with
-        `required`
-
-        * Mandatory parameter cannot be empty or null
-      operationId: ''
-      tags: *ref_20
-      parameters:
-        - in: header
-          name: X-auth-token
-          description: >-
-            You require an X-auth-token to use this API. This token is available
-            in the login API Response.
-          schema: *ref_21
-          required: false
-        - in: header
-          name: internal-access-token
-          description: ''
-          schema: &ref_27
-            type: string
-          required: true
-        - in: header
-          name: admin-auth-token
-          description: >-
-            This header should be passed when system admin wants to create
-            resources
-          schema: &ref_24
-            type: string
-        - in: header
-          name: tenantId
-          description: >-
-            This header specifies the tenant data of the resource creator. This
-            header should be passed when system admin wants to create resources
-          schema: *ref_24
-        - in: header
-          name: orgId
-          description: >-
-            This header specifies the organization data of the resource creator.
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_24
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $schema: http://json-schema.org/draft-04/schema#
-              type: object
-              properties:
-                query:
-                  type: object
-                  properties:
-                    entityTypes.entityTypeId:
-                      type: object
-                      properties:
-                        $in:
-                          type: array
-                          items:
-                            type: string
-                projection:
-                  type: array
-                  items:
-                    type: string
-            examples:
-              sampleBodyData:
-                value:
-                  query:
-                    entityTypes.entityTypeId:
-                      $in:
-                        - 5f32d8228e0dc8312404056b
-                        - 5f32d8228e0dc8312404056c
-                        - 5f32d8228e0dc83124040567
-                        - 5f32d8228e0dc8312404056e
-                  projection:
-                    - _id
-                    - title
-      responses:
-        '200':
-          description: Accepted
-          headers: *ref_22
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                  status:
-                    type: number
-                  result:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        _id:
-                          type: string
-                        status:
-                          type: string
-                        createdBy:
-                          type: string
-                        updatedBy:
-                          type: string
-                        deleted:
-                          type: boolean
-                        userRoleId:
-                          type: string
-                        title:
-                          type: string
-                        code:
-                          type: string
-                        entityTypes:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              entityType:
-                                type: string
-                              entityTypeId:
-                                type: string
-                        tenantId:
-                          type: string
-                        orgId:
-                          type: string
-                        updatedAt:
-                          type: string
-                        createdAt:
-                          type: string
-                        __v:
-                          type: number
-                  count:
-                    type: number
-        '400':
-          description: Bad Request.
-          headers: *ref_23
-          content:
-            application/json:
-              schema: *ref_25
-              examples:
-                FailureResponse:
-                  value:
-                    status: 400
-                    message:
-                      - location: body
-                        param: query
-                        msg: required query
-  /v1/userRoleExtension/delete:
-    delete:
-      summary: Delete user role extension data.
-      description: >-
-        Use this API to delete user role extension data by passing it's id.
-        `/v1/userRoleExtension/delete`
-
-
-        * It is mandatory to provide values for parameters marked with
-        `required`
-
-        * Mandatory parameter cannot be empty or null
-      operationId: ''
-      tags: *ref_20
-      parameters:
-        - in: header
-          name: X-auth-token
-          description: >-
-            You require an X-auth-token to use this API. This token is available
-            in the login API Response.
-          schema: *ref_21
-          required: true
-        - in: header
-          name: internal-access-token
-          description: ''
-          schema: &ref_26
-            type: string
-          required: true
-        - in: header
-          name: admin-access-token
-          description: >-
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_26
-        - in: header
-          name: tenantId
-          description: >-
-            This header specifies the tenant data of the resource creator. This
-            header should be passed when system admin wants to create resources
-          schema: *ref_26
-        - in: header
-          name: orgId
-          description: >-
-            This header specifies the organization data of the resource creator.
-            This header should be passed when system admin wants to create
-            resources
-          schema: *ref_26
-      responses:
-        '200':
-          description: Accepted
-          headers: *ref_22
-          content:
-            application/json:
-              schema:
-                $schema: http://json-schema.org/draft-04/schema#
-                type: object
-                properties:
-                  message:
-                    type: string
-                  status:
-                    type: number
-              examples:
-                SuccessResponse:
-                  value:
-                    message: USER_ROLE_DELETED
-                    status: 200
-        '400':
-          description: Bad Request.
-          headers: *ref_23
-          content:
-            application/json:
-              schema: *ref_25
-              examples:
-                FailureResponse:
-                  value:
-                    status: 400
-                    message:
-                      - location: params
-                        param: _id
-                        msg: required id
   /v1/admin/createIndex/{collection_name}:
     post:
       summary: Find the user role extension data.
       description: >-
-        This endpoint allows an admin to create an index for a
-        specificollection. The request body should include the keys to be
-        indexed.
+        This endpoint allows an admin to create an index for a specific
+        collection. The request body should include the keys to be indexed.
 
         * The endpoint allows a user to create an index for a specified
 
@@ -3326,19 +2852,21 @@ paths:
         * This is a mandatory parameter and cannot be empty or null.
       operationId: ''
       tags:
-        - Admin-API's
+        - Admin
       parameters:
         - in: header
           name: X-auth-token
           description: >-
             You require an X-auth-token to use this API. This token is available
             in the login API Response.
-          schema: *ref_21
+          schema:
+            type: string
           required: true
         - in: header
           name: internal-access-token
           description: You require an internal-access-token to use this API.
-          schema: *ref_27
+          schema:
+            type: string
           required: true
         - in: header
           name: collection_name
@@ -3366,7 +2894,7 @@ paths:
       responses:
         '200':
           description: Accepted
-          headers: *ref_22
+          headers: {}
           content:
             application/json:
               schema:
@@ -3383,7 +2911,7 @@ paths:
                     status: 200
         '400':
           description: Bad Request.
-          headers: *ref_23
+          headers: {}
           content:
             application/json:
               schema:
@@ -3421,9 +2949,7 @@ paths:
     get:
       description: >-
         This endpoint is used to verify the health status of the Entity Service
-        and
-                its dependencies. 
-        * The API Endpoint for health check is
+        and its dependencies.  * The API Endpoint for health check is
          is `/entity-management/health`.
         * It is mandatory to provide values for parameters which are marked as
 
@@ -3432,7 +2958,7 @@ paths:
         * This is a mandatory parameter and cannot be empty or null.
       operationId: ''
       tags:
-        - healthCheck-API
+        - Health Check
       parameters: []
       responses:
         '200':
@@ -3579,12 +3105,12 @@ paths:
         * This is a mandatory parameter and cannot be empty or null.
       operationId: ''
       tags:
-        - Admin-API's
+        - Admin
       parameters:
         - in: path
           name: _id
           description: Valid Entities Id to be passed
-          schema: &ref_28
+          schema: &ref_19
             type: string
           required: true
         - in: path
@@ -3597,27 +3123,27 @@ paths:
           description: >-
             To use this API, you require an X-auth-token. This is available in
             the login API Response.
-          schema: *ref_28
+          schema: *ref_19
           required: true
         - in: header
           name: internal-access-token
           description: internal-access-token
-          schema: *ref_28
+          schema: *ref_19
           required: true
         - in: header
           name: admin-auth-token
           description: admin-auth-token
-          schema: *ref_28
+          schema: *ref_19
           required: true
         - in: header
           name: tenantId
           description: tenantId
-          schema: *ref_28
+          schema: *ref_19
           required: true
         - in: header
           name: orgId
           description: orgId
-          schema: *ref_28
+          schema: *ref_19
           required: true
       responses:
         '200':
@@ -3679,24 +3205,19 @@ paths:
                         param: _id
                         msg: required entity _id
 tags:
-  - name: userRoleExtension-API's
+  - name: Entity Type
     description: ''
     externalDocs:
       description: ''
       url: ''
-  - name: entityType-API's
+  - name: Entities
     description: ''
     externalDocs:
       description: ''
       url: ''
-  - name: entities-API's
+  - name: Admin
     description: ''
-    externalDocs:
-      description: ''
-      url: ''
-  - name: Admin-API's
-    description: ''
-  - name: healthCheck-API
+  - name: Health Check
     description: ''
     externalDocs:
       description: ''
