@@ -443,14 +443,7 @@ module.exports = class Entities extends Abstract {
     "result": [
         {
             "_id": "667bf60c3d7cec1dab341ee9",
-            "childHierarchyPath": [
-                "district",
-                "beat",
-                "cluster",
-                "school",
-                "block",
-                "state"
-            ],
+            "childHierarchyPath": [],
             "allowedRoles": [],
             "createdBy": "SYSTEM",
             "updatedBy": "SYSTEM",
@@ -458,50 +451,32 @@ module.exports = class Entities extends Abstract {
             "entityTypeId": "6638c5bfb87e1acce3fcd6af",
             "entityType": "school",
             "registryDetails": {
-                "locationId": "entitytj41d42f3",
-                "code": "entitytj41d42f3"
+                "locationId": "KA28",
+                "code": "KA28"
             },
             "metaInformation": {
-                "externalId": "entitytj41d42f3",
-                "name": "school"
+                "externalId": "KA28",
+                "name": "Govt School Bijapur"
             },
             "updatedAt": "2024-06-26T11:05:48.397Z",
             "createdAt": "2024-06-26T11:05:48.397Z",
             "__v": 0,
-            "groups": {
-                "cluster": [
-                    "6682424ba845ef3e891daee1",
-                    "6682426ba845ef3e891daee4",
-                    "668242835fb8bc3e93ceae44",
-                    "6682429fa845ef3e891daee7"
-                ],
-                "block": [
-                    "668276d45fb8bc3e93ceaeaf",
-                    "6682771aa845ef3e891db070",
-                    "668273665fb8bc3e93ceae65",
-                    "668273bda845ef3e891daf15"
-                ],
-                "district": [
-                    "668240135fb8bc3e93ceae39",
-                    "66827345a845ef3e891daf0c",
-                    "66d57216a4699c239cec6b00"
-                ]
-            },
+            "groups": {},
             "orgId": "1",
             "tenantId": "1",
             "parentInformation": {
                 "state": [
                     {
                         "_id": "665d8df5c6892808846230e7",
-                        "externalId": "hsjj",
+                        "externalId": "KA",
                         "name": "Karnataka"
                     }
                 ],
                 "block": [
                     {
                         "_id": "66790a8cba9a0b5bd7d6aba0",
-                        "externalId": "jpl",
-                        "name": "state"
+                        "externalId": "KA2825",
+                        "name": "Bijapur"
                     }
                 ]
             }
@@ -546,26 +521,37 @@ module.exports = class Entities extends Abstract {
 	 * @returns {JSON} - Updated entity information.
 	 * 
 	 *  
-	"result": {
-		"metaInformation": {
-		"externalId": "entity123",
-		"name": "rahul"
-		},
-		"childHierarchyPath": [],
-		"allowedRoles": [
-		"rahul",
-		"prajwal"
-		],
-		"createdBy": "user123",
-		"updatedBy": "user123",
-		"deleted": false,
-		"_id": "6613ddfa44b91a0d1a58bb32",
-		"entityTypeId": "661384681797bc00de520555",
-		"entityType": "rahul",
-		"updatedAt": "2024-04-22T09:04:12.292Z",
-		"createdAt": "2024-04-08T12:07:22.369Z",
-		"__v": 0
-	 }
+	{
+    "message": "ENTITY_UPDATED",
+    "status": 200,
+    "result": {
+        "metaInformation": {
+            "targetedEntityTypes": [
+                "state ",
+                "block"
+            ],
+            "externalId": "KA280",
+            "name": "Karnataka"
+        },
+        "registryDetails": {
+            "locationId": "KA280",
+            "code": "KA280"
+        },
+        "childHierarchyPath": [],
+        "createdBy": "456",
+        "updatedBy": "456",
+        "deleted": false,
+        "_id": "68f84c5be09cc92d37d26cce",
+        "entityTypeId": "68f849082be5592a62b67ad3",
+        "entityType": "subroles",
+        "userId": "456",
+        "tenantId": "shikshalokam",
+        "orgId": "slorg",
+        "updatedAt": "2025-10-22T04:06:35.790Z",
+        "createdAt": "2025-10-22T03:15:39.145Z",
+        "__v": 0
+    }
+	}
 	*/
 
 	update(req) {
@@ -598,24 +584,36 @@ module.exports = class Entities extends Abstract {
 	 * @param {Object} req - All requested Data.
 	 * @returns {JSON} - Added entities information.
 	 * 
-	 *   "result": [
-		{
-			"childHierarchyPath": [],
-			"allowedRoles": [],
-			"createdBy": "SYSTEM",
-			"updatedBy": "SYSTEM",
-			"_id": "662627c923a1b004a5cc4d65",
-			"deleted": false,
-			"entityTypeId": "627a13928ce12806f5803f57",
-			"entityType": "block",
-			"metaInformation": {
-				"externalId": "entity123"
-			},
-			"updatedAt": "2024-04-22T09:03:05.921Z",
-			"createdAt": "2024-04-22T09:03:05.921Z",
-			"__v": 0
-		}
-	 ]
+	 *   {
+    "message": "ENTITY_ADDED",
+    "status": 200,
+    "result": [
+        {
+            "metaInformation": {
+                "targetedEntityTypes": [],
+                "externalId": "KA280",
+                "name": "Karnataka"
+            },
+            "childHierarchyPath": [],
+            "createdBy": "456",
+            "updatedBy": "456",
+            "_id": "68f84c5be09cc92d37d26cce",
+            "deleted": false,
+            "entityTypeId": "68f849082be5592a62b67ad3",
+            "entityType": "subroles",
+            "registryDetails": {
+                "locationId": "KA280",
+                "code": "KA280"
+            },
+            "userId": "456",
+            "tenantId": "shikshalokam",
+            "orgId": "slorg",
+            "updatedAt": "2025-10-22T03:15:39.145Z",
+            "createdAt": "2025-10-22T03:15:39.145Z",
+            "__v": 0
+        }
+    ]
+	}
 	*/
 
 	add(req) {
@@ -714,7 +712,6 @@ module.exports = class Entities extends Abstract {
 			"_id": "5f33c3d85f637784791cd830",
 			"childHierarchyPath": [
 				"district",
-				"beat",
 				"cluster",
 				"school"
 			]
@@ -723,7 +720,6 @@ module.exports = class Entities extends Abstract {
 			"_id": "627a13928ce12806f5803f57",
 			"childHierarchyPath": [
 				"district",
-				"beat",
 				"cluster",
 				"school"
 			]
