@@ -346,7 +346,9 @@ module.exports = class UserProjectsHelper {
 								value: entity._id,
 								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
 									const relatedEntities = groupEntityMap.get(entity._id.toString()) || []
-									const matchingEntity = relatedEntities.find((relatedEntity) => relatedEntity.entityType === entityType)
+									const matchingEntity = relatedEntities.find(
+										(relatedEntity) => relatedEntity.entityType === entityType
+									)
 									if (matchingEntity) {
 										entityTypeNameMap[entityType] = matchingEntity?.metaInformation?.name
 									}
@@ -1023,7 +1025,10 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Retrieve entity documents based on the filterQuery
-				const entityDocuments = await entitiesQueries.entityDocuments(filterQuery, ['childHierarchyPath'])
+				const entityDocuments = await entitiesQueries.entityDocuments(filterQuery, [
+					'childHierarchyPath',
+					'entityType',
+				])
 
 				if (!entityDocuments.length > 0) {
 					throw {
@@ -1032,7 +1037,12 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 
-				let result = []
+				let result = entityDocuments.map((entityDoc) => {
+					return {
+						_id: entityDoc._id,
+						childHierarchyPath: [entityDoc.entityType, ...entityDoc.childHierarchyPath],
+					}
+				})
 
 				//  if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
 				//     result = entityDocuments[0].childHierarchyPath;
@@ -1062,7 +1072,7 @@ module.exports = class UserProjectsHelper {
 				return resolve({
 					success: true,
 					message: CONSTANTS.apiResponses.ENTITIES_CHILD_HIERACHY_PATH,
-					result: entityDocuments,
+					result,
 				})
 			} catch (error) {
 				return reject(error)
