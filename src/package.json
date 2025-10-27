@@ -67,7 +67,7 @@
 		"mongoose-ttl": "0.0.3",
 		"node-cache": "5.1.2",
 		"nodemon": "2.0.22",
-		"p-each-series": "2.2.",
+		"p-each-series": "2.2.0",
 		"path": "0.12.7",
 		"prettier": "2.8.8",
 		"request": "2.88.2",
