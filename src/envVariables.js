@@ -89,6 +89,11 @@ let enviromentVariables = {
 		optional: false,
 		default: 'entity-health-check-topic-check',
 	},
+	SERVICE_NAME: {
+		message: 'Required SERVICE_NAME',
+		optional: false,
+		default: 'EntityManagementService',
+	},
 }
 
 let success = true
