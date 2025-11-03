@@ -1160,7 +1160,7 @@ module.exports = class UserProjectsHelper {
 	) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				let aggregateData
+				let aggregateData, count
 				bodyQuery = UTILS.convertMongoIds(bodyQuery)
 
 				if (aggregateStaging == true) {
@@ -1262,6 +1262,8 @@ module.exports = class UserProjectsHelper {
 				}
 
 				let result = await entitiesQueries.getAggregate(aggregateData)
+				count = result[0].totalCount[0]?.count || 0
+
 				if (aggregateStaging == true) {
 					if (!Array.isArray(result) || !(result.length > 0)) {
 						throw {
@@ -1282,6 +1284,7 @@ module.exports = class UserProjectsHelper {
 					success: true,
 					message: CONSTANTS.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
 					result: result,
+					...(count !== undefined && { count }),
 				})
 			} catch (error) {
 				return reject(error)
