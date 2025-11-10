@@ -899,7 +899,9 @@ module.exports = class Entities extends Abstract {
 					req.pageNo,
 					req.query.language ? req.query.language : '',
 					req.userDetails,
-					req.query.parentInfoRequired ? req.query.parentInfoRequired : false
+					req.query.parentInfoRequired ? req.query.parentInfoRequired : false,
+					req.query.sortOrder,
+					req.query.sortKey
 				)
 				return resolve(entityDocuments)
 			} catch (error) {
