@@ -8,7 +8,6 @@
 const kafkaEnabled = process.env.KAFKA_COMMUNICATIONS_ON_OFF === 'ON'
 module.exports = {
 	name: process.env.SERVICE_NAME,
-	version: '1.0.0',
 	checks: {
 		mongodb: {
 			enabled: true,
