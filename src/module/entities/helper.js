@@ -258,7 +258,6 @@ module.exports = class UserProjectsHelper {
 						entities.map(async (entity) => {
 							obj['entityId'] = entity
 							let entitiesDocument = await this.subEntities(obj, language, tenantId, sortOrder, sortKey)
-							// console.log('entitiesDocument----------->>>>> ',entitiesDocument)
 
 							if (Array.isArray(entitiesDocument.data) && entitiesDocument.data.length > 0) {
 								result = entitiesDocument
@@ -344,7 +343,6 @@ module.exports = class UserProjectsHelper {
 							// Process the results more efficiently
 							result.data = result.data.map((entity) => ({
 								...entity,
-								[entity.entityType]: entity.name,
 								label: entity.name,
 								value: entity._id,
 								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
