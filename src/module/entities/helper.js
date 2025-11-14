@@ -483,6 +483,8 @@ module.exports = class UserProjectsHelper {
 	 * @name subEntities
 	 * @param {body} entitiesData
 	 * @param {String} tenantId
+	 * @param {String} sortOrder
+	 * @param {String} sortKey
 	 * @returns {Array} - List of all immediate entities or traversal data.
 	 */
 
@@ -608,6 +610,8 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} searchText - Search Text.
 	 * @param {String} tenantId - user's tenant id
+	 * @param {String} sortOrder - Sort order key for sorting
+	 * @param {String} sortKey - sort key for sorting
 	 * @returns {Array} - List of all immediateEntities based on entityId.
 	 */
 
@@ -671,6 +675,8 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageSize - total page size.
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} tenantId - user's tenantId
+	 * @param {String} sortOrder - Sort order key for sorting
+	 * @param {String} sortKey - Sort key for sorting
 	 * @param {Array} [entityIds = false] - Array of entity ids.
 	 */
 

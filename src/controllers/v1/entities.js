@@ -840,7 +840,7 @@ module.exports = class Entities extends Abstract {
 	}
 
 	/**
-     * @api {GET} v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&parentInfoRequired=true
+	* @api {GET} v1/entities/subEntityList/663339bc0cb19f01c459853b?type=school&search=&page=1&limit=100&parentInfoRequired=true&sortOrder=asc&sortKey=name
      * Get sub entity list for the given entity. 
      * @apiVersion 1.0.0
      * @apiGroup Entities
@@ -868,14 +868,16 @@ module.exports = class Entities extends Abstract {
     }
 
     /**
-      * Get the immediate entities .
-      * @method
-      * @name subEntityList
-      * @param  {Request} req request body.
-      * @param {String} req.params._id - entityId
-	  * @param {String} req.query.type - Entity Type
-	  * @param {String} req.query.language - language Code
-      * @returns {JSON} Returns list of immediate entities
+	* Get the immediate entities .
+	* @method
+	* @name subEntityList
+	* @param  {Request} req request body.
+	* @param {String} req.params._id - entityId
+ 	  * @param {String} req.query.type - Entity Type
+ 	  * @param {String} req.query.language - language Code
+ 	  * @param {String} [req.query.sortOrder] - Sort order for results. Allowed values: 'asc'|'desc' (case-insensitive). If provided, 'sortKey' must also be provided.
+ 	  * @param {String} [req.query.sortKey] - Sort key for results. Allowed values: 'name'|'externalId'. If provided, 'sortOrder' must also be provided.
+	* @returns {JSON} Returns list of immediate entities
      */
 
 	subEntityList(req) {
