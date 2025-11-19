@@ -234,7 +234,9 @@ module.exports = class UserProjectsHelper {
 		pageNo,
 		language,
 		userDetails,
-		parentInfoRequired = false
+		parentInfoRequired = false,
+		sortOrder = '',
+		sortKey = ''
 	) {
 		return new Promise(async (resolve, reject) => {
 			try {
@@ -249,13 +251,13 @@ module.exports = class UserProjectsHelper {
 				}
 				// Retrieve sub-entities using 'this.subEntities' for a single entity
 				if (entityId !== '') {
-					result = await this.subEntities(obj, language, tenantId)
+					result = await this.subEntities(obj, language, tenantId, sortOrder, sortKey)
 				} else {
 					// Retrieve sub-entities using 'this.subEntities' for multiple entities
 					await Promise.all(
 						entities.map(async (entity) => {
 							obj['entityId'] = entity
-							let entitiesDocument = await this.subEntities(obj, language, tenantId)
+							let entitiesDocument = await this.subEntities(obj, language, tenantId, sortOrder, sortKey)
 
 							if (Array.isArray(entitiesDocument.data) && entitiesDocument.data.length > 0) {
 								result = entitiesDocument
@@ -341,7 +343,6 @@ module.exports = class UserProjectsHelper {
 							// Process the results more efficiently
 							result.data = result.data.map((entity) => ({
 								...entity,
-								[entity.entityType]: entity.name,
 								label: entity.name,
 								value: entity._id,
 								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
@@ -482,10 +483,12 @@ module.exports = class UserProjectsHelper {
 	 * @name subEntities
 	 * @param {body} entitiesData
 	 * @param {String} tenantId
+	 * @param {String} sortOrder
+	 * @param {String} sortKey
 	 * @returns {Array} - List of all immediate entities or traversal data.
 	 */
 
-	static subEntities(entitiesData, language, tenantId) {
+	static subEntities(entitiesData, language, tenantId, sortOrder = '', sortKey = '') {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entitiesDocument
@@ -499,7 +502,9 @@ module.exports = class UserProjectsHelper {
 						entitiesData.limit,
 						entitiesData.pageNo,
 						language,
-						tenantId
+						tenantId,
+						sortOrder,
+						sortKey
 					)
 				} else {
 					// Retrieve immediate entities
@@ -573,7 +578,16 @@ module.exports = class UserProjectsHelper {
 					})
 
 					if (Array.isArray(immediateEntitiesIds) && immediateEntitiesIds.length > 0) {
-						let searchImmediateData = await this.search(searchText, pageSize, pageNo, immediateEntitiesIds)
+						let searchImmediateData = await this.search(
+							searchText,
+							pageSize,
+							pageNo,
+							immediateEntitiesIds,
+							language,
+							tenantId,
+							sortOrder,
+							sortKey
+						)
 
 						immediateEntities = searchImmediateData[0]
 					}
@@ -596,10 +610,22 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} searchText - Search Text.
 	 * @param {String} tenantId - user's tenant id
+	 * @param {String} sortOrder - Sort order key for sorting
+	 * @param {String} sortKey - sort key for sorting
 	 * @returns {Array} - List of all immediateEntities based on entityId.
 	 */
 
-	static entityTraversal(entityId, entityTraversalType = '', searchText = '', pageSize, pageNo, language, tenantId) {
+	static entityTraversal(
+		entityId,
+		entityTraversalType = '',
+		searchText = '',
+		pageSize,
+		pageNo,
+		language,
+		tenantId,
+		sortOrder = '',
+		sortKey = ''
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entityTraversal = `groups.${entityTraversalType}`
@@ -626,7 +652,9 @@ module.exports = class UserProjectsHelper {
 						pageNo,
 						entitiesDocument[0].groups[entityTraversalType],
 						language,
-						tenantId
+						tenantId,
+						sortOrder,
+						sortKey
 					)
 
 					result = entityTraversalData[0]
@@ -647,10 +675,12 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageSize - total page size.
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} tenantId - user's tenantId
+	 * @param {String} sortOrder - Sort order key for sorting
+	 * @param {String} sortKey - Sort key for sorting
 	 * @param {Array} [entityIds = false] - Array of entity ids.
 	 */
 
-	static search(searchText, pageSize, pageNo, entityIds = false, language, tenantId) {
+	static search(searchText, pageSize, pageNo, entityIds = false, language, tenantId, sortOrder = '', sortKey = '') {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let queryObject = {}
@@ -674,68 +704,52 @@ module.exports = class UserProjectsHelper {
 				}
 
 				let finalEntityDocuments = []
-				// Perform aggregation query to retrieve entity documents based on search criteria
+				// check the language criteria is set to english or not
+				const isEnglish = !language || language === CONSTANTS.common.ENGLISH_LANGUGE_CODE
+				// construct the name expression based on language
+				const nameExpr = isEnglish ? '$metaInformation.name' : `$translations.${language}.name`
+				// create a query pipeline
+				let pipeline = [
+					queryObject,
+					{
+						$project: {
+							name: nameExpr,
+							externalId: '$metaInformation.externalId',
+							addressLine1: '$metaInformation.addressLine1',
+							addressLine2: '$metaInformation.addressLine2',
+							entityType: 1,
+						},
+					},
+				]
+				// check if sort is necessary
+				// added here because $sort is not allowed after $facet
+				if (sortOrder && sortKey) {
+					// Define sort order
+					sortOrder = sortOrder.toLowerCase() === 'desc' ? -1 : 1
 
-				if (!language || language == CONSTANTS.common.ENGLISH_LANGUGE_CODE) {
-					let entityDocuments = await entitiesQueries.getAggregate([
-						queryObject,
-						{
-							$project: {
-								name: '$metaInformation.name',
-								externalId: '$metaInformation.externalId',
-								addressLine1: '$metaInformation.addressLine1',
-								addressLine2: '$metaInformation.addressLine2',
-								entityType: 1,
-							},
-						},
-						{
-							$facet: {
-								totalCount: [{ $count: 'count' }],
-								data: [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }],
-							},
-						},
-						{
-							$project: {
-								data: 1,
-								count: {
-									$arrayElemAt: ['$totalCount.count', 0],
-								},
-							},
-						},
-					])
-
-					finalEntityDocuments.push(...entityDocuments)
-				} else {
-					let entityDocuments = await entitiesQueries.getAggregate([
-						queryObject,
-						{
-							$project: {
-								// name: '$translations.hi.name',
-								name: `$translations.${language}.name`,
-								externalId: '$metaInformation.externalId',
-								addressLine1: '$metaInformation.addressLine1',
-								addressLine2: '$metaInformation.addressLine2',
-								entityType: 1,
-							},
-						},
-						{
-							$facet: {
-								totalCount: [{ $count: 'count' }],
-								data: [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }],
-							},
-						},
-						{
-							$project: {
-								data: 1,
-								count: {
-									$arrayElemAt: ['$totalCount.count', 0],
-								},
-							},
-						},
-					])
-
-					finalEntityDocuments.push(...entityDocuments)
+					// Create sort object dynamically
+					pipeline.push({ $sort: { [sortKey]: sortOrder } })
 				}
+				// append the remaining to pipeline
+				pipeline = [
+					...pipeline,
+					...[
+						{
+							$facet: {
+								totalCount: [{ $count: 'count' }],
+								data: [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }],
+							},
+						},
+						{
+							$project: {
+								data: 1,
+								count: { $arrayElemAt: ['$totalCount.count', 0] },
+							},
+						},
+					],
+				]
+				const entityDocuments = await entitiesQueries.getAggregate(pipeline)
+				finalEntityDocuments.push(...entityDocuments)
 
 				return resolve(finalEntityDocuments)
 			} catch (error) {
@@ -1160,7 +1174,7 @@ module.exports = class UserProjectsHelper {
 	) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				let aggregateData
+				let aggregateData, count
 				bodyQuery = UTILS.convertMongoIds(bodyQuery)
 
 				if (aggregateStaging == true) {
@@ -1262,6 +1276,8 @@ module.exports = class UserProjectsHelper {
 				}
 
 				let result = await entitiesQueries.getAggregate(aggregateData)
+				count = result[0].totalCount[0]?.count || 0
+
 				if (aggregateStaging == true) {
 					if (!Array.isArray(result) || !(result.length > 0)) {
 						throw {
@@ -1282,6 +1298,7 @@ module.exports = class UserProjectsHelper {
 					success: true,
 					message: CONSTANTS.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
 					result: result,
+					...(count !== undefined && { count }),
 				})
 			} catch (error) {
 				return reject(error)
