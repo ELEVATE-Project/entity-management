@@ -221,10 +221,23 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageNo - page no.
 	 * @param {params} language - language Code
 	 * @param {Object} userDetails - loggedin user's details
+	 * @param {Boolean} parentInfoRequired - additional fields to be fetched if true
 	 * @returns {Array} - List of all sub list entities.
 	 */
 
-	static subEntityList(entities, entityId, type, search, limit, pageNo, language, userDetails) {
+	static subEntityList(
+		entities,
+		entityId,
+		type,
+		search,
+		limit,
+		pageNo,
+		language,
+		userDetails,
+		parentInfoRequired = false,
+		sortOrder = '',
+		sortKey = ''
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let tenantId = userDetails.userInformation.tenantId
@@ -238,13 +251,13 @@ module.exports = class UserProjectsHelper {
 				}
 				// Retrieve sub-entities using 'this.subEntities' for a single entity
 				if (entityId !== '') {
-					result = await this.subEntities(obj, language, tenantId)
+					result = await this.subEntities(obj, language, tenantId, sortOrder, sortKey)
 				} else {
 					// Retrieve sub-entities using 'this.subEntities' for multiple entities
 					await Promise.all(
 						entities.map(async (entity) => {
 							obj['entityId'] = entity
-							let entitiesDocument = await this.subEntities(obj, language, tenantId)
+							let entitiesDocument = await this.subEntities(obj, language, tenantId, sortOrder, sortKey)
 
 							if (Array.isArray(entitiesDocument.data) && entitiesDocument.data.length > 0) {
 								result = entitiesDocument
@@ -254,60 +267,98 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Modify data properties (e.g., 'label') of retrieved entities if necessary
-				// if (result.data && result.data.length > 0) {
-				// 	// fetch the entity ids to look for parent hierarchy
-				// 	const entityIds = _.map(result.data, (item) => ObjectId(item._id))
-				// 	// dynamically set the entityType to search inside the group
-				// 	const key = ['groups', type]
-				// 	// create filter for fetching the parent data using group
-				// 	let entityFilter = {}
-				// 	entityFilter[key.join('.')] = {
-				// 		$in: entityIds,
-				// 	}
+				if (parentInfoRequired && result.data && result.data.length > 0) {
+					// fetch the entity ids to look for parent hierarchy
+					const entityIds = result.data.map((item) => ObjectId(item._id))
+					// dynamically set the entityType to search inside the group
+					const key = ['groups', type]
 
-				// 	entityFilter['tenantId'] = tenantId
+					// create filter for fetching the parent data using group
+					const entityFilter = {
+						[key.join('.')]: { $in: entityIds },
+						tenantId,
+					}
 
-				// 	// Retrieve all the entity documents with the entity ids in their gropu
-				// 	const entityDocuments = await entitiesQueries.entityDocuments(entityFilter, [
-				// 		'entityType',
-				// 		'metaInformation.name',
-				// 		'childHierarchyPath',
-				// 		key.join('.'),
-				// 	])
-				// 	// find out the state of the passed entityId
-				// 	const stateEntity = entityDocuments.find((entity) => entity.entityType == 'state')
-				// 	// fetch the child hierarchy path of the state
-				// 	const stateChildHierarchy = stateEntity.childHierarchyPath
-				// 	let upperLevelsOfType = type != 'state' ? ['state'] : [] // add state as default if type != state
-				// 	// fetch all the upper levels of the type from state hierarchy
-				// 	upperLevelsOfType = [
-				// 		...upperLevelsOfType,
-				// 		...stateChildHierarchy.slice(0, stateChildHierarchy.indexOf(type)),
-				// 	]
-				// 	result.data = result.data.map((data) => {
-				// 		let cloneData = { ...data }
-				// 		cloneData[cloneData.entityType] = cloneData.name
-				// 		// if we have upper levels to fetch
-				// 		if (upperLevelsOfType.length > 0) {
-				// 			// iterate through the data fetched to fetch the parent entity names
-				// 			entityDocuments.forEach((eachEntity) => {
-				// 				eachEntity[key[0]][key[1]].forEach((eachEntityGroup) => {
-				// 					if (
-				// 						ObjectId(eachEntityGroup).equals(cloneData._id) &&
-				// 						upperLevelsOfType.includes(eachEntity.entityType)
-				// 					) {
-				// 						if (eachEntity?.entityType !== 'state') {
-				// 							cloneData[eachEntity?.entityType] = eachEntity?.metaInformation?.name
-				// 						}
-				// 					}
-				// 				})
-				// 			})
-				// 		}
-				// 		cloneData['label'] = cloneData.name
-				// 		cloneData['value'] = cloneData._id
-				// 		return cloneData
-				// 	})
-				// }
+					let entityDocuments = await entitiesQueries.getAggregate([
+						{
+							$match: entityFilter,
+						},
+						{
+							$project: {
+								entityType: 1,
+								'metaInformation.name': 1,
+								childHierarchyPath: 1,
+								[key.join('.')]: 1,
+								childHierarchyPathSize: { $size: '$childHierarchyPath' },
+							},
+						},
+						{
+							$addFields: {
+								childHierarchyPathSize: {
+									$cond: {
+										if: { $isArray: '$childHierarchyPath' },
+										then: { $size: '$childHierarchyPath' },
+										else: 0,
+									},
+								},
+							},
+						},
+						{
+							$sort: {
+								childHierarchyPathSize: -1, // Sort by size in descending order
+							},
+						},
+					])
+
+					if (entityDocuments?.length > 0) {
+						// Get the first entity (will have the largest childHierarchyPath due to sort)
+						const topEntity = entityDocuments[0]
+						const topEntityHierarchy = Array.isArray(topEntity?.childHierarchyPath)
+							? topEntity.childHierarchyPath
+							: []
+
+						if (topEntityHierarchy?.length > 0 && type) {
+							const hierarchyLevels = topEntityHierarchy.slice(
+								0,
+								topEntityHierarchy.indexOf(type) !== -1
+									? topEntityHierarchy.indexOf(type) + 1
+									: topEntityHierarchy.length
+							)
+
+							// Create an efficient lookup map for entities
+							const groupEntityMap = entityDocuments.reduce((map, entity) => {
+								const group = entity?.groups?.[type]
+								if (Array.isArray(group)) {
+									group.forEach((childId) => {
+										const idStr = childId.toString()
+										if (!map.has(idStr)) {
+											map.set(idStr, [])
+										}
+										map.get(idStr).push(entity)
+									})
+								}
+								return map
+							}, new Map())
+
+							// Process the results more efficiently
+							result.data = result.data.map((entity) => ({
+								...entity,
+								label: entity.name,
+								value: entity._id,
+								...hierarchyLevels.reduce((entityTypeNameMap, entityType) => {
+									const relatedEntities = groupEntityMap.get(entity._id.toString()) || []
+									const matchingEntity = relatedEntities.find(
+										(relatedEntity) => relatedEntity.entityType === entityType
+									)
+									if (matchingEntity) {
+										entityTypeNameMap[entityType] = matchingEntity?.metaInformation?.name
+									}
+									return entityTypeNameMap
+								}, {}),
+							}))
+						}
+					}
+				}
 
 				resolve({
 					message: CONSTANTS.apiResponses.ENTITIES_FETCHED,
@@ -326,10 +377,20 @@ module.exports = class UserProjectsHelper {
 	 * @param {params} pageSize - page pageSize.
 	 * @param {params} pageNo - page no.
 	 * @param {String} type - Entity type
+	 * @param {String} roleLevel - Role level to filter roles (e.g., 'professional_subroles').
 	 * @param {String} tenantId - user's tenantId
 	 * @returns {Promise<Object>} A promise that resolves to the response containing the fetched roles or an error object.
 	 */
-	static targetedRoles(entityId, pageNo = '', pageSize = '', paginate, type = '', language, tenantId) {
+	static targetedRoles(
+		entityId,
+		pageNo = '',
+		pageSize = '',
+		paginate,
+		type = '',
+		roleLevel = '',
+		language,
+		tenantId
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Construct the filter to retrieve entities based on provided entity IDs
@@ -369,72 +430,46 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 
-				// Construct the filter to retrieve entity type IDs based on child hierarchy paths
-				const entityTypeFilter = {
-					name: {
-						$in: filteredHierarchyPaths,
-					},
+				// Construct the filter
+				const roleFilter = {
+					entityType: roleLevel ? roleLevel : CONSTANTS.common.SUBROLE_ENTITY_TYPE,
 					tenantId: tenantId,
-					isDeleted: false,
-				}
-				const entityTypeProjection = ['_id']
-				// Retrieve entity type IDs based on child hierarchy paths
-				const fetchEntityTypeId = await entityTypeQueries.entityTypesDocument(
-					entityTypeFilter,
-					entityTypeProjection
-				)
-				// Check if entity type IDs are retrieved successfully
-				if (fetchEntityTypeId.length < 0) {
-					throw {
-						status: HTTP_STATUS_CODE.not_found.status,
-						message: CONSTANTS.apiResponses.ENTITY_TYPE_DETAILS_NOT_FOUND,
-					}
-				}
-				// Extract the _id fields from the fetched entity types to use as a filter for user roles
-				const userRoleFilter = fetchEntityTypeId.map((entityType) => entityType._id)
-
-				// Construct the filter for finding user roles based on entityTypeIds and status
-				const userRoleExtensionFilter = {
-					'entityTypes.entityTypeId': {
-						$in: userRoleFilter,
-					},
-					status: CONSTANTS.common.ACTIVE_STATUS,
-					tenantId: tenantId,
+					deleted: false,
+					'metaInformation.targetedEntityTypes.entityType': { $in: filteredHierarchyPaths },
 				}
 
-				// Specify the fields to include in the result set
-				const userRoleExtensionProjection = ['_id', 'title', 'code', 'userRoleId']
+				const roleProjection = ['_id', 'metaInformation.name', 'metaInformation.externalId']
 
 				// Fetch the user roles based on the filter and projection
-				const fetchUserRoles = await userRoleExtensionHelper.find(
-					userRoleExtensionFilter,
-					userRoleExtensionProjection,
+				const fetchRoles = await entitiesQueries.entityDocuments(
+					roleFilter,
+					roleProjection,
 					pageSize,
 					pageSize * (pageNo - 1),
+					'',
 					paginate
 				)
 
 				// Check if the fetchUserRoles operation was successful and returned data
-				if (!fetchUserRoles.success || !fetchUserRoles.result || fetchUserRoles.result.length < 0) {
+				if (!fetchRoles || fetchRoles.length === 0) {
 					throw {
 						status: HTTP_STATUS_CODE.not_found.status,
 						message: CONSTANTS.apiResponses.ROLES_NOT_FOUND,
 					}
 				}
+
 				// Transforming the data
-				const transformedData = fetchUserRoles.result.map((item) => {
-					// For each item in the result array, create a new object with modified keys
-					return {
-						_id: item._id,
-						value: item.userRoleId,
-						label: item.title,
-						code: item.code,
-					}
-				})
+				const transformedData = fetchRoles.map((item) => ({
+					_id: item._id,
+					value: item.metaInformation?.externalId,
+					label: item.metaInformation?.name,
+					code: item.metaInformation?.externalId,
+				}))
+
 				return resolve({
 					message: CONSTANTS.apiResponses.ROLES_FETCHED_SUCCESSFULLY,
-					result: transformedData,
-					count: fetchUserRoles.count,
+					result: transformedData || [],
+					count: fetchRoles.length || 0,
 				})
 			} catch (error) {
 				return reject(error)
@@ -448,10 +483,12 @@ module.exports = class UserProjectsHelper {
 	 * @name subEntities
 	 * @param {body} entitiesData
 	 * @param {String} tenantId
+	 * @param {String} sortOrder
+	 * @param {String} sortKey
 	 * @returns {Array} - List of all immediate entities or traversal data.
 	 */
 
-	static subEntities(entitiesData, language, tenantId) {
+	static subEntities(entitiesData, language, tenantId, sortOrder = '', sortKey = '') {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entitiesDocument
@@ -465,7 +502,9 @@ module.exports = class UserProjectsHelper {
 						entitiesData.limit,
 						entitiesData.pageNo,
 						language,
-						tenantId
+						tenantId,
+						sortOrder,
+						sortKey
 					)
 				} else {
 					// Retrieve immediate entities
@@ -539,7 +578,16 @@ module.exports = class UserProjectsHelper {
 					})
 
 					if (Array.isArray(immediateEntitiesIds) && immediateEntitiesIds.length > 0) {
-						let searchImmediateData = await this.search(searchText, pageSize, pageNo, immediateEntitiesIds)
+						let searchImmediateData = await this.search(
+							searchText,
+							pageSize,
+							pageNo,
+							immediateEntitiesIds,
+							language,
+							tenantId,
+							sortOrder,
+							sortKey
+						)
 
 						immediateEntities = searchImmediateData[0]
 					}
@@ -562,10 +610,22 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} searchText - Search Text.
 	 * @param {String} tenantId - user's tenant id
+	 * @param {String} sortOrder - Sort order key for sorting
+	 * @param {String} sortKey - sort key for sorting
 	 * @returns {Array} - List of all immediateEntities based on entityId.
 	 */
 
-	static entityTraversal(entityId, entityTraversalType = '', searchText = '', pageSize, pageNo, language, tenantId) {
+	static entityTraversal(
+		entityId,
+		entityTraversalType = '',
+		searchText = '',
+		pageSize,
+		pageNo,
+		language,
+		tenantId,
+		sortOrder = '',
+		sortKey = ''
+	) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let entityTraversal = `groups.${entityTraversalType}`
@@ -592,7 +652,9 @@ module.exports = class UserProjectsHelper {
 						pageNo,
 						entitiesDocument[0].groups[entityTraversalType],
 						language,
-						tenantId
+						tenantId,
+						sortOrder,
+						sortKey
 					)
 
 					result = entityTraversalData[0]
@@ -613,10 +675,12 @@ module.exports = class UserProjectsHelper {
 	 * @param {Number} pageSize - total page size.
 	 * @param {Number} pageNo - Page no.
 	 * @param {String} tenantId - user's tenantId
+	 * @param {String} sortOrder - Sort order key for sorting
+	 * @param {String} sortKey - Sort key for sorting
 	 * @param {Array} [entityIds = false] - Array of entity ids.
 	 */
 
-	static search(searchText, pageSize, pageNo, entityIds = false, language, tenantId) {
+	static search(searchText, pageSize, pageNo, entityIds = false, language, tenantId, sortOrder = '', sortKey = '') {
 		return new Promise(async (resolve, reject) => {
 			try {
 				let queryObject = {}
@@ -640,68 +704,52 @@ module.exports = class UserProjectsHelper {
 				}
 
 				let finalEntityDocuments = []
-				// Perform aggregation query to retrieve entity documents based on search criteria
+				// check the language criteria is set to english or not
+				const isEnglish = !language || language === CONSTANTS.common.ENGLISH_LANGUGE_CODE
+				// construct the name expression based on language
+				const nameExpr = isEnglish ? '$metaInformation.name' : `$translations.${language}.name`
+				// create a query pipeline
+				let pipeline = [
+					queryObject,
+					{
+						$project: {
+							name: nameExpr,
+							externalId: '$metaInformation.externalId',
+							addressLine1: '$metaInformation.addressLine1',
+							addressLine2: '$metaInformation.addressLine2',
+							entityType: 1,
+						},
+					},
+				]
+				// check if sort is necessary
+				// added here because $sort is not allowed after $facet
+				if (sortOrder && sortKey) {
+					// Define sort order
+					sortOrder = sortOrder.toLowerCase() === 'desc' ? -1 : 1
 
-				if (!language || language == CONSTANTS.common.ENGLISH_LANGUGE_CODE) {
-					let entityDocuments = await entitiesQueries.getAggregate([
-						queryObject,
-						{
-							$project: {
-								name: '$metaInformation.name',
-								externalId: '$metaInformation.externalId',
-								addressLine1: '$metaInformation.addressLine1',
-								addressLine2: '$metaInformation.addressLine2',
-								entityType: 1,
-							},
-						},
-						{
-							$facet: {
-								totalCount: [{ $count: 'count' }],
-								data: [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }],
-							},
-						},
-						{
-							$project: {
-								data: 1,
-								count: {
-									$arrayElemAt: ['$totalCount.count', 0],
-								},
-							},
-						},
-					])
-
-					finalEntityDocuments.push(...entityDocuments)
-				} else {
-					let entityDocuments = await entitiesQueries.getAggregate([
-						queryObject,
-						{
-							$project: {
-								// name: '$translations.hi.name',
-								name: `$translations.${language}.name`,
-								externalId: '$metaInformation.externalId',
-								addressLine1: '$metaInformation.addressLine1',
-								addressLine2: '$metaInformation.addressLine2',
-								entityType: 1,
-							},
-						},
-						{
-							$facet: {
-								totalCount: [{ $count: 'count' }],
-								data: [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }],
-							},
-						},
-						{
-							$project: {
-								data: 1,
-								count: {
-									$arrayElemAt: ['$totalCount.count', 0],
-								},
-							},
-						},
-					])
-
-					finalEntityDocuments.push(...entityDocuments)
+					// Create sort object dynamically
+					pipeline.push({ $sort: { [sortKey]: sortOrder } })
 				}
+				// append the remaining to pipeline
+				pipeline = [
+					...pipeline,
+					...[
+						{
+							$facet: {
+								totalCount: [{ $count: 'count' }],
+								data: [{ $skip: pageSize * (pageNo - 1) }, { $limit: pageSize }],
+							},
+						},
+						{
+							$project: {
+								data: 1,
+								count: { $arrayElemAt: ['$totalCount.count', 0] },
+							},
+						},
+					],
+				]
+				const entityDocuments = await entitiesQueries.getAggregate(pipeline)
+				finalEntityDocuments.push(...entityDocuments)
 
 				return resolve(finalEntityDocuments)
 			} catch (error) {
@@ -991,7 +1039,11 @@ module.exports = class UserProjectsHelper {
 				}
 
 				// Retrieve entity documents based on the filterQuery
-				const entityDocuments = await entitiesQueries.entityDocuments(filterQuery, ['childHierarchyPath'])
+				const entityDocuments = await entitiesQueries.entityDocuments(filterQuery, [
+					'childHierarchyPath',
+					'entityType',
+					'metaInformation',
+				])
 
 				if (!entityDocuments.length > 0) {
 					throw {
@@ -1000,7 +1052,7 @@ module.exports = class UserProjectsHelper {
 					}
 				}
 
-				let result = []
+				// let result = [];
 
 				//  if( rolesDocument[0].entityTypes[0].entityType === constants.common.STATE_ENTITY_TYPE ) {
 				//     result = entityDocuments[0].childHierarchyPath;
@@ -1122,7 +1174,7 @@ module.exports = class UserProjectsHelper {
 	) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				let aggregateData
+				let aggregateData, count
 				bodyQuery = UTILS.convertMongoIds(bodyQuery)
 
 				if (aggregateStaging == true) {
@@ -1224,6 +1276,8 @@ module.exports = class UserProjectsHelper {
 				}
 
 				let result = await entitiesQueries.getAggregate(aggregateData)
+				count = result[0].totalCount[0]?.count || 0
+
 				if (aggregateStaging == true) {
 					if (!Array.isArray(result) || !(result.length > 0)) {
 						throw {
@@ -1244,6 +1298,7 @@ module.exports = class UserProjectsHelper {
 					success: true,
 					message: CONSTANTS.apiResponses.ASSETS_FETCHED_SUCCESSFULLY,
 					result: result,
+					...(count !== undefined && { count }),
 				})
 			} catch (error) {
 				return reject(error)
@@ -1483,7 +1538,7 @@ module.exports = class UserProjectsHelper {
 				queryToParent['$or'] = []
 
 				// Prepare entityIds based on entityId and requestData
-				if (ObjectId.isValid(entityId)) {
+				if (UTILS.strictObjectIdCheck(entityId)) {
 					entityIds.push(entityId)
 				} else {
 					externalIds.push(entityId)
@@ -1759,6 +1814,12 @@ module.exports = class UserProjectsHelper {
 						if (entityCreation.metaInformation.externalId) {
 							const externalId = entityCreation.metaInformation.externalId
 
+							if (UTILS.strictObjectIdCheck(externalId)) {
+								entityCreation.status = CONSTANTS.apiResponses.ENTITIES_FAILED
+								entityCreation.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
+								return entityCreation
+							}
+
 							entityCreation.registryDetails = {
 								code: externalId,
 								locationId: externalId,
@@ -1885,11 +1946,15 @@ module.exports = class UserProjectsHelper {
 						})
 
 						if (!updateData['metaInformation.name'] || !updateData['metaInformation.externalId']) {
-							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_FAILED
+							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
 							singleEntity.message = CONSTANTS.apiResponses.FIELD_MISSING
 							return singleEntity
 						}
-						// let data =
+						if (UTILS.strictObjectIdCheck(updateData['metaInformation.externalId'])) {
+							singleEntity.status = CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED
+							singleEntity.message = CONSTANTS.apiResponses.NOT_A_VALID_MONGOID
+							return singleEntity
+						}
 
 						if (translationFile) {
 							updateData['translations'] = translationFile[updateData['metaInformation.name']]

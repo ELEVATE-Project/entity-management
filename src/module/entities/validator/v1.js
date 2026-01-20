@@ -17,6 +17,13 @@ module.exports = (req) => {
 				.withMessage('The externalId field cannot be empty.')
 				.matches(/^\S+$/)
 				.withMessage('The externalId field should not contain spaces.')
+				.custom((value) => {
+					// Check if it's a valid Mongo ObjectId (24 hex characters)
+					if (/^[0-9a-fA-F]{24}$/.test(value)) {
+						throw new Error('externalId cannot be a Mongo ObjectId')
+					}
+					return true
+				})
 			req.checkBody('name')
 				.exists()
 				.withMessage('The name field is required.')
@@ -42,12 +49,42 @@ module.exports = (req) => {
 					.trim()
 					.notEmpty()
 					.withMessage('The name field cannot be empty.')
+					.custom((value) => {
+						// Check if it's a valid Mongo ObjectId (24 hex characters)
+						if (/^[0-9a-fA-F]{24}$/.test(value)) {
+							throw new Error('externalId cannot be a Mongo ObjectId')
+						}
+						return true
+					})
 			}
 		},
 		subEntityList: function () {
 			req.checkQuery('type').exists().withMessage('required type')
 			req.checkParams('_id').exists().withMessage('required _id')
 			req.checkParams('_id').exists().isMongoId().withMessage('Invalid Entity ID')
+
+			// Validate dependent sort query params: if one is present the other must be present
+			if (req.query && (req.query.sortOrder !== undefined || req.query.sortKey !== undefined)) {
+				// sortOrder must be present and either 'asc' or 'desc' (case-insensitive)
+				req.checkQuery('sortOrder')
+					.exists()
+					.withMessage('required sortOrder')
+					.custom((value) => {
+						if (typeof value !== 'string') return false
+						const v = value.toLowerCase()
+						return v === 'asc' || v === 'desc'
+					})
+					.withMessage("sortOrder must be one of 'asc' or 'desc'")
+
+				// sortKey must be present and one of 'name' or 'externalId'
+				req.checkQuery('sortKey')
+					.exists()
+					.withMessage('required sortKey')
+					.custom((value) => {
+						return value === 'name' || value === 'externalId'
+					})
+					.withMessage("sortKey must be one of 'name' or 'externalId'")
+			}
 		},
 		targetedRoles: function () {
 			req.checkParams('_id').exists().withMessage('The entity ID (_id) is required.')

@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "fa7d1558-cdcb-493a-8767-55758ac735da",
-		"name": "Entity-Management API's",
+		"_postman_id": "10b257e6-6f3c-42e1-a60d-06dbc25abb85",
+		"name": "Entity-Management",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "33513401"
 	},
@@ -32,7 +32,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"query\": {\n        \"name\": \"Goa\"\n    },\n    \"projection\": {\n        \"immediateChildrenEntityType\": 1,\n        \"name\": 1\n    },\n    \"skipFields\": {\n        \"createdAt\": 1\n    }\n}\n",
+							"raw": "{\n    \"query\": {\n        \"name\": \"state\",\n        \"tenantId\": \"shikshagraha\",\n        \"orgIds\" : {\"$in\" : [\"ALL\"]}\n    },\n    \"projection\": [\n        \"immediateChildrenEntityType\",\n        \"name\"\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -65,6 +65,21 @@
 							{
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
 								"type": "text"
 							}
 						],
@@ -104,6 +119,21 @@
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
 								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -141,6 +171,21 @@
 							{
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
 								"type": "text"
 							}
 						],
@@ -209,6 +254,21 @@
 							{
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tennatId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
 								"type": "text"
 							}
 						],
@@ -295,11 +355,26 @@
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
 								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"externalId\": \"entity123\",\n     \"name\": \" block\",\n    \"childHierarchyPath\": [],\n    \"allowedRoles\": [\"role2\", \"role1\"],\n    \"createdBy\": \"user123\",\n    \"updatedBy\": \"user123\"\n}\n",
+							"raw": "{\n    \"metaInformation.externalId\": \"KA28\",\n    \"metaInformation.name\": \" Karnataka\",\n    \"childHierarchyPath\": [\n        \"district\",\n        \"block\",\n        \"cluster\",\n        \"school\"\n    ],\n    \"allowedRoles\": [\n        \"role2\",\n        \"role1\"\n    ],\n    \"createdBy\": \"user123\",\n    \"updatedBy\": \"user123\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -332,6 +407,21 @@
 							{
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
 								"type": "text"
 							}
 						],
@@ -388,6 +478,21 @@
 							{
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
 								"type": "text"
 							}
 						],
@@ -471,6 +576,21 @@
 							{
 								"key": "internal-access-token",
 								"value": "{{internalToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
 								"type": "text"
 							}
 						],
@@ -594,7 +714,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{ \"query\": {\n        \"_id\": {\n            \"$in\": [\"5fd1b52ab53a6416aaeefb1f\", \"5fd1b52ab53a6416aaeefb24\",\"5f33c3d85f637784791cd830\",\"5fd1b52ab53a6416aaeefb26\",\"5fd098e2e049735a86b748ae\"]\n        }\n    },\n    \"projection\": [\n        \"_id\",\"metaInformation.name\"\n    ]}",
+							"raw": "{\n    \"query\": {\n        \"_id\": {\n            \"$in\": [\n                \"5fd1b52ab53a6416aaeefb1f\",\n                \"5fd1b52ab53a6416aaeefb24\",\n                \"5f33c3d85f637784791cd830\",\n                \"5fd1b52ab53a6416aaeefb26\",\n                \"5fd098e2e049735a86b748ae\"\n            ]\n        },\n        \"tenantId\": \"shikshalokam\"\n    },\n    \"projection\": [\n        \"_id\",\n        \"metaInformation.name\"\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -631,7 +751,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/entity-management/v1/entities/details/663339bc0cb19f01c459853b?&language=en",
+							"raw": "{{baseUrl}}/entity-management/v1/entities/details/663339bc0cb19f01c459853b",
 							"host": ["{{baseUrl}}"],
 							"path": ["entity", "v1", "entities", "details", "663339bc0cb19f01c459853b"]
 						}
@@ -640,9 +760,6 @@
 				},
 				{
 					"name": "listByLocationIds",
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
 					"request": {
 						"method": "POST",
 						"header": [
@@ -698,11 +815,26 @@
 								"key": "x-auth-token",
 								"value": "{{userToken}}",
 								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
+								"type": "text"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"entityTypeId\": \"663335e2a766490014aead0a\",\n    \"externalId\": \"entity44123\",\n    \"name\": \"Arunachal Pradesh\",\n     \"childHierarchyPath\" : [ \n        \"district\", \n        \"beat\", \n        \"cluster\", \n        \"school\", \n        \"block\"\n    ],\n    \"allowedRoles\": [\"role1\", \"role2\"]\n    \n}\n",
+							"raw": "{\n    \"externalId\": \"KA280\",\n    \"name\": \"Karnataka\",\n    \"childHierarchyPath\": [],\n    \"targetedEntityTypes\": [\n        \"district\",\n        \"block\",\n        \"cluster\",\n        \"school\"\n    ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -740,9 +872,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/entity-management/v1/entities/subEntityListBasedOnRoleAndLocation/entity123",
+							"raw": "{{baseUrl}}/entity-management/v1/entities/subEntityListBasedOnRoleAndLocation/KA28",
 							"host": ["{{baseUrl}}"],
-							"path": ["entity", "v1", "entities", "subEntityListBasedOnRoleAndLocation", "entity123"]
+							"path": ["entity", "v1", "entities", "subEntityListBasedOnRoleAndLocation", "KA28"]
 						}
 					},
 					"response": []
@@ -764,7 +896,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/entity-management/v1/entities/subEntityList/663354e56109810671aec49f?type=school&search=&page=1&limit=100&language=en",
+							"raw": "{{baseUrl}}/entity-management/v1/entities/subEntityList/663354e56109810671aec49f?type=school&search=&page=1&limit=100",
 							"host": ["{{baseUrl}}"],
 							"path": ["entity", "v1", "entities", "subEntityList", "663354e56109810671aec49f"],
 							"query": [
@@ -852,7 +984,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/entity-management/v1/entities/entityListBasedOnEntityType?entityType=state&language=en",
+							"raw": "{{baseUrl}}/entity-management/v1/entities/entityListBasedOnEntityType?entityType=state",
 							"host": ["{{baseUrl}}"],
 							"path": ["entity", "v1", "entities", "entityListBasedOnEntityType"],
 							"query": [
@@ -880,127 +1012,9 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/entity/v1/entities/targetedRoles/5f33c3d85f637784791cd831?entityType=district&language=hi",
+							"raw": "{{baseUrl}}/entity-management/v1/entities/targetedRoles/5f33c3d85f637784791cd831",
 							"host": ["{{baseUrl}}"],
 							"path": ["entity", "v1", "entities", "targetedRoles", "5f33c3d85f637784791cd831"]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "userRoleExtension",
-			"item": [
-				{
-					"name": "create",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "internal-access-token",
-								"value": "8c3a94f0931e01a4940a"
-							},
-							{
-								"key": "content-type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-auth-token",
-								"value": "{{userToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"userRoleId\": \"13\",\n    \"title\": \"State Level Campaign Coordinator\",\n    \"userType\": 1,\n    \"entityTypes\": [\n        {\n            \"entityType\": \"district\",\n            \"entityTypeId\": \"5f32d8228e0dc83104056e\"\n        }\n    ],\n    \"code\": \"state_level_campaign_coordinator\"}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/entity/v1/userRoleExtension/create",
-							"host": ["{{baseUrl}}"],
-							"path": ["entity", "v1", "userRoleExtension", "create"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "update",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "internal-access-token",
-								"value": "8c3a94f0931e01a4940a"
-							},
-							{
-								"key": "content-type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-auth-token",
-								"value": "{{userToken}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"title\":\"DM\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/entity/v1/userRoleExtension/update/66a94c06fff8abb34f9d800f",
-							"host": ["{{baseUrl}}"],
-							"path": ["entity", "v1", "userRoleExtension", "update", "66a94c06fff8abb34f9d800f"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "find",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "content-type",
-								"value": "application/json"
-							},
-							{
-								"key": "internal-access-token",
-								"value": "{{internal_access_token}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"query\": {\n        \"entityTypes.entityTypeId\": {\n            \"$in\": [\n                \"5f32d8228e0dc8312404056b\",\n                \"5f32d8228e0dc8312404056c\",\n                \"5f32d8228e0dc83124040567\",\n                \"5f32d8228e0dc8312404056e\"\n            ]\n        }\n    },\n    \"projection\": [\n        \"_id\", \"title\"\n    ]\n}\n"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/entity/v1/userRoleExtension/find",
-							"host": ["{{baseUrl}}"],
-							"path": ["entity", "v1", "userRoleExtension", "find"]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "content-type",
-								"value": "application/json"
-							},
-							{
-								"key": "x-auth-token",
-								"value": "{{userToken}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/entity/v1/userRoleExtension/delete/66a94fc1fdf2d5dda4b689dc",
-							"host": ["{{baseUrl}}"],
-							"path": ["entity", "v1", "userRoleExtension", "delete", "66a94fc1fdf2d5dda4b689dc"]
 						}
 					},
 					"response": []
@@ -1038,11 +1052,82 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/entity/v1/admin/createIndex/entities",
+							"raw": "{{baseUrl}}/entity-management/v1/admin/createIndex/entities",
 							"host": ["{{baseUrl}}"],
 							"path": ["entity", "v1", "admin", "createIndex", "entities"]
 						},
 						"description": "Generated from cURL: curl --location 'https://dev.sunbirdsaas.com/project/project/v1/admin/createIndex/solutions' \\\n--header 'X-auth-token: {{devToken}}' \\\n--header 'internal-access-token: {internal-access-token}' \\\n--header 'Content-Type: application/json' \\\n--data '{\n    \"keys\": [\n        \"scope.state\",\"scope.district\",\"scope.block\",\"scope.cluster\",\"scope.school\",\"scope.roles\"\n    ]\n}'"
+					},
+					"response": []
+				},
+				{
+					"name": "deleteEntity",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "content-type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "internal-access-token",
+								"value": "{{internalToken}}",
+								"type": "text"
+							},
+							{
+								"key": "x-auth-token",
+								"value": "{{userToken}}",
+								"type": "text"
+							},
+							{
+								"key": "admin-auth-token",
+								"value": "{{adminAuthToken}}",
+								"type": "text"
+							},
+							{
+								"key": "tenantId",
+								"value": "{{tenantId}}",
+								"type": "text"
+							},
+							{
+								"key": "orgId",
+								"value": "{{orgId}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/entity-management/v1/admin/deleteEntity/6825b78bcfa7cfe32cd835b6?allowRecursiveDelete=false",
+							"host": ["{{baseUrl}}"],
+							"path": ["entity", "v1", "admin", "deleteEntity", "6825b78bcfa7cfe32cd835b6"],
+							"query": [
+								{
+									"key": "allowRecursiveDelete",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "healthCheck",
+			"item": [
+				{
+					"name": "healthCheck",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}entity/health",
+							"host": ["{{baseUrl}}entity"],
+							"path": ["health"]
+						}
 					},
 					"response": []
 				}
