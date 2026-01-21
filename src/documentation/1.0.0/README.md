@@ -60,49 +60,31 @@ Elevate entity-management services can be setup in local using two methods:
 
 **Expectation**: Run single docker containerized service with existing local (in host) or remote dependencies.
 
-## Installation
+### Local Dependencies Steps
 
-**Create project Directory:** Establish a directory titled **project**.
+1.  **Download Docker Compose File:** Retrieve the **[docker-compose.yml](https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/docker-compose.yml)** file from the entity-management service repository and save it to the entity-management directory.
 
-> Example Command: `mkdir entity-management && cd entity-management/`
+2.  Run the docker container.
 
-> Note: All commands are run from the project directory.
+    -   For Mac & Windows with docker v18.03+:
 
-## Operating Systems: Linux
+        ```
+        $ docker run --name entity-management shikshalokamqa/elevate-entity-management:1.0.0
+        ```
 
-> **Caution:** Before proceeding, please ensure that the ports given here are available and open. It is essential to verify their availability prior to moving forward. You can run below command in your terminal to check this
+    -   For Linux:
+        ```
+        $ docker run --name entity-management --add-host=host.docker.internal:host-gateway shikshalokamqa/elevate-entity-management:1.0.0
+        ```
+        Refer [this](https://stackoverflow.com/a/24326540) for more information.
 
-```
-for port in 5001 27017; do
-    if sudo lsof -iTCP:$port -sTCP:LISTEN &>/dev/null; then
-        echo "Port $port is IN USE"
-    else
-        echo "Port $port is available"
-    fi
-done
-```
+### Remote Dependencies Steps
 
-1. **Download and execute main setup script:** Execute the following command in your terminal from the project directory.
+1. Run the docker container.
+
     ```
-    curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/project-service/refs/heads/setupGuide-3.4/documentation/3.4.0/dockerized/scripts/stand-alone/ubuntu/setup_project.sh && chmod +x setup_project.sh && sudo ./setup_project.sh
+    $ docker run --name entity-management shikshalokamqa/elevate-entity-management:1.0.0
     ```
-
-> Note : The script will download all the essential files and launch the services in Docker. Once all services are successfully up and running, you can proceed to the next steps.
-
-**General Instructions :**
-
-1. All containers which are part of the docker-compose can be gracefully stopped by pressing Ctrl + c in the same terminal where the services are running.
-2. All docker containers can be stopped and removed by using below command.
-
-```
-sudo ./docker-compose-down.sh
-```
-
-3. All services and dependencies can be started using below command.
-
-```
-sudo ./docker-compose-up.sh
-```
 
 </details>
 

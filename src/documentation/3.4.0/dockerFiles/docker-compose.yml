@@ -1,0 +1,31 @@
+version: '3'
+services:
+  mongo:
+    image: 'mongo:4.4.14'
+    restart: 'always'
+    ports:
+      - '27017:27017'
+    networks:
+      - entity_net
+    # volumes:
+    #   - mongo-data:/data/db
+    logging:
+      driver: none
+  entity_management:
+    image: shikshalokamqa/elevate-entity-management:3.3.13.1
+    ports:
+      - '5001:5001'
+    command: ['nodemon', 'app.js']
+    env_file:
+      - ./entity_management_env
+    depends_on:
+      - mongo
+    networks:
+      - entity_net
+
+networks:
+  entity_net:
+    # external: false
+volumes:
+  mongo-data:
+  logs:
