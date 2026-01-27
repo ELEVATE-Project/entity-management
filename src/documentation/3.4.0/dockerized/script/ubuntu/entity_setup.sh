@@ -7,20 +7,20 @@ log() {
 
 # Step 1: Download Docker Compose file
 log "Downloading Docker Compose file..."
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/project-service/refs/heads/main/documentation/3.4.0/dockerized/dockerFiles/project-with-survey/docker-compose-project.yml
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml
 log "Docker Compose file downloaded."
 
 # Step 2: Download environment files
 log "Downloading environment files..."
 curl -L \
-    -O https://raw.githubusercontent.com/ELEVATE-Project/project-service/refs/heads/main/documentation/3.4.0/dockerized/envs/interface_env \
+    -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/envs/entity_management_env \
 log "Environment files downloaded."
 
 
 # Step 6: Download additional scripts
 log "Downloading docker-compose scripts..."
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/project-service/refs/heads/main/documentation/3.4.0/dockerized/scripts/project-with-survey/ubuntu/docker-compose-up.sh
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/project-service/refs/heads/main/documentation/3.4.0/dockerized/scripts/project-with-survey/ubuntu/docker-compose-down.sh
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/ubuntu/docker-compose-down.sh
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/ubuntu/docker-compose-down.sh
 log "docker-compose scripts downloaded."
 
 # Step 7: Make the scripts executable
@@ -36,7 +36,7 @@ npm install mongodb
 npm install mongoose
 
 log "Downloading config.json file..."
-curl -L https://raw.githubusercontent.com/ELEVATE-Project/project-service/refs/heads/main/documentation/3.4.0/common-files/dockerized/project-with-survey/configFile.json -o config.json
+curl -L https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/commonFiles/configFile.json -o config.json
 log "config.json file is downloaded."
 
 # Step 13: Run docker-compose-up.sh script

@@ -20,6 +20,8 @@ services:
       - ./entity_management_env
     depends_on:
       - mongo
+    volumes:
+      - ./config.json:/var/src/config.json
     networks:
       - entity_net
 
