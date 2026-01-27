@@ -70,7 +70,7 @@ Click on a service name to expand and view the diagram.
 <summary>📂 <b>Entity Management Service (EMS)</b></summary>
 <br>
 <p align="center">
-  <img src="https://github.com/ELEVATE-Project/project-service/raw/MainReadMe/documentation/3.4.0/database-diagram/EMS-Entity-Service.drawio.png" alt="Entity Management Diagram" width="100%">
+  <img src="https://github.com/ELEVATE-Project/entity-management/blob/dockerSetup/src/documentation/3.4.0/database-diagram/EMS-Entity-Service.drawio.png" alt="Entity Management Diagram" width="100%">
 </p>
 </details>
 
