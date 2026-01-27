@@ -13,7 +13,7 @@ log "Docker Compose file downloaded."
 # Step 2: Download environment files
 log "Downloading environment files..."
 curl -L \
-    -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/envs/entity_management_env \
+    -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/envs/entity_management_env
 log "Environment files downloaded."
 
 
