@@ -19,7 +19,7 @@ log "Environment files downloaded."
 
 # Step 6: Download additional scripts
 log "Downloading docker-compose scripts..."
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/ubuntu/docker-compose-down.sh
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/ubuntu/docker-compose-up.sh
 curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/ubuntu/docker-compose-down.sh
 log "docker-compose scripts downloaded."
 
