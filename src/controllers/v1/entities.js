@@ -643,16 +643,16 @@ module.exports = class Entities extends Abstract {
 
 	/**
 	 * Add entities after bulk import from user service.
-	 * @api {POST} /entity/api/v1/entities/addAfterBulkImport
+	 * @api {POST} /entity/api/v1/entities/addEntityAfterBulkUserImport
 	 * @apiVersion 1.0.0
-	 * @apiName addAfterBulkImport
+	 * @apiName addEntityAfterBulkUserImport
 	 * @apiGroup Entities
 	 * @apiHeader {String} X-authenticated-user-token Authenticity token
 	 * @apiHeader {String} internal-access-token Internal access token
 	 * @param {Object} req - Event data from user service bulk create.
 	 * @returns {JSON} - Added entity information.
 	 */
-	addAfterBulkImport(req) {
+	addEntityAfterBulkUserImport(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				const eventData = req.body

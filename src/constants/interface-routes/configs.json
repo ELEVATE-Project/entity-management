@@ -157,7 +157,7 @@
 			]
 		},
 		{
-			"sourceRoute": "/entity-management/v1/entities/addAfterBulkImport",
+			"sourceRoute": "/entity-management/v1/entities/addEntityAfterBulkUserImport",
 			"type": "POST",
 			"priority": "MUST_HAVE",
 			"inSequence": false,

@@ -14,7 +14,7 @@ module.exports = {
 		'/entities/bulkCreate',
 		'/entities/bulkUpdate',
 		'/entities/add',
-		'/entities/addAfterBulkImport',
+		'/entities/addEntityAfterBulkUserImport',
 		'/entities/update',
 		'/entityTypes/create',
 		'/entityTypes/update',
