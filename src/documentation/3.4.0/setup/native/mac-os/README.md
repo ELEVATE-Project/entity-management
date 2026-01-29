@@ -27,14 +27,6 @@
 [![CircleCI](https://dl.circleci.com/insights-snapshot/gh/ELEVATE-Project/notification/master/buil-and-test/badge.svg?window=30d)](https://app.circleci.com/insights/github/ELEVATE-Project/notification/workflows/buil-and-test/overview?branch=master&reporting-window=last-30-days&insights-snapshot=true)
 
 </details>
-<!-- <details><summary>dev</summary>
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/ELEVATE-Project/mentoring/tree/dev.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/ELEVATE-Project/mentoring/tree/dev)
-![GitHub package.json version (subfolder of monorepo)](https://img.shields.io/github/package-json/v/ELEVATE-Project/user/dev?filename=src%2Fpackage.json)
-[![CircleCI](https://dl.circleci.com/insights-snapshot/gh/ELEVATE-Project/mentoring/dev/buil-and-test/badge.svg?window=30d)](https://app.circleci.com/insights/github/ELEVATE-Project/mentoring/workflows/buil-and-test/overview?branch=integration-testing&reporting-window=last-30-days&insights-snapshot=true)
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=ELEVATE-Project_mentoring&metric=duplicated_lines_density&branch=dev)](https://sonarcloud.io/summary/new_code?id=ELEVATE-Project_mentoring)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=ELEVATE-Project_mentoring&metric=coverage&branch=dev)](https://sonarcloud.io/summary/new_code?id=ELEVATE-Project_mentoring)
-[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=ELEVATE-Project_mentoring&metric=vulnerabilities&branch=revert-77-integration-test)](https://sonarcloud.io/summary/new_code?id=ELEVATE-Project_mentoring)
-</details> -->
 
 </br>
 This Service enables the creation and management of various entities and entityType .It
@@ -46,51 +38,11 @@ This Service enables the creation and management of various entities and entityT
 
 # System Requirements
 
--   **Operating System:** Ubuntu 22
+-   **Operating System:** Mac
 -   **Node.js:** v20
 -   **mongoDb:** v4
 
-# Setup Options
-
-Elevate entity-management services can be setup in local using two methods:
-
-<details><summary>Dockerized service with local dependencies(Intermediate)</summary>
-
-## A. Dockerized Service With Local Dependencies
-
-**Expectation**: Run single docker containerized service with existing local (in host) or remote dependencies.
-
-### Local Dependencies Steps
-
-1.  **Download Docker Compose File:** Retrieve the **[docker-compose.yml](https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/main/src/documentation/1.0.0/dockerFiles/docker-compose.yml)** file from the entity-management service repository and save it to the entity-management directory.
-
-2.  Run the docker container.
-
-    -   For Mac & Windows with docker v18.03+:
-
-        ```
-        $ docker run --name entity-management shikshalokamqa/elevate-entity-management:1.0.0
-        ```
-
-    -   For Linux:
-        ```
-        $ docker run --name entity-management --add-host=host.docker.internal:host-gateway shikshalokamqa/elevate-entity-management:1.0.0
-        ```
-        Refer [this](https://stackoverflow.com/a/24326540) for more information.
-
-### Remote Dependencies Steps
-
-1. Run the docker container.
-
-    ```
-    $ docker run --name entity-management shikshalokamqa/elevate-entity-management:1.0.0
-    ```
-
-</details>
-
-<details><summary>Local Service with local dependencies(Hardest)</summary>
-
-## B. Local Service With Local Dependencies
+## Local Service With Local Dependencies - Mac
 
 **Expectation**: Run single service with existing local dependencies in host (**Non-Docker Implementation**).
 
@@ -98,21 +50,18 @@ Elevate entity-management services can be setup in local using two methods:
 
 ### Install Node.js LTS
 
-Refer to the [NodeSource distributions installation scripts](https://github.com/nodesource/distributions#installation-scripts) for Node.js installation.
+Refer to the [NodeSource distributions installation scripts](https://nodejs.org/en/download/) for Node.js installation.
 
 ```bash
-$ curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - &&\
-sudo apt-get install -y nodejs
+brew install node
 ```
 
 ### Install PM2
 
-Refer to [How To Set Up a Node.js Application for Production on Ubuntu 22.04](https://www.digitalocean.com/community/tutorials/how-to-set-up-a-node-js-application-for-production-on-ubuntu-22-04).
-
 **Run the following command**
 
 ```bash
-$ sudo npm install pm2@latest -g
+npm install -g pm2
 ```
 
 ## Setting up Repository
@@ -120,19 +69,19 @@ $ sudo npm install pm2@latest -g
 ### Clone the entity-management repository to /opt/backend directory
 
 ```bash
-opt/backend$ git clone -b develop-2.5 --single-branch "https://github.com/ELEVATE-Project/entity-management"
+ git clone -b develop https://github.com/ELEVATE-Project/entity-management
 ```
 
 ### Install Npm packages from src directory
 
 ```bash
-backend/entity-management/src$ sudo npm i
+cd entity-management/src && npm i
 ```
 
 ### Create .env file in src directory
 
 ```bash
-entity-management/src$ sudo nano .env
+sudo nano .env
 ```
 
 Copy-paste the following env variables to the `.env` file:
@@ -141,30 +90,49 @@ Copy-paste the following env variables to the `.env` file:
 # entity-management Service Config
 
 # Port on which service runs
-APPLICATION_PORT=5001
+APPLICATION_PORT = 5001
 
 # Application environment
-APPLICATION_ENV=development
+APPLICATION_ENV ="development"
 
 # Route after the base URL
-APPLICATION_BASE_URL=/entity/
+APPLICATION_BASE_URL='/entity-management/'
 
-# Api doc URL
-API_DOC_URL= "https://project-dev.elevate-apis.shikshalokam.org/entity-management/api-doc"
+#Internal Access Token to decode
+INTERNAL_ACCESS_TOKEN =xahusub12yexlashsbxAXADHBlaj
 
-#User service URL
-USER_SERVICE_URL = http://localhost:3001/user
+ACCESS_TOKEN_SECRET=bsj82AHBxahusub12yexlashsbxAXADHBlaj
 
+# MongoDB Connection to the service
+MONGODB_URL=mongodb://localhost:27017/elevate-entity
 
-INTERNAL_ACCESS_TOKEN="internal_access_token"
+AUTH_METHOD = native
 
-#DB URL
-MONGODB_URL=mongodb://mongo:27017/elevate-entity-management
+#User Service Url
+USER_SERVICE_URL = http://localhost:3569
 
-#service name
+USER_SERVICE_BASE_URL=/user
+
 SERVICE_NAME = elevate-entity-service
 
-version=8
+#API Doc URL
+API_DOC_URL="http://localhost:3569/entity-management/api-doc"
+
+APPLICATION_HOST=localhost
+
+IS_AUTH_TOKEN_BEARER="false"
+
+ADMIN_ACCESS_TOKEN=rwwee3$123
+
+ADMIN_TOKEN_HEADER_NAME="admin-auth-token"
+
+#kafka health check topic
+KAFKA_HEALTH_CHECK_TOPIC='KAFKA_HEALTH_CHECK_TOPIC'
+
+#Interface URL
+INTERFACE_SERVICE_URL=http://localhost:3569
+
+HEALTH_CHECK_DEBUG_MODE = true
 ```
 
 Save and exit.
@@ -189,7 +157,7 @@ sudo systemctl status mongod
 Navigate to the src folder of entity-management service and run pm2 start command:
 
 ```bash
-entity-management/src$ pm2 start app.js -i 2 --name elevate-entity-management
+pm2 start app.js --name elevate-entity-management
 ```
 
 #### Run pm2 ls command
