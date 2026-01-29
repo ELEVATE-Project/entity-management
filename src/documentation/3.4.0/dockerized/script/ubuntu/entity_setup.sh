@@ -29,12 +29,6 @@ chmod +x docker-compose-up.sh
 chmod +x docker-compose-down.sh
 log "Made docker-compose scripts executable."
 
-# Install MongoDB driver (usually needed if connecting directly to MongoDB/Citus)
-npm install mongodb
-
-# Install Mongoose (Object Data Modeling library, if the scripts use it)
-npm install mongoose
-
 log "Downloading config.json file..."
 curl -L https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/commonFiles/configFile.json -o config.json
 log "config.json file is downloaded."

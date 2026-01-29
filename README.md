@@ -32,7 +32,7 @@ This section outlines the different ways to set up the **Entity-Management Servi
 ---
 
 <details>
-<summary> 🚀 <b>Entity-Management Service (Stand Alone)</b> </summary>
+<summary> 🚀 <b>Entity-Management Service</b> </summary>
 <br>
 
 This setup is ideal for **local development and testing**, where only the core Entity-Management Service components are required.

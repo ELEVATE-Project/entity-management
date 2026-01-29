@@ -41,6 +41,7 @@ This Service enables the creation and management of various entities and entityT
 -   **Operating System:** Windows
 -   **Node.js:** v20
 -   **mongoDb:** v4
+-   **Kafka:** 2.13
 
 ## Local Service With Local Dependencies - Windows
 
@@ -51,6 +52,10 @@ This Service enables the creation and management of various entities and entityT
 ### Install Node.js LTS
 
 Refer to the [NodeSource distributions installation scripts](https://nodejs.org/en/download/) for Node.js installation.
+
+### Install Kafka
+
+Refer to the [Kafka installation scripts](https://kafka.apache.org/community/downloads/) for Kafka installation.
 
 ### Install PM2
 
@@ -109,14 +114,14 @@ MONGODB_URL=mongodb://localhost:27017/elevate-entity
 AUTH_METHOD = native
 
 #User Service Url
-USER_SERVICE_URL = http://localhost:3569
+USER_SERVICE_URL = http://localhost:5001
 
 USER_SERVICE_BASE_URL=/user
 
 SERVICE_NAME = elevate-entity-service
 
 #API Doc URL
-API_DOC_URL="http://localhost:3569/entity-management/api-doc"
+API_DOC_URL="http://localhost:5001/entity-management/api-doc"
 
 APPLICATION_HOST=localhost
 
@@ -130,7 +135,15 @@ ADMIN_TOKEN_HEADER_NAME="admin-auth-token"
 KAFKA_HEALTH_CHECK_TOPIC='KAFKA_HEALTH_CHECK_TOPIC'
 
 #Interface URL
-INTERFACE_SERVICE_URL=http://localhost:3569
+INTERFACE_SERVICE_URL=http://localhost:5001
+
+KAFKA_HEALTH_CHECK_TOPIC = entity-health-check-topic-check
+
+KAFKA_URL = kafka:9092
+
+KAFKA_COMMUNICATIONS_ON_OFF = ON
+
+KAFKA_GROUP_ID = entity
 
 HEALTH_CHECK_DEBUG_MODE = true
 ```
@@ -196,3 +209,4 @@ Several open source dependencies that have aided Mentoring's development:
 ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
 ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
+![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka)
