@@ -141,7 +141,7 @@ INTERFACE_SERVICE_URL=http://localhost:5001
 
 KAFKA_HEALTH_CHECK_TOPIC = entity-health-check-topic-check
 
-KAFKA_URL = kafka:9092
+KAFKA_URL = localhost:9092
 
 KAFKA_COMMUNICATIONS_ON_OFF = ON
 
