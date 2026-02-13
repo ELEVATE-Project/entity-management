@@ -47,6 +47,10 @@ This Service enables the creation and management of various entities and entityT
 
 **Expectation**: Run single service with existing local dependencies in host (**Non-Docker Implementation**).
 
+## Prerequisites
+
+Before setting up the following ELEVATE-Entity-Management application, dependencies given below should be installed and verified to be running. Refer to the steps given below to install them and verify.
+
 ## Installations
 
 ### Install Node.js LTS
@@ -205,9 +209,9 @@ You can learn more about the full implementation of project-service [here](https
 
 # Open Source Dependencies
 
-Several open source dependencies that have aided Mentoring's development:
+This project uses several open-source tools and dependencies that supported its development
 
-![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)
-![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
-![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka)
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)  
+![Apache Kafka](https://img.shields.io/badge/Apache%20Kafka-000?style=for-the-badge&logo=apachekafka)  
+![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)  
+![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)
