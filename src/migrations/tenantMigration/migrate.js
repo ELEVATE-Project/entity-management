@@ -8,6 +8,7 @@ const { MongoClient, ObjectId } = require('mongodb')
 const axios = require('axios')
 const fs = require('fs')
 const path = require('path')
+const jwt = require('jsonwebtoken') // Added for decoding token
 
 require('dotenv').config({
 	path: path.join(__dirname, '../../.env'),
@@ -49,8 +50,18 @@ async function runMigration() {
 		 */
 		log('🔐 Logging in...')
 
-		const loginResponse = await axios.post(
-			`${BASE_URL}/user/v1/admin/login`,
+		let loginUrl = ''
+		let loginResponse
+
+		// Role based login selection
+		if (loginCredentails.createrType === 'admin') {
+			loginUrl = `${BASE_URL}/user/v1/admin/login`
+		} else {
+			loginUrl = `${BASE_URL}/user/v1/account/login`
+		}
+
+		loginResponse = await axios.post(
+			loginUrl,
 			{
 				identifier: loginCredentails.createrUserName,
 				password: loginCredentails.createrPassword,
@@ -63,15 +74,55 @@ async function runMigration() {
 			}
 		)
 
-		const userId = loginResponse.data?.result?.user?.id
 		const token = loginResponse.data?.result?.access_token
 
-		if (!token || !userId) {
-			throw new Error('Login failed. Token or userId missing.')
+		const userId = loginResponse.data?.result?.user?.id
+
+		if (!token) {
+			throw new Error('Login failed. Token missing.')
 		}
 
-		log(`✅ Login successful. userId: ${userId}\n`)
+		const decodedToken = jwt.decode(token)
 
+		log(`✅ Login successful. userId: ${userId}`)
+
+		/**
+		 * ==========================================================
+		 * VALIDATIONS (ONLY FOR NON-ADMIN)
+		 * ==========================================================
+		 */
+
+		if (loginCredentails.createrType !== 'admin') {
+			log(' Running Role & Tenant Validations...')
+
+			// Extract roles safely
+			const roles = decodedToken?.data?.organizations?.[0]?.roles || []
+
+			// Extract role titles
+			const roleTitles = roles.map((r) => r.title)
+
+			// Validation 1: Role check
+			if (!roleTitles.includes(loginCredentails.createrType)) {
+				throw new Error(
+					`Role validation failed. User does not have required role: "${
+						loginCredentails.createrType
+					}". Available roles: ${roleTitles.join(', ')}`
+				)
+			}
+
+			log('✅ Role validation passed.')
+
+			// Validation 2: Tenant match check
+			const tokenTenantCode = decodedToken?.data?.tenant_code
+
+			if (tokenTenantCode !== newTenantId) {
+				throw new Error(
+					`Tenant validation failed. Token tenant_code "${tokenTenantCode}" does not match newTenantId "${newTenantId}".`
+				)
+			}
+
+			log('✅ Tenant validation passed.\n')
+		}
 		/**
 		 * CONNECT DB
 		 */
