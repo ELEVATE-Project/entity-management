@@ -48,7 +48,7 @@ This Service enables the creation and management of various entities and entityT
 
 ## Prerequisites
 
-To set up the Entity-Management application, ensure you have Docker and Docker Compose installed on your system. For Ubuntu users, detailed installation instructions for both can be found in the documentation here: [How To Install and Use Docker Compose on Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-ubuntu-20-04). To install and use Nodejs in Ubuntu machine, you can follow instructions here: [How To Install Nodejs in Ubuntu](https://nodejs.org/en/download/package-manager). For Windows and MacOS users, you can refer to the Docker documentation for installation instructions: [Docker Compose Installation Guide](https://docs.docker.com/compose/install/). Once these prerequisites are in place, you're all set to get started with setting up the Project application.
+To set up the Entity-Management application, ensure you have Docker and Docker Compose installed on your system. For Windows users, detailed installation instructions for both can be found in the documentation here: [How To Install and Use Docker Compose on Linux](https://docs.docker.com/desktop/setup/install/windows-install/). To install and use Nodejs in Window machine, you can follow instructions here: [How To Install Nodejs in Linux](https://nodejs.org/en/download/package-manager).
 
 ## Installation
 
