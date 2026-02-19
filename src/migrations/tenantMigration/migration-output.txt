@@ -1,10 +1,9 @@
 ==============================
- SAFE MIGRATION STARTED
+ MIGRATION STARTED
 ==============================
 
 🔐 Logging in...
 ✅ Login successful. userId: 1
-
 🔌 Connecting to MongoDB...
 ✅ Connected to DB: qadb,
 
@@ -35,5 +34,5 @@ EntityTypes (Old): 3
 EntityTypes (New): 3
 Entities (Old): 3
 Entities (New): 3
-🎉 SAFE MIGRATION COMPLETED SUCCESSFULLY
+ MIGRATION COMPLETED SUCCESSFULLY
 

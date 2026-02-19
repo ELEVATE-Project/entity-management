@@ -220,7 +220,8 @@ async function runMigration() {
 			})
 
 			if (!newEntityType) {
-				throw new Error(`EntityType mapping missing for ${oldEntity.entityTypeId}`)
+				log(`EntityType mapping missing for ${oldEntity.entityTypeId}`)
+				continue
 			}
 
 			const newDoc = {
@@ -279,7 +280,8 @@ async function runMigration() {
 				})
 
 				if (!mappedType) {
-					throw new Error(`Targeted EntityType mapping missing for ${target.entityTypeId}`)
+					log(`Targeted EntityType mapping missing for ${target.entityTypeId}`)
+					continue
 				}
 
 				updatedTargets.push({
@@ -380,7 +382,8 @@ async function runMigration() {
 					const mappedId = idMapping[oldId.toString()]
 
 					if (!mappedId) {
-						throw new Error(`Group mapping missing for oldId: ${oldId}`)
+						log(`⚠️ Warning: Group mapping missing for oldId: ${oldId}, skipping`)
+						continue
 					}
 
 					newIds.push(mappedId)

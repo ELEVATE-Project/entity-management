@@ -1,9 +1,9 @@
 {
 	"loginCredentails": {
-		"createrUserName": "slmbprogrammanagerdhalai@yopmail.com",
-		"createrPassword": "Password@1234",
-		"origin": "qa.elevate-shikshalokam.shikshalokam.org",
-		"createrType": "tenant_admin"
+		"createrUserName": "nevil@tunerlabs.com",
+		"createrPassword": "PASSword###11",
+		"origin": "default-qa.tekdinext.com",
+		"createrType": "admin"
 	},
 	"tenantMappingConfig": {
 		"currentTenantId": "shikshalokam",
