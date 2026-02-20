@@ -25,7 +25,7 @@ log "Docker is installed and running."
 # Step 2: Download Docker Compose file
 # -----------------------------
 log "Downloading Docker Compose file..."
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml
 log "Docker Compose file downloaded."
 
 # -----------------------------
@@ -33,7 +33,7 @@ log "Docker Compose file downloaded."
 # -----------------------------
 log "Downloading environment files..."
 curl -L \
-    -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/envs/entity_management_env
+    -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/envs/entity_management_env
 log "Environment files downloaded."
 
 
@@ -41,8 +41,8 @@ log "Environment files downloaded."
 # Step 5: docker-compose scripts (mac-safe)
 # -----------------------------
 log "Downloading docker-compose scripts..."
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/mac-os/docker-compose-up.sh
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/mac-os/docker-compose-down.sh
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/script/mac-os/docker-compose-up.sh
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/script/mac-os/docker-compose-down.sh
 chmod +x docker-compose-down.sh
 chmod +x docker-compose-up.sh
 
@@ -56,7 +56,7 @@ log "docker-compose scripts patched safely."
 # Step 10: config.json
 # -----------------------------
 log "Downloading config.json..."
-curl -L https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/commonFiles/configFile.json -o config.json
+curl -L https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/commonFiles/generics/configFile.json -o config.json
 log "config.json downloaded."
 
 # -----------------------------

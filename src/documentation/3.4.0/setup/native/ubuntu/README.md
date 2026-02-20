@@ -83,6 +83,12 @@ sudo npm install -g pm2
  git clone -b develop https://github.com/ELEVATE-Project/entity-management
 ```
 
+### Attaching Config File
+
+```bash
+curl -L -o entity-management/src/config.json https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/commonFiles/generics/configFile.json
+```
+
 ### Install Npm packages from src directory
 
 ```bash
