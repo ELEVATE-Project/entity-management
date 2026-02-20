@@ -39,17 +39,17 @@ This setup is ideal for **local development and testing**, where only the core E
 
 #### I. Docker Setup (Recommended)
 
--   [Setup guide for Linux](https://github.com/ELEVATE-Project/project-service/blob/main/documentation/3.4.0/setup/docker/stand-alone/ubuntu/README.md)
--   [Setup guide for macOS](https://github.com/ELEVATE-Project/project-service/blob/main/documentation/3.4.0/setup/docker/stand-alone/mac-os/README.md)
--   [Setup guide for Windows](https://github.com/ELEVATE-Project/project-service/blob/main/documentation/3.4.0/setup/docker/stand-alone/windows/README.md)
+-   [Setup guide for Linux](https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/setup/docker/ubuntu/README.md)
+-   [Setup guide for macOS](https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/setup/docker/mac-os/README.md)
+-   [Setup guide for Windows](https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/setup/docker/windows/README.md)
 
 <br>
 
 #### II. Native Setup (PM2 Managed Services)
 
--   [Setup guide for Linux](https://github.com/ELEVATE-Project/project-service/blob/main/documentation/3.4.0/setup/native/stand-alone/ubuntu/README.md)
--   [Setup guide for macOS](https://github.com/ELEVATE-Project/project-service/blob/main/documentation/3.4.0/setup/docker/stand-alone/mac-os/README.md)
--   [Setup guide for Windows](link/to/standalone/native/windows/README)
+-   [Setup guide for Linux](https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/setup/native/ubuntu/README.md)
+-   [Setup guide for macOS](https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/setup/native/mac-os/README.md)
+-   [Setup guide for Windows](https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/setup/native/windows/README.md)
 
 </details>
 
@@ -70,7 +70,7 @@ Click on a service name to expand and view the diagram.
 <summary>📂 <b>Entity Management Service (EMS)</b></summary>
 <br>
 <p align="center">
-  <img src="https://github.com/ELEVATE-Project/entity-management/blob/dockerSetup/src/documentation/3.4.0/database-diagram/EMS-Entity-Service.drawio.png" alt="Entity Management Diagram" width="100%">
+  <img src="https://github.com/ELEVATE-Project/entity-management/blob/main/src/documentation/3.4.0/database-diagram/EMS-Entity-Service.drawio.png" alt="Entity Management Diagram" width="100%">
 </p>
 </details>
 
