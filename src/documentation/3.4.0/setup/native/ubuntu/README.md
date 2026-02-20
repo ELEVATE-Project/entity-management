@@ -177,6 +177,20 @@ sudo systemctl status mongod
 
 ```
 
+## Setting up Kafka
+
+**Start Kafka Service**
+
+```
+sudo systemctl start kafka
+```
+
+**Verify Kafka is running**
+
+```
+sudo systemctl status kafka
+```
+
 ## Start the Service
 
 Navigate to the src folder of entity-management service and run pm2 start command:

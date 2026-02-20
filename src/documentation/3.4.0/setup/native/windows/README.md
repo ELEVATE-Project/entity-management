@@ -174,6 +174,20 @@ net start MongoDB
 sc query MongoDB
 ```
 
+## Setting up Kafka
+
+**Start Kafka Service**
+
+```
+bin\windows\kafka-server-start.bat config\server.properties
+```
+
+**Verify Kafka is running**
+
+```
+bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092
+```
+
 ## Start the Service
 
 Navigate to the src folder of entity-management service and run pm2 start command:
