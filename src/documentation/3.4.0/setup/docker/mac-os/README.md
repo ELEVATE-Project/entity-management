@@ -74,7 +74,7 @@ done
 
 1. **Download and execute main setup script:** Execute the following command in your terminal from the project directory.
     ```
-    curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/mac-os/entity_setup.sh && chmod +x entity_setup.sh && sudo ./entity_setup.sh
+    curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/script/mac-os/entity_setup.sh && chmod +x entity_setup.sh && sudo ./entity_setup.sh
     ```
 
 > Note : The script will download all the essential files and launch the services in Docker. Once all services are successfully up and running, you can proceed to the next steps.

@@ -81,6 +81,12 @@ Refer to [How to Set up a MongoDB for Production on Windows](https://www.mongodb
  git clone -b develop https://github.com/ELEVATE-Project/entity-management
 ```
 
+### Attaching Config File
+
+```bash
+curl -L -o entity-management/src/config.json https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/commonFiles/generics/configFile.json
+```
+
 ### Install Npm packages from src directory
 
 ```bash
@@ -166,6 +172,20 @@ net start MongoDB
 
 ```bash
 sc query MongoDB
+```
+
+## Setting up Kafka
+
+**Start Kafka Service**
+
+```
+bin\windows\kafka-server-start.bat config\server.properties
+```
+
+**Verify Kafka is running**
+
+```
+bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092
 ```
 
 ## Start the Service

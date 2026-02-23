@@ -72,32 +72,32 @@ for port in 5001 27017 9092; do
 done
 ```
 
-1.  **Download Docker Compose File:** Retrieve the **[docker-compose.yml](https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml)** file from the Entity service repository and save it to the project directory.
+1.  **Download Docker Compose File:** Retrieve the **[docker-compose.yml](https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml)** file from the Entity service repository and save it to the project directory.
 
 ```
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/dockerFiles/docker-compose.yml
 ```
 
 2.  **Download Environment Files**: Using the OS specific commands given below, download environment files for all the services.
 
 ```
-curl -L -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/envs/entity_management_env
+curl -L -O https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/envs/entity_management_env
 ```
 
 3.  **Download `docker-compose-up` & `docker-compose-down` Script Files**
 
 ```
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/windows/docker-compose-down.bat
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/script/windows/docker-compose-down.bat
 ```
 
 ```
-curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/dockerized/script/windows/docker-compose-up.bat
+curl -OJL https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/dockerized/script/windows/docker-compose-up.bat
 ```
 
 4.  **Download `Config` File**
 
 ```
-curl -L https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/dockerSetup/src/documentation/3.4.0/commonFiles/configFile.json -o config.json
+curl -L https://raw.githubusercontent.com/ELEVATE-Project/entity-management/refs/heads/main/src/documentation/3.4.0/commonFiles/generics/configFile.json -o config.json
 ```
 
 5.  **Run All Services & Dependencies**:All services and dependencies can be started using the `docker-compose-up` script file.
