@@ -212,7 +212,7 @@ async function runMigration() {
 		 * ==========================================================
 		 */
 
-		log('🚀 Phase 4 - Fixing Groups...')
+		log('🚀 Phase 3 - Fixing Groups...')
 
 		const idMapping = {}
 
@@ -258,7 +258,7 @@ async function runMigration() {
 			skippedGroupMappings += await processGroupBatch(groupBatch, idMapping, entityCollection)
 		}
 
-		log('✅ Phase 4 Completed\n')
+		log('✅ Phase 3 Completed\n')
 
 		/**
 		 * FINAL COUNTS
