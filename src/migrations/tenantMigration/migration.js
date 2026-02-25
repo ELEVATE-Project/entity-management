@@ -4,11 +4,11 @@
  * ==========================================================
  */
 
-const { MongoClient, ObjectId } = require('mongodb')
+const { MongoClient } = require('mongodb')
 const axios = require('axios')
 const fs = require('fs')
 const path = require('path')
-const jwt = require('jsonwebtoken') // Added for decoding token
+const jwt = require('jsonwebtoken')
 
 require('dotenv').config({
 	path: path.join(__dirname, '../../.env'),
@@ -17,7 +17,7 @@ require('dotenv').config({
 const input = JSON.parse(fs.readFileSync(path.join(__dirname, 'input.json'), 'utf8'))
 
 const { loginCredentails, tenantMappingConfig } = input
-const { currentTenantId, currentOrgId, newTenantId, newOrgId } = tenantMappingConfig
+const { currentTenantId, newTenantId, newOrgId } = tenantMappingConfig
 
 const BASE_URL = process.env.INTERFACE_SERVICE_URL
 const MONGODB_URL = process.env.MONGODB_URL
@@ -39,6 +39,17 @@ function stopWithError(error) {
 async function runMigration() {
 	let client
 
+	// Counters
+	let totalEntityTypesOld = 0
+	let totalEntitiesOld = 0
+
+	let insertedEntityTypes = 0
+	let insertedEntities = 0
+
+	let skippedEntitiesMissingType = 0
+	let skippedTargetMappings = 0
+	let skippedGroupMappings = 0
+
 	try {
 		fs.writeFileSync(
 			OUTPUT_FILE,
@@ -49,18 +60,13 @@ async function runMigration() {
 		 * LOGIN
 		 */
 		log('🔐 Logging in...')
+		// Normalize createrType once (handle Admin, ADMIN, etc.)
+		const normalizedCreatorType = (loginCredentails.createrType || '').toLowerCase().trim()
 
-		let loginUrl = ''
-		let loginResponse
+		const loginUrl =
+			normalizedCreatorType === 'admin' ? `${BASE_URL}/user/v1/admin/login` : `${BASE_URL}/user/v1/account/login`
 
-		// Role based login selection
-		if (loginCredentails.createrType === 'admin') {
-			loginUrl = `${BASE_URL}/user/v1/admin/login`
-		} else {
-			loginUrl = `${BASE_URL}/user/v1/account/login`
-		}
-
-		loginResponse = await axios.post(
+		const loginResponse = await axios.post(
 			loginUrl,
 			{
 				identifier: loginCredentails.createrUserName,
@@ -75,126 +81,90 @@ async function runMigration() {
 		)
 
 		const token = loginResponse.data?.result?.access_token
-
 		const userId = loginResponse.data?.result?.user?.id
 
-		if (!token) {
-			throw new Error('Login failed. Token missing.')
-		}
-
-		const decodedToken = jwt.decode(token)
+		if (!token) throw new Error('Login failed.')
 
 		log(`✅ Login successful. userId: ${userId}`)
 
 		/**
-		 * ==========================================================
-		 * VALIDATIONS (ONLY FOR NON-ADMIN)
-		 * ==========================================================
-		 */
-
-		if (loginCredentails.createrType !== 'admin') {
-			log(' Running Role & Tenant Validations...')
-
-			// Extract roles safely
-			const roles = decodedToken?.data?.organizations?.[0]?.roles || []
-
-			// Extract role titles
-			const roleTitles = roles.map((r) => r.title)
-
-			// Validation 1: Role check
-			if (!roleTitles.includes(loginCredentails.createrType)) {
-				throw new Error(
-					`Role validation failed. User does not have required role: "${
-						loginCredentails.createrType
-					}". Available roles: ${roleTitles.join(', ')}`
-				)
-			}
-
-			log('✅ Role validation passed.')
-
-			// Validation 2: Tenant match check
-			const tokenTenantCode = decodedToken?.data?.tenant_code
-
-			if (tokenTenantCode !== newTenantId) {
-				throw new Error(
-					`Tenant validation failed. Token tenant_code "${tokenTenantCode}" does not match newTenantId "${newTenantId}".`
-				)
-			}
-
-			log('✅ Tenant validation passed.\n')
-		}
-		/**
 		 * CONNECT DB
 		 */
 		log('🔌 Connecting to MongoDB...')
-
 		client = new MongoClient(MONGODB_URL)
 		await client.connect()
 
-		const dbNameFromUrl = MONGODB_URL.split('/').pop()
-		const db = client.db(dbNameFromUrl)
+		const dbName = MONGODB_URL.split('/').pop()
+		const db = client.db(dbName)
 
 		const entityTypeCollection = db.collection('entityTypes')
 		const entityCollection = db.collection('entities')
 
-		log(`✅ Connected to DB: ${dbNameFromUrl}\n`)
-
-		const existingTargetData =
-			(await entityTypeCollection.countDocuments({ tenantId: newTenantId })) +
-			(await entityCollection.countDocuments({ tenantId: newTenantId }))
-
-		if (existingTargetData > 0) {
-			throw new Error(`Target tenant (${newTenantId}) already has data. Migration stopped.`)
-		}
-
-		log('✅ Target tenant clean.\n')
+		log(`✅ Connected to DB: ${dbName}\n`)
 
 		/**
-		 * COUNT
+		 * OLD COUNTS
 		 */
-		const currentEntityTypeCount = await entityTypeCollection.countDocuments({
+		totalEntityTypesOld = await entityTypeCollection.countDocuments({
 			tenantId: currentTenantId,
 		})
 
-		const currentEntityCount = await entityCollection.countDocuments({
+		totalEntitiesOld = await entityCollection.countDocuments({
 			tenantId: currentTenantId,
 		})
 
-		log(`📊 EntityTypes: ${currentEntityTypeCount}`)
-		log(`📊 Entities: ${currentEntityCount}\n`)
+		log(`📊 Old EntityTypes: ${totalEntityTypesOld}`)
+		log(`📊 Old Entities: ${totalEntitiesOld}\n`)
+
+		/**
+		 * TARGET CLEAN CHECK
+		 */
+		const existingTargetData =
+			(await entityTypeCollection.countDocuments({
+				tenantId: newTenantId,
+			})) +
+			(await entityCollection.countDocuments({
+				tenantId: newTenantId,
+			}))
+
+		if (existingTargetData > 0) throw new Error(`Target tenant (${newTenantId}) already has data.`)
 
 		/**
 		 * ==========================================================
-		 * PHASE 1 - COPY ENTITY TYPES (BATCH)
+		 * PHASE 1 - COPY ENTITY TYPES
 		 * ==========================================================
 		 */
 
 		log('🚀 Phase 1 - Copying EntityTypes...')
 
-		const oldEntityTypes = await entityTypeCollection.find({ tenantId: currentTenantId }).toArray()
+		const oldTypes = await entityTypeCollection.find({ tenantId: currentTenantId }).toArray()
 
-		const newEntityTypes = oldEntityTypes.map((oldType) => {
-			const oldId = oldType._id
+		const entityTypeIdMapping = {}
 
-			return {
-				...oldType,
-				_id: undefined,
-				tenantId: newTenantId,
-				orgId: newOrgId,
-				createdBy: userId,
-				updatedBy: userId,
-				registryDetails: {
-					...(oldType.registryDetails || {}),
-					tenantMigrationReferenceId: oldId.toString(),
-				},
+		const newTypes = oldTypes.map((t) => ({
+			...t,
+			_id: undefined,
+			tenantId: newTenantId,
+			orgId: newOrgId,
+			registryDetails: {
+				...(t.registryDetails || {}),
+				tenantMigrationReferenceId: t._id.toString(),
+			},
+		}))
+
+		if (newTypes.length) {
+			const result = await entityTypeCollection.insertMany(newTypes)
+
+			insertedEntityTypes = result.insertedCount
+
+			const insertedIds = Object.values(result.insertedIds)
+
+			for (let i = 0; i < oldTypes.length; i++) {
+				entityTypeIdMapping[oldTypes[i]._id.toString()] = insertedIds[i]
 			}
-		})
-
-		if (newEntityTypes.length) {
-			await entityTypeCollection.insertMany(newEntityTypes)
 		}
 
-		log('✅ Phase 1 Completed\n')
+		log(`✅ Phase 1 Completed (Inserted: ${insertedEntityTypes}/${totalEntityTypesOld})\n`)
 
 		/**
 		 * ==========================================================
@@ -204,236 +174,113 @@ async function runMigration() {
 
 		log('🚀 Phase 2 - Copying Entities...')
 
-		const cursor = entityCollection.find({
-			tenantId: currentTenantId,
-		})
+		const cursor = entityCollection.find({ tenantId: currentTenantId }).batchSize(BATCH_SIZE)
 
 		let batch = []
-		let oldEntity
+		let processed = 0
 
-		while ((oldEntity = await cursor.next()) != null) {
-			const oldEntityId = oldEntity._id
-
-			const newEntityType = await entityTypeCollection.findOne({
-				tenantId: newTenantId,
-				'registryDetails.tenantMigrationReferenceId': oldEntity.entityTypeId.toString(),
-			})
-
-			if (!newEntityType) {
-				log(`EntityType mapping missing for ${oldEntity.entityTypeId}`)
-				continue
-			}
-
-			const newDoc = {
-				...oldEntity,
-				_id: undefined,
-				tenantId: newTenantId,
-				orgId: newOrgId,
-				entityTypeId: newEntityType._id,
-				entityType: newEntityType.name,
-				createdBy: userId,
-				updatedBy: userId,
-				metaInformation: {
-					...(oldEntity.metaInformation || {}),
-					tenantMigrationReferenceId: oldEntityId.toString(),
-				},
-			}
-
-			batch.push(newDoc)
+		while (await cursor.hasNext()) {
+			batch.push(await cursor.next())
 
 			if (batch.length === BATCH_SIZE) {
-				await entityCollection.insertMany(batch)
+				const result = await processEntityBatch(batch, entityTypeIdMapping, entityCollection, userId)
+
+				insertedEntities += result.inserted
+				skippedEntitiesMissingType += result.skippedType
+				skippedTargetMappings += result.skippedTarget
+
+				processed += batch.length
+				log(`   Processed ${processed}/${totalEntitiesOld}`)
+
 				batch = []
 			}
 		}
 
 		if (batch.length) {
-			await entityCollection.insertMany(batch)
+			const result = await processEntityBatch(batch, entityTypeIdMapping, entityCollection, userId)
+
+			insertedEntities += result.inserted
+			skippedEntitiesMissingType += result.skippedType
+			skippedTargetMappings += result.skippedTarget
 		}
 
-		log('✅ Phase 2 Completed\n')
+		log(`✅ Phase 2 Completed (Inserted: ${insertedEntities}/${totalEntitiesOld})\n`)
 
 		/**
 		 * ==========================================================
-		 * PHASE 3 - FIX targetedEntityTypes
+		 * PHASE 3 - FIX GROUPS
 		 * ==========================================================
 		 */
 
-		log('🚀 Phase 3 - Fixing targetedEntityTypes...')
-
-		const newEntitiesWithTargets = entityCollection.find({
-			tenantId: newTenantId,
-			'metaInformation.targetedEntityTypes': { $exists: true },
-		})
-
-		while ((oldEntity = await newEntitiesWithTargets.next()) != null) {
-			const targets = oldEntity.metaInformation?.targetedEntityTypes || []
-
-			if (!targets.length) continue
-
-			const updatedTargets = []
-
-			for (let target of targets) {
-				const mappedType = await entityTypeCollection.findOne({
-					tenantId: newTenantId,
-					'registryDetails.tenantMigrationReferenceId': target.entityTypeId.toString(),
-				})
-
-				if (!mappedType) {
-					log(`Targeted EntityType mapping missing for ${target.entityTypeId}`)
-					continue
-				}
-
-				updatedTargets.push({
-					entityType: mappedType.name,
-					entityTypeId: mappedType._id,
-				})
-			}
-
-			await entityCollection.updateOne(
-				{ _id: oldEntity._id },
-				{
-					$set: {
-						'metaInformation.targetedEntityTypes': updatedTargets,
-					},
-				}
-			)
-		}
-
-		log('✅ Phase 3 Completed\n')
-
-		/**
-		 * ==========================================================
-		 * PHASE 4 - FIX GROUP REFERENCES
-		 * ==========================================================
-		 */
-
-		log('🚀 Phase 4 - Fixing Groups (Bulk Optimized)...')
-
-		/**
-		 * STEP 1:
-		 * Build oldId -> newId map once
-		 */
-		log('🔎 Building entityId mapping...')
+		log('🚀 Phase 4 - Fixing Groups...')
 
 		const idMapping = {}
 
-		const mappingCursor = entityCollection.find(
-			{
-				tenantId: newTenantId,
-				'metaInformation.tenantMigrationReferenceId': { $exists: true },
-			},
-			{
-				projection: {
-					_id: 1,
-					'metaInformation.tenantMigrationReferenceId': 1,
+		const mapCursor = entityCollection
+			.find(
+				{
+					tenantId: newTenantId,
+					'metaInformation.tenantMigrationReferenceId': { $exists: true },
 				},
-			}
-		)
-
-		let mapDoc
-
-		while ((mapDoc = await mappingCursor.next()) != null) {
-			const oldId = mapDoc.metaInformation?.tenantMigrationReferenceId
-
-			if (oldId) {
-				idMapping[oldId.toString()] = mapDoc._id
-			}
-		}
-
-		log(`✅ Mapping dictionary built (${Object.keys(idMapping).length} records)\n`)
-
-		/**
-		 * STEP 2:
-		 * Process entities with groups using bulkWrite
-		 */
-
-		const groupCursor = entityCollection.find({
-			tenantId: newTenantId,
-			groups: { $exists: true, $ne: null },
-		})
-
-		let bulkOps = []
-		let entityDoc
-
-		while ((entityDoc = await groupCursor.next()) != null) {
-			if (
-				!entityDoc.groups ||
-				typeof entityDoc.groups !== 'object' ||
-				Object.keys(entityDoc.groups).length === 0
-			) {
-				continue
-			}
-
-			const updatedGroups = {}
-			let needsUpdate = false
-
-			for (const key of Object.keys(entityDoc.groups)) {
-				const oldIds = entityDoc.groups[key]
-
-				if (!Array.isArray(oldIds) || oldIds.length === 0) {
-					updatedGroups[key] = []
-					continue
-				}
-
-				const newIds = []
-
-				for (const oldId of oldIds) {
-					const mappedId = idMapping[oldId.toString()]
-
-					if (!mappedId) {
-						log(`⚠️ Warning: Group mapping missing for oldId: ${oldId}, skipping`)
-						continue
-					}
-
-					newIds.push(mappedId)
-				}
-
-				updatedGroups[key] = newIds
-				needsUpdate = true
-			}
-
-			if (needsUpdate) {
-				bulkOps.push({
-					updateOne: {
-						filter: { _id: entityDoc._id },
-						update: { $set: { groups: updatedGroups } },
+				{
+					projection: {
+						_id: 1,
+						'metaInformation.tenantMigrationReferenceId': 1,
 					},
-				})
-			}
+				}
+			)
+			.batchSize(BATCH_SIZE)
 
-			if (bulkOps.length === BATCH_SIZE) {
-				await entityCollection.bulkWrite(bulkOps)
-				bulkOps = []
+		while (await mapCursor.hasNext()) {
+			const doc = await mapCursor.next()
+			idMapping[doc.metaInformation.tenantMigrationReferenceId] = doc._id
+		}
+
+		const groupCursor = entityCollection
+			.find({
+				tenantId: newTenantId,
+				groups: { $exists: true },
+			})
+			.batchSize(BATCH_SIZE)
+
+		let groupBatch = []
+
+		while (await groupCursor.hasNext()) {
+			groupBatch.push(await groupCursor.next())
+
+			if (groupBatch.length === BATCH_SIZE) {
+				skippedGroupMappings += await processGroupBatch(groupBatch, idMapping, entityCollection)
+				groupBatch = []
 			}
 		}
 
-		if (bulkOps.length > 0) {
-			await entityCollection.bulkWrite(bulkOps)
+		if (groupBatch.length) {
+			skippedGroupMappings += await processGroupBatch(groupBatch, idMapping, entityCollection)
 		}
 
 		log('✅ Phase 4 Completed\n')
 
 		/**
-		 * SUMMARY
+		 * FINAL COUNTS
 		 */
-
-		const newEntityTypeCount = await entityTypeCollection.countDocuments({
+		const totalEntityTypesNew = await entityTypeCollection.countDocuments({
 			tenantId: newTenantId,
 		})
 
-		const newEntityCount = await entityCollection.countDocuments({
+		const totalEntitiesNew = await entityCollection.countDocuments({
 			tenantId: newTenantId,
 		})
 
 		log('=================================================')
 		log('MIGRATION SUMMARY')
 		log('=================================================')
-		log(`EntityTypes (Old): ${currentEntityTypeCount}`)
-		log(`EntityTypes (New): ${newEntityTypeCount}`)
-		log(`Entities (Old): ${currentEntityCount}`)
-		log(`Entities (New): ${newEntityCount}`)
-		log(' MIGRATION COMPLETED SUCCESSFULLY\n')
+		log(`EntityTypes: ${insertedEntityTypes}/${totalEntityTypesOld}`)
+		log(`Entities: ${insertedEntities}/${totalEntitiesOld}`)
+		log(`Skipped (Missing Type): ${skippedEntitiesMissingType}`)
+		log(`Skipped TargetedEntityType Mappings: ${skippedTargetMappings}`)
+		log(`Skipped Group Mappings: ${skippedGroupMappings}`)
+		log('=================================================')
+		log('🎉 MIGRATION COMPLETED SUCCESSFULLY\n')
 
 		await client.close()
 		process.exit(0)
@@ -441,6 +288,95 @@ async function runMigration() {
 		if (client) await client.close()
 		stopWithError(error)
 	}
+}
+
+async function processEntityBatch(batch, mapping, collection, userId) {
+	let inserted = 0
+	let skippedType = 0
+	let skippedTarget = 0
+
+	const newDocs = []
+
+	for (const oldEntity of batch) {
+		const mappedTypeId = mapping[oldEntity.entityTypeId?.toString()]
+
+		if (!mappedTypeId) {
+			skippedType++
+			continue
+		}
+
+		let updatedTargets = []
+
+		if (Array.isArray(oldEntity.metaInformation?.targetedEntityTypes)) {
+			for (const target of oldEntity.metaInformation.targetedEntityTypes) {
+				const mappedTargetId = mapping[target.entityTypeId?.toString()]
+
+				if (!mappedTargetId) {
+					skippedTarget++
+					continue
+				}
+
+				updatedTargets.push({
+					entityType: target.entityType,
+					entityTypeId: mappedTargetId,
+				})
+			}
+		}
+
+		newDocs.push({
+			...oldEntity,
+			_id: undefined,
+			tenantId: newTenantId,
+			orgId: newOrgId,
+			entityTypeId: mappedTypeId,
+			metaInformation: {
+				...(oldEntity.metaInformation || {}),
+				tenantMigrationReferenceId: oldEntity._id.toString(),
+				targetedEntityTypes: updatedTargets,
+			},
+			createdBy: userId,
+			updatedBy: userId,
+		})
+	}
+
+	if (newDocs.length) {
+		const result = await collection.insertMany(newDocs)
+		inserted = result.insertedCount
+	}
+
+	return { inserted, skippedType, skippedTarget }
+}
+
+async function processGroupBatch(batch, idMapping, collection) {
+	let skipped = 0
+	const bulkOps = []
+
+	for (const doc of batch) {
+		if (!doc.groups) continue
+
+		const updatedGroups = {}
+
+		for (const key of Object.keys(doc.groups)) {
+			updatedGroups[key] = doc.groups[key]
+				.map((oldId) => {
+					const mapped = idMapping[oldId?.toString()]
+					if (!mapped) skipped++
+					return mapped
+				})
+				.filter(Boolean)
+		}
+
+		bulkOps.push({
+			updateOne: {
+				filter: { _id: doc._id },
+				update: { $set: { groups: updatedGroups } },
+			},
+		})
+	}
+
+	if (bulkOps.length) await collection.bulkWrite(bulkOps)
+
+	return skipped
 }
 
 runMigration()

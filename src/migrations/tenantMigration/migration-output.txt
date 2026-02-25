@@ -7,32 +7,26 @@
 🔌 Connecting to MongoDB...
 ✅ Connected to DB: qadb,
 
-✅ Target tenant clean.
-
-📊 EntityTypes: 3
-📊 Entities: 3
+📊 Old EntityTypes: 4
+📊 Old Entities: 5
 
 🚀 Phase 1 - Copying EntityTypes...
-✅ Phase 1 Completed
+✅ Phase 1 Completed (Inserted: 4/4)
 
 🚀 Phase 2 - Copying Entities...
-✅ Phase 2 Completed
+✅ Phase 2 Completed (Inserted: 5/5)
 
-🚀 Phase 3 - Fixing targetedEntityTypes...
-✅ Phase 3 Completed
-
-🚀 Phase 4 - Fixing Groups (Bulk Optimized)...
-🔎 Building entityId mapping...
-✅ Mapping dictionary built (3 records)
-
+🚀 Phase 4 - Fixing Groups...
 ✅ Phase 4 Completed
 
 =================================================
 MIGRATION SUMMARY
 =================================================
-EntityTypes (Old): 3
-EntityTypes (New): 3
-Entities (Old): 3
-Entities (New): 3
- MIGRATION COMPLETED SUCCESSFULLY
+EntityTypes: 4/4
+Entities: 5/5
+Skipped (Missing Type): 0
+Skipped TargetedEntityType Mappings: 0
+Skipped Group Mappings: 0
+=================================================
+🎉 MIGRATION COMPLETED SUCCESSFULLY
 

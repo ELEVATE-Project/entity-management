@@ -3,7 +3,7 @@
 		"createrUserName": "nevil@tunerlabs.com",
 		"createrPassword": "PASSword###11",
 		"origin": "default-qa.tekdinext.com",
-		"createrType": "admin"
+		"createrType": "AdMin"
 	},
 	"tenantMappingConfig": {
 		"currentTenantId": "shikshalokam",
