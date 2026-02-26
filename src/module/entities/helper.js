@@ -1278,7 +1278,6 @@ module.exports = class UserProjectsHelper {
 				let result = await entitiesQueries.getAggregate(aggregateData)
 				count = result?.[0]?.totalCount?.[0]?.count || 0
 
-
 				if (aggregateStaging == true) {
 					if (!Array.isArray(result) || !(result.length > 0)) {
 						throw {
@@ -1408,7 +1407,7 @@ module.exports = class UserProjectsHelper {
 				// Find the entities document based on the entityType in queryParams
 
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
-				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
+				let orgId = userDetails.tenantAndOrgInfo.orgId
 				let entityTypeDocument = await entityTypeQueries.findOne(
 					{ name: queryParams.type, tenantId: tenantId },
 					{ _id: 1 }
@@ -1748,7 +1747,7 @@ module.exports = class UserProjectsHelper {
 
 				// Find the entity type document based on the provided entityType
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
-				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
+				let orgId = userDetails.tenantAndOrgInfo.orgId
 				let entityTypeDocument = await entityTypeQueries.findOne(
 					{
 						name: entityType,

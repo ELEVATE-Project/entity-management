@@ -488,7 +488,7 @@ module.exports = async function (req, res, next, token = '') {
 				req.headers['orgid'] = validateOrgsResult.validOrgIds
 			} else if (userRoles.includes(CONSTANTS.common.TENANT_ADMIN)) {
 				req.headers['tenantid'] = decodedToken.data.tenant_id.toString()
-
+				req.headers['orgid'] = decodedToken.data.organizations[0].code
 				let orgId = req.body.orgId || req.headers['orgid']
 
 				if (!orgId) {
@@ -497,18 +497,6 @@ module.exports = async function (req, res, next, token = '') {
 					rspObj.responseCode = HTTP_STATUS_CODE['bad_request'].status
 					return res.status(HTTP_STATUS_CODE['bad_request'].status).send(respUtil(rspObj))
 				}
-
-				req.headers['orgid'] = orgId
-
-				let validateOrgsResult = await validateIfOrgsBelongsToTenant(
-					req.headers['tenantid'],
-					req.headers['orgid'],
-					token
-				)
-				if (!validateOrgsResult.success) {
-					return res.status(responseCode['unauthorized'].status).send(respUtil(validateOrgsResult.errorObj))
-				}
-				req.headers['orgid'] = validateOrgsResult.validOrgIds
 			} else if (userRoles.includes(CONSTANTS.common.ORG_ADMIN)) {
 				req.headers['tenantid'] = decodedToken.data.tenant_id.toString()
 				req.headers['orgid'] = [decodedToken.data.organization_id.toString()]
@@ -519,7 +507,7 @@ module.exports = async function (req, res, next, token = '') {
 			}
 
 			decodedToken.data.tenantAndOrgInfo['tenantId'] = req.headers['tenantid'].toString()
-			decodedToken.data.tenantAndOrgInfo['orgId'] = req.headers['orgid']
+			decodedToken.data.tenantAndOrgInfo['orgId'] = req.headers['orgid'].toString()
 		}
 	} catch (err) {
 		rspObj.errCode = CONSTANTS.apiResponses.TOKEN_MISSING_CODE
