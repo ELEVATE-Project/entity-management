@@ -66,8 +66,7 @@ const fetchOrgDetails = function (organisationIdentifier, userToken) {
 const fetchTenantDetails = function (tenantId, userToken, userRole) {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let url
-			let options
+			let url, options
 			if (userRole === CONSTANTS.common.TENANT_ADMIN) {
 				url =
 					interfaceServiceUrl +
