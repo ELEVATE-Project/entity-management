@@ -63,22 +63,38 @@ const fetchOrgDetails = function (organisationIdentifier, userToken) {
  * @returns {Promise} A promise that resolves with the organization details or rejects with an error.
  */
 
-const fetchTenantDetails = function (tenantId, userToken) {
+const fetchTenantDetails = function (tenantId, userToken, userRole) {
 	return new Promise(async (resolve, reject) => {
 		try {
-			let url =
-				interfaceServiceUrl +
-				process.env.USER_SERVICE_BASE_URL +
-				CONSTANTS.endpoints.TENANT_READ +
-				'/' +
-				tenantId
-			const options = {
-				headers: {
-					'content-type': 'application/json',
-					'X-auth-token': userToken,
-				},
+			let url
+			let options
+			if (userRole === CONSTANTS.common.TENANT_ADMIN) {
+				url =
+					interfaceServiceUrl +
+					process.env.USER_SERVICE_BASE_URL +
+					CONSTANTS.endpoints.INTERNAL_TENANT_READ +
+					'/' +
+					tenantId
+				options = {
+					headers: {
+						'content-type': 'application/json',
+						internal_access_token: process.env.INTERNAL_ACCESS_TOKEN,
+					},
+				}
+			} else {
+				url =
+					interfaceServiceUrl +
+					process.env.USER_SERVICE_BASE_URL +
+					CONSTANTS.endpoints.TENANT_READ +
+					'/' +
+					tenantId
+				options = {
+					headers: {
+						'content-type': 'application/json',
+						'X-auth-token': userToken,
+					},
+				}
 			}
-
 			request.get(url, options, userReadCallback)
 			let result = {
 				success: true,
