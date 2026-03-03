@@ -81,7 +81,7 @@ async function runMigration() {
 		)
 
 		const token = loginResponse.data?.result?.access_token
-		const userId = loginResponse.data?.result?.user?.id
+		const userId = loginResponse.data?.result?.user?.id?.toString()
 
 		if (!token) throw new Error('Login failed.')
 
@@ -146,6 +146,8 @@ async function runMigration() {
 			_id: undefined,
 			tenantId: newTenantId,
 			orgId: newOrgId,
+			createdBy: userId,
+			updatedBy: userId,
 			registryDetails: {
 				...(t.registryDetails || {}),
 				tenantMigrationReferenceId: t._id.toString(),
