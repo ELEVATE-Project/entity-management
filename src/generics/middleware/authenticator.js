@@ -330,9 +330,9 @@ module.exports = async function (req, res, next, token = '') {
 		 * @param {String} token - The authentication token
 		 * @returns {Object} - Success with validOrgIds array or failure with error object
 		 */
-		async function validateIfOrgsBelongsToTenant(tenantId, orgId, token, userRole) {
+		async function validateIfOrgsBelongsToTenant(tenantId, orgId, token) {
 			let orgIdArr = Array.isArray(orgId) ? orgId : typeof orgId === 'string' ? orgId.split(',') : []
-			let orgDetails = await userService.fetchTenantDetails(tenantId, token, userRole)
+			let orgDetails = await userService.fetchTenantDetails(tenantId)
 			let validOrgIds = null
 
 			if (orgIdArr.includes('ALL') || orgIdArr.includes('all')) {
@@ -475,8 +475,7 @@ module.exports = async function (req, res, next, token = '') {
 
 				let validateOrgsResult = await validateIfOrgsBelongsToTenant(
 					req.headers['tenantid'],
-					req.headers['orgid'],
-					token
+					req.headers['orgid']
 				)
 
 				if (!validateOrgsResult.success) {
@@ -502,9 +501,7 @@ module.exports = async function (req, res, next, token = '') {
 
 				let validateOrgsResult = await validateIfOrgsBelongsToTenant(
 					req.headers['tenantid'],
-					req.headers['orgid'],
-					token,
-					CONSTANTS.common.TENANT_ADMIN
+					req.headers['orgid']
 				)
 				if (!validateOrgsResult.success) {
 					return res.status(responseCode['unauthorized'].status).send(respUtil(validateOrgsResult.errorObj))

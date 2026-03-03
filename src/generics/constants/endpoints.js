@@ -8,6 +8,5 @@
 module.exports = {
 	// End points to be added here
 	ORGANIZATION_READ: '/v1/organization/read',
-	TENANT_READ: '/v1/tenant/read',
 	INTERNAL_TENANT_READ: '/v1/tenant/readInternal',
 }
