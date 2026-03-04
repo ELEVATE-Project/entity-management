@@ -1,0 +1,32 @@
+==============================
+ MIGRATION STARTED
+==============================
+
+🔐 Logging in...
+✅ Login successful. userId: 1
+🔌 Connecting to MongoDB...
+✅ Connected to DB: qadb,
+
+📊 Old EntityTypes: 4
+📊 Old Entities: 5
+
+🚀 Phase 1 - Copying EntityTypes...
+✅ Phase 1 Completed (Inserted: 4/4)
+
+🚀 Phase 2 - Copying Entities...
+✅ Phase 2 Completed (Inserted: 5/5)
+
+🚀 Phase 4 - Fixing Groups...
+✅ Phase 4 Completed
+
+=================================================
+MIGRATION SUMMARY
+=================================================
+EntityTypes: 4/4
+Entities: 5/5
+Skipped (Missing Type): 0
+Skipped TargetedEntityType Mappings: 0
+Skipped Group Mappings: 0
+=================================================
+🎉 MIGRATION COMPLETED SUCCESSFULLY
+
