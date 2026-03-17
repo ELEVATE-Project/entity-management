@@ -40,7 +40,7 @@ services:
     logging:
       driver: none
   entity_management:
-    image: shikshalokamqa/elevate-entity-management:3.3.13.1
+    image: shikshalokamqa/elevate-entity-management:3.4
     ports:
       - '5001:5001'
     command: ['nodemon', 'app.js']
