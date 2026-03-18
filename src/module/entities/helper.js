@@ -706,14 +706,17 @@ module.exports = class UserProjectsHelper {
 				let finalEntityDocuments = []
 				// check the language criteria is set to english or not
 				const isEnglish = !language || language === CONSTANTS.common.ENGLISH_LANGUGE_CODE
-				// construct the name expression based on language
-				const nameExpr = isEnglish ? '$metaInformation.name' : `$translations.${language}.name`
+				// construct the name expression based on language with fallback to English
+				const nameExpr = isEnglish
+					? '$metaInformation.name'
+					: { $ifNull: [`$translations.${language}.name`, '$metaInformation.name'] }
 				// create a query pipeline
 				let pipeline = [
 					queryObject,
 					{
 						$project: {
 							name: nameExpr,
+							...(sortKey === 'name' ? { sortName: { $toLower: nameExpr } } : {}),
 							externalId: '$metaInformation.externalId',
 							addressLine1: '$metaInformation.addressLine1',
 							addressLine2: '$metaInformation.addressLine2',
@@ -728,7 +731,12 @@ module.exports = class UserProjectsHelper {
 					sortOrder = sortOrder.toLowerCase() === 'desc' ? -1 : 1
 
 					// Create sort object dynamically
-					pipeline.push({ $sort: { [sortKey]: sortOrder } })
+					if (sortKey === 'name') {
+						pipeline.push({ $sort: { sortName: sortOrder } })
+						pipeline.push({ $project: { sortName: 0 } })
+					} else {
+						pipeline.push({ $sort: { [sortKey]: sortOrder } })
+					}
 				}
 				// append the remaining to pipeline
 				pipeline = [
@@ -1277,7 +1285,6 @@ module.exports = class UserProjectsHelper {
 
 				let result = await entitiesQueries.getAggregate(aggregateData)
 				count = result?.[0]?.totalCount?.[0]?.count || 0
-
 
 				if (aggregateStaging == true) {
 					if (!Array.isArray(result) || !(result.length > 0)) {
