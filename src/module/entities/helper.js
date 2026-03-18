@@ -716,6 +716,7 @@ module.exports = class UserProjectsHelper {
 					{
 						$project: {
 							name: nameExpr,
+							// Add a lowercase helper for case-insensitive name sorting.
 							...(sortKey === 'name' ? { sortName: { $toLower: nameExpr } } : {}),
 							externalId: '$metaInformation.externalId',
 							addressLine1: '$metaInformation.addressLine1',
@@ -731,10 +732,12 @@ module.exports = class UserProjectsHelper {
 					sortOrder = sortOrder.toLowerCase() === 'desc' ? -1 : 1
 
 					// Create sort object dynamically
+					// For name sorting, use the lowercase helper and remove it from output.
 					if (sortKey === 'name') {
 						pipeline.push({ $sort: { sortName: sortOrder } })
 						pipeline.push({ $project: { sortName: 0 } })
 					} else {
+						// For other fields, sort directly by the requested key.
 						pipeline.push({ $sort: { [sortKey]: sortOrder } })
 					}
 				}
