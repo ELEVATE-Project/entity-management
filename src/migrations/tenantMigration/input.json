@@ -1,14 +1,14 @@
 {
 	"loginCredentails": {
-		"createrUserName": "nevil@tunerlabs.com",
-		"createrPassword": "PASSword###11",
-		"origin": "default-qa.tekdinext.com",
-		"createrType": "AdMin"
+		"createrUserName": "<system admin , org admin>",
+		"createrPassword": "<user password>",
+		"origin": "<Valid origin>",
+		"createrType": "<user role type>"
 	},
 	"tenantMappingConfig": {
-		"currentTenantId": "shikshalokam",
-		"currentOrgId": "tan90",
-		"newTenantId": "tan90",
-		"newOrgId": "default"
+		"currentTenantId": "< current tenant ID>",
+		"currentOrgId": "< current org ID>",
+		"newTenantId": "< new tenant ID>",
+		"newOrgId": "< new org ID>"
 	}
 }

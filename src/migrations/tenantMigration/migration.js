@@ -17,7 +17,11 @@ require('dotenv').config({
 const input = JSON.parse(fs.readFileSync(path.join(__dirname, 'input.json'), 'utf8'))
 
 const { loginCredentails, tenantMappingConfig } = input
-const { currentTenantId, newTenantId, newOrgId } = tenantMappingConfig
+let { currentTenantId, newTenantId, newOrgId } = tenantMappingConfig
+
+currentTenantId = (currentTenantId || '').toLowerCase().trim()
+newTenantId = (newTenantId || '').toLowerCase().trim()
+newOrgId = (newOrgId || '').toLowerCase().trim()
 
 const BASE_URL = process.env.INTERFACE_SERVICE_URL
 const MONGODB_URL = process.env.MONGODB_URL
