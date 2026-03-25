@@ -62,7 +62,9 @@ async function runMigration() {
 		log('🔐 Logging in...')
 		// Normalize createrType once (handle Admin, ADMIN, etc.)
 		const normalizedCreatorType = (loginCredentails.createrType || '').toLowerCase().trim()
-
+		const normalizedCurrentTenantId = (currentTenantId || '').toLowerCase().trim()
+		const normalizedNewTenantId = (newTenantId || '').toLowerCase().trim()
+		const normalizedNewOrgId = (newOrgId || '').toLowerCase().trim()
 		const loginUrl =
 			normalizedCreatorType === 'admin' ? `${BASE_URL}/user/v1/admin/login` : `${BASE_URL}/user/v1/account/login`
 
@@ -106,11 +108,11 @@ async function runMigration() {
 		 * OLD COUNTS
 		 */
 		totalEntityTypesOld = await entityTypeCollection.countDocuments({
-			tenantId: currentTenantId,
+			tenantId: normalizedCurrentTenantId,
 		})
 
 		totalEntitiesOld = await entityCollection.countDocuments({
-			tenantId: currentTenantId,
+			tenantId: normalizedCurrentTenantId,
 		})
 
 		log(`📊 Old EntityTypes: ${totalEntityTypesOld}`)
@@ -121,13 +123,13 @@ async function runMigration() {
 		 */
 		const existingTargetData =
 			(await entityTypeCollection.countDocuments({
-				tenantId: newTenantId,
+				tenantId: normalizedNewTenantId,
 			})) +
 			(await entityCollection.countDocuments({
-				tenantId: newTenantId,
+				tenantId: normalizedNewTenantId,
 			}))
 
-		if (existingTargetData > 0) throw new Error(`Target tenant (${newTenantId}) already has data.`)
+		if (existingTargetData > 0) throw new Error(`Target tenant (${normalizedNewTenantId}) already has data.`)
 
 		/**
 		 * ==========================================================
@@ -137,15 +139,15 @@ async function runMigration() {
 
 		log('🚀 Phase 1 - Copying EntityTypes...')
 
-		const oldTypes = await entityTypeCollection.find({ tenantId: currentTenantId }).toArray()
+		const oldTypes = await entityTypeCollection.find({ tenantId: normalizedCurrentTenantId }).toArray()
 
 		const entityTypeIdMapping = {}
 
 		const newTypes = oldTypes.map((t) => ({
 			...t,
 			_id: undefined,
-			tenantId: newTenantId,
-			orgId: newOrgId,
+			tenantId: normalizedNewTenantId,
+			orgId: normalizedNewOrgId,
 			createdBy: userId,
 			updatedBy: userId,
 			registryDetails: {
@@ -176,7 +178,7 @@ async function runMigration() {
 
 		log('🚀 Phase 2 - Copying Entities...')
 
-		const cursor = entityCollection.find({ tenantId: currentTenantId }).batchSize(BATCH_SIZE)
+		const cursor = entityCollection.find({ tenantId: normalizedCurrentTenantId }).batchSize(BATCH_SIZE)
 
 		let batch = []
 		let processed = 0
@@ -221,7 +223,7 @@ async function runMigration() {
 		const mapCursor = entityCollection
 			.find(
 				{
-					tenantId: newTenantId,
+					tenantId: normalizedNewTenantId,
 					'metaInformation.tenantMigrationReferenceId': { $exists: true },
 				},
 				{
@@ -240,7 +242,7 @@ async function runMigration() {
 
 		const groupCursor = entityCollection
 			.find({
-				tenantId: newTenantId,
+				tenantId: normalizedNewTenantId,
 				groups: { $exists: true },
 			})
 			.batchSize(BATCH_SIZE)
@@ -266,11 +268,11 @@ async function runMigration() {
 		 * FINAL COUNTS
 		 */
 		const totalEntityTypesNew = await entityTypeCollection.countDocuments({
-			tenantId: newTenantId,
+			tenantId: normalizedNewTenantId,
 		})
 
 		const totalEntitiesNew = await entityCollection.countDocuments({
-			tenantId: newTenantId,
+			tenantId: normalizedNewTenantId,
 		})
 
 		log('=================================================')
@@ -328,8 +330,8 @@ async function processEntityBatch(batch, mapping, collection, userId) {
 		newDocs.push({
 			...oldEntity,
 			_id: undefined,
-			tenantId: newTenantId,
-			orgId: newOrgId,
+			tenantId: normalizedNewTenantId,
+			orgId: normalizedNewOrgId,
 			entityTypeId: mappedTypeId,
 			metaInformation: {
 				...(oldEntity.metaInformation || {}),
