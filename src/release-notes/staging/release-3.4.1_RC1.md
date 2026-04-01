@@ -2,4 +2,4 @@
 
 ## ✨ Features
 
--   **Tenant Admin Flow** – Enabled Tenant Admin to create resources in Project Service
+-   **Tenant Admin Flow** – Enabled Tenant Admin to create resources in Entity-Management Service
