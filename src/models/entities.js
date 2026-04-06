@@ -18,6 +18,9 @@ module.exports = {
 			externalId: { type: String, index: true },
 			name: { type: String, index: true },
 			targetedEntityTypes: { type: Array },
+			status: { type: String, default: 'ACTIVE', index: true },
+			onBoardingProjectId: { type: String },
+			IDPProjectId: { type: String },
 		},
 		childHierarchyPath: Array,
 		userId: {
