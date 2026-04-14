@@ -129,6 +129,8 @@ module.exports = class UserProjectsHelper {
 						} else {
 							// Add failure status if no matching entity is found
 							rowStatus[`${key}Status`] = CONSTANTS.apiResponses.ENTITY_NOT_FOUND
+							// Add failure status if no matching entity is found to the csv file.
+							entityIds.push(CONSTANTS.apiResponses.ENTITY_NOT_FOUND)
 						}
 					}
 
