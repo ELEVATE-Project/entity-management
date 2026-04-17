@@ -1870,6 +1870,19 @@ module.exports = class UserProjectsHelper {
 						return singleEntity
 					})
 				)
+
+				// Check if ALL records failed
+				const allFailed = entityUploadedData.every(
+					(entity) => entity.status === CONSTANTS.apiResponses.ENTITIES_FAILED
+				)
+
+				// If all failed → throw FIELD_MISSING error
+				if (allFailed) {
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.FIELD_MISSING,
+					}
+				}
 				if (entityUploadedData.findIndex((entity) => entity === undefined) >= 0) {
 					throw CONSTANTS.apiResponses.SOMETHING_WRONG_INSERTED_UPDATED
 				}
@@ -2002,7 +2015,25 @@ module.exports = class UserProjectsHelper {
 					})
 				)
 
-				// Check for any undefined values in entityUploadedData array
+				// multiple failure statuses
+				const failedStatuses = [
+					CONSTANTS.apiResponses.ENTITIES_UPDATE_FAILED,
+					CONSTANTS.apiResponses.INVALID_OR_MISSING_SYSTEM_ID,
+					CONSTANTS.apiResponses.ENTITY_NOT_FOUND,
+					CONSTANTS.apiResponses.NO_INFORMATION_TO_UPDATE,
+				]
+
+				// Check if ALL records failed
+				const allFailed = entityUploadedData.every((entity) => failedStatuses.includes(entity.status))
+
+				// Check if ALL records failed
+				if (allFailed) {
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.FIELD_MISSING,
+					}
+				}
+
 				if (entityUploadedData.findIndex((entity) => entity === undefined) >= 0) {
 					throw CONSTANTS.apiResponses.SOMETHING_WRONG_INSERTED_UPDATED
 				}

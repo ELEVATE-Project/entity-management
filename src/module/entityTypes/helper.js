@@ -358,7 +358,21 @@ module.exports = class UserProjectsHelper {
 					})
 				)
 
-				return resolve(entityTypesUploadedData)
+				// Check if ALL records failed
+				const allFailed = entityTypesUploadedData.every(
+					(entity) =>
+						entity.status === CONSTANTS.apiResponses.ENTITY_TYPE_FAILED ||
+						entity.status === CONSTANTS.common.FAILURE ||
+						entity.status === CONSTANTS.apiResponses.FAILURE
+				)
+
+				// If all failed → throw error
+				if (allFailed) {
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.FIELD_MISSING,
+					}
+				}
 			} catch (error) {
 				return reject(error)
 			}
