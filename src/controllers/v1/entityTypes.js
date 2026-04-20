@@ -278,8 +278,7 @@ module.exports = class EntityTypes extends Abstract {
 				// Call 'entityTypesHelper.bulkCreate' to create multiple entity types from CSV data and user details
 				const newEntityTypeData = await entityTypesHelper.bulkCreate(entityTypesCSVData, req.userDetails)
 
-				// Check if entity types were created successfully
-				if (newEntityTypeData.length > 0 && newEntityTypeData[0].status === CONSTANTS.apiResponses.SUCCESS) {
+				if (newEntityTypeData.hasSuccess && newEntityTypeData.data.length > 0) {
 					const fileName = `EntityType-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()
@@ -294,16 +293,17 @@ module.exports = class EntityTypes extends Abstract {
 					})()
 
 					await Promise.all(
-						newEntityTypeData.map(async (entityType) => {
+						newEntityTypeData.data.map(async (entityType) => {
 							input.push(entityType)
 						})
 					)
 
 					input.push(null)
 				} else {
-					const error = new Error(CONSTANTS.apiResponses.ENTITY_TYPE_CREATION_FAILED)
-					error.status = HTTP_STATUS_CODE.bad_request.status
-					throw error
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.ALL_RECORDS_FAILED_TO_PROCESS,
+					}
 				}
 			} catch (error) {
 				return reject({
@@ -343,7 +343,7 @@ module.exports = class EntityTypes extends Abstract {
 				let newEntityTypeData = await entityTypesHelper.bulkUpdate(entityTypesCSVData, req.userDetails)
 
 				// Check if entity types were updated successfully
-				if (newEntityTypeData.length > 0) {
+				if (newEntityTypeData.hasSuccess && newEntityTypeData.data.length > 0) {
 					const fileName = `EntityType-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()
@@ -358,14 +358,17 @@ module.exports = class EntityTypes extends Abstract {
 					})()
 
 					await Promise.all(
-						newEntityTypeData.map(async (entityType) => {
+						newEntityTypeData.data.map(async (entityType) => {
 							input.push(entityType)
 						})
 					)
 
 					input.push(null)
 				} else {
-					throw CONSTANTS.apiResponses.ENTITY_TYPE_NOT_UPDATED
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.ALL_RECORDS_FAILED_TO_UPDATE,
+					}
 				}
 			} catch (error) {
 				return reject({
