@@ -278,7 +278,7 @@ module.exports = class EntityTypes extends Abstract {
 				// Call 'entityTypesHelper.bulkCreate' to create multiple entity types from CSV data and user details
 				const newEntityTypeData = await entityTypesHelper.bulkCreate(entityTypesCSVData, req.userDetails)
 
-				if (newEntityTypeData.hasSuccess) {
+				if (newEntityTypeData.hasSuccess && newEntityTypeData.data.length > 0) {
 					const fileName = `EntityType-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()
@@ -343,7 +343,7 @@ module.exports = class EntityTypes extends Abstract {
 				let newEntityTypeData = await entityTypesHelper.bulkUpdate(entityTypesCSVData, req.userDetails)
 
 				// Check if entity types were updated successfully
-				if (newEntityTypeData.hasSuccess) {
+				if (newEntityTypeData.hasSuccess && newEntityTypeData.data.length > 0) {
 					const fileName = `EntityType-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()

@@ -1000,7 +1000,7 @@ module.exports = class Entities extends Abstract {
 				)
 
 				// Check if new entities were created successfully
-				if (newEntityData.hasSuccess) {
+				if (newEntityData.hasSuccess && newEntityData.data.length > 0) {
 					const fileName = `Entity-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()
@@ -1074,7 +1074,7 @@ module.exports = class Entities extends Abstract {
 				let newEntityData = await entitiesHelper.bulkUpdate(entityCSVData, translationFile, req.userDetails)
 
 				// Check if entities were updated successfully
-				if (newEntityData.hasSuccess) {
+				if (newEntityData.hasSuccess && newEntityData.data.length > 0) {
 					const fileName = `Entity-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()

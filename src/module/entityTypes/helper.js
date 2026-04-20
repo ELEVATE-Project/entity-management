@@ -26,7 +26,6 @@ module.exports = class UserProjectsHelper {
 	 * @returns {JSON} - uploaded entity information.
 	 */
 	static bulkCreate(entityTypesCSVData, userDetails) {
-		console.log(userDetails, '<--userDetails in bulkCreate entityTypesCSVData')
 		return new Promise(async (resolve, reject) => {
 			try {
 				// Flag to track if at least one record is successfully processed
