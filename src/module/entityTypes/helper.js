@@ -29,6 +29,8 @@ module.exports = class UserProjectsHelper {
 		console.log(userDetails, '<--userDetails in bulkCreate entityTypesCSVData')
 		return new Promise(async (resolve, reject) => {
 			try {
+				// Flag to track if at least one record is successfully processed
+				let hasSuccess = false
 				const entityTypesUploadedData = await Promise.all(
 					entityTypesCSVData.map(async (entityType) => {
 						try {
@@ -107,8 +109,9 @@ module.exports = class UserProjectsHelper {
 								)
 							)
 							if (newEntityType._id) {
-								entityType['_SYSTEM_ID'] = newEntityType._id
-								entityType.status = CONSTANTS.apiResponses.SUCCESS
+								;(entityType['_SYSTEM_ID'] = newEntityType._id),
+									(entityType.status = CONSTANTS.apiResponses.SUCCESS),
+									(hasSuccess = true)
 							} else {
 								entityType['_SYSTEM_ID'] = ''
 								entityType.status = CONSTANTS.apiResponses.FAILURE
@@ -123,7 +126,10 @@ module.exports = class UserProjectsHelper {
 					})
 				)
 
-				return resolve(entityTypesUploadedData)
+				return resolve({
+					data: entityTypesUploadedData,
+					hasSuccess,
+				})
 			} catch (error) {
 				return reject(error)
 			}
@@ -260,6 +266,8 @@ module.exports = class UserProjectsHelper {
 	static bulkUpdate(entityTypesCSVData, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				// Flag to track if at least one record is successfully processed
+				let hasSuccess = false
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				// Process each entity type in the provided array asynchronously
 				const entityTypesUploadedData = await Promise.all(
@@ -343,7 +351,7 @@ module.exports = class UserProjectsHelper {
 
 							if (updateEntityType._id) {
 								entityType['_SYSTEM_ID'] = updateEntityType._id
-								entityType.status = CONSTANTS.common.SUCCESS
+								;(entityType.status = CONSTANTS.common.SUCCESS), (hasSuccess = true)
 							} else {
 								entityType['_SYSTEM_ID'] = ''
 								entityType.status = CONSTANTS.common.FAILURE
@@ -358,7 +366,10 @@ module.exports = class UserProjectsHelper {
 					})
 				)
 
-				return resolve(entityTypesUploadedData)
+				return resolve({
+					data: entityTypesUploadedData,
+					hasSuccess,
+				})
 			} catch (error) {
 				return reject(error)
 			}

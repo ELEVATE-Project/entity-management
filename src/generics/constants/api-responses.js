@@ -80,4 +80,6 @@ module.exports = {
 	ENTITIES_DELETED_SUCCESSFULLY: 'ENTITIES_DELETED_SUCCESSFULLY',
 	ADMIN_ROLE_REQUIRED: 'Access denied: Admin role required',
 	NOT_A_VALID_MONGOID: 'externalId cannot be a Mongo ObjectId',
+	ALL_RECORDS_FAILED_TO_PROCESS: 'All records failed to process',
+	ALL_RECORDS_FAILED_TO_UPDATE: 'All records failed to Update',
 }

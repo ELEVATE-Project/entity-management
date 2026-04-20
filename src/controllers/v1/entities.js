@@ -1000,7 +1000,7 @@ module.exports = class Entities extends Abstract {
 				)
 
 				// Check if new entities were created successfully
-				if (newEntityData.length > 0) {
+				if (newEntityData.hasSuccess) {
 					const fileName = `Entity-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()
@@ -1016,14 +1016,17 @@ module.exports = class Entities extends Abstract {
 
 					// Push each new entity into the file stream for processing
 					await Promise.all(
-						newEntityData.map(async (newEntity) => {
+						newEntityData.data.map(async (newEntity) => {
 							input.push(newEntity)
 						})
 					)
 
 					input.push(null)
 				} else {
-					throw CONSTANTS.apiResponses.SOMETHING_WENT_WRONG
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.ALL_RECORDS_FAILED_TO_PROCESS,
+					}
 				}
 			} catch (error) {
 				return reject({
@@ -1071,7 +1074,7 @@ module.exports = class Entities extends Abstract {
 				let newEntityData = await entitiesHelper.bulkUpdate(entityCSVData, translationFile, req.userDetails)
 
 				// Check if entities were updated successfully
-				if (newEntityData.length > 0) {
+				if (newEntityData.hasSuccess) {
 					const fileName = `Entity-Upload`
 					let fileStream = new FileStream(fileName)
 					let input = fileStream.initStream()
@@ -1086,14 +1089,17 @@ module.exports = class Entities extends Abstract {
 					})()
 
 					await Promise.all(
-						newEntityData.map(async (newEntity) => {
+						newEntityData.data.map(async (newEntity) => {
 							input.push(newEntity)
 						})
 					)
 
 					input.push(null)
 				} else {
-					throw new Error(CONSTANTS.apiResponses.SOMETHING_WENT_WRONG)
+					throw {
+						status: HTTP_STATUS_CODE.bad_request.status,
+						message: CONSTANTS.apiResponses.ALL_RECORDS_FAILED_TO_UPDATE,
+					}
 				}
 			} catch (error) {
 				return reject({
