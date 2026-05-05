@@ -238,6 +238,18 @@ function generateUniqueId() {
 	return uuidV4()
 }
 
+/**
+ * Build a tenant-scoped unique identifier for entity types.
+ * @function
+ * @name generateEntityTypeUniqueId
+ * @param {String} name - entity type name.
+ * @param {String} tenantId - tenant id.
+ * @returns {String} - unique identifier derived from name and tenant.
+ */
+function generateEntityTypeUniqueId(name, tenantId) {
+	return `${String(name || '').trim()}_${String(tenantId || '').trim()}`
+}
+
 // Helper function to convert mongo ids to objectIds to facilitate proper query in aggregate function
 function convertMongoIds(query) {
 	const keysToConvert = ['_id', 'entityTypeId'] // Add other fields if needed
@@ -326,6 +338,7 @@ module.exports = {
 	noOfElementsInArray: noOfElementsInArray,
 	operatorValidation: operatorValidation,
 	generateUniqueId: generateUniqueId,
+	generateEntityTypeUniqueId: generateEntityTypeUniqueId,
 	convertMongoIds: convertMongoIds,
 	stripOrgIds: stripOrgIds,
 	convertOrgIdsToString: convertOrgIdsToString,

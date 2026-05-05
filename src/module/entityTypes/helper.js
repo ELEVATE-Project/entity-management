@@ -7,9 +7,12 @@
 
 // Dependencies
 const entityTypeQueries = require(DB_QUERY_BASE_PATH + '/entityTypes')
+const entitiesQueries = require(DB_QUERY_BASE_PATH + '/entities')
 
 // const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper")
 // const programUsersQueries = require(DB_QUERY_BASE_PATH + "/programUsers")
+
+const buildEntityTypeUniqueId = (name, tenantId) => UTILS.generateEntityTypeUniqueId(name, tenantId)
 
 /**
  * UserProjectsHelper
@@ -36,6 +39,10 @@ module.exports = class UserProjectsHelper {
 							entityType = UTILS.valueParser(entityType)
 							entityType['tenantId'] = userDetails.tenantAndOrgInfo.tenantId
 							entityType['orgId'] = userDetails.tenantAndOrgInfo.orgId[0]
+							entityType['entityTypeUniqueId'] = buildEntityTypeUniqueId(
+								entityType.name,
+								entityType['tenantId']
+							)
 							entityType.registryDetails = {}
 							let removedKeys = []
 
@@ -184,6 +191,8 @@ module.exports = class UserProjectsHelper {
 						? userDetails.userInformation.userId
 						: CONSTANTS.common.SYSTEM
 
+				entityType.entityTypeUniqueId = buildEntityTypeUniqueId(entityType.name, entityType.tenantId)
+
 				let newEntityType = await entityTypeQueries.create(
 					_.merge(
 						{
@@ -230,6 +239,11 @@ module.exports = class UserProjectsHelper {
 				delete bodyData.orgIds
 
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
+				const existingEntityType = await entityTypeQueries.findOne(
+					{ _id: ObjectId(entityTypeId), tenantId: tenantId },
+					{ name: 1, entityTypeUniqueId: 1 }
+				)
+				bodyData.entityTypeUniqueId = buildEntityTypeUniqueId(bodyData.name, tenantId)
 
 				// Find and update the entity type by ID with the provided bodyData
 				let entityInformation = await entityTypeQueries.findOneAndUpdate(
@@ -240,6 +254,18 @@ module.exports = class UserProjectsHelper {
 
 				if (!entityInformation) {
 					return reject({ status: 404, message: CONSTANTS.apiResponses.ENTITYTYPE_NOT_FOUND })
+				}
+
+				if (existingEntityType && existingEntityType.entityTypeUniqueId !== bodyData.entityTypeUniqueId) {
+					await entitiesQueries.updateMany(
+						{ entityTypeId: ObjectId(entityTypeId), tenantId: tenantId },
+						{
+							$set: {
+								entityType: bodyData.name,
+								entityTypeUniqueId: bodyData.entityTypeUniqueId,
+							},
+						}
+					)
 				}
 
 				resolve({
@@ -321,9 +347,11 @@ module.exports = class UserProjectsHelper {
 
 							// Get the userId from userDetails or default to SYSTEM
 							const userId =
-								userDetails && userDetails.userInformation.id
-									? userDetails && userDetails.userInformation.id
+								userDetails && userDetails.userInformation.userId
+									? userDetails && userDetails.userInformation.userId
 									: CONSTANTS.common.SYSTEM
+
+							entityType.entityTypeUniqueId = buildEntityTypeUniqueId(entityType.name, tenantId)
 
 							if (!entityType.name) {
 								entityType['_SYSTEM_ID'] = ''
@@ -345,6 +373,18 @@ module.exports = class UserProjectsHelper {
 									entityType
 								)
 							)
+
+							if (updateEntityType && updateEntityType._id) {
+								await entitiesQueries.updateMany(
+									{ entityTypeId: ObjectId(entityType._SYSTEM_ID), tenantId: tenantId },
+									{
+										$set: {
+											entityType: entityType.name,
+											entityTypeUniqueId: entityType.entityTypeUniqueId,
+										},
+									}
+								)
+							}
 
 							delete entityType.registryDetails
 

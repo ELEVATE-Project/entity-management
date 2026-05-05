@@ -11,6 +11,10 @@ module.exports = {
 		name: {
 			type: String,
 		},
+		entityTypeUniqueId: {
+			type: String,
+			index: true,
+		},
 		profileForm: Array,
 		profileFields: Array,
 		types: Array,

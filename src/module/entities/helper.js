@@ -15,6 +15,8 @@ const { Parser } = require('json2csv')
 
 const _ = require('lodash')
 
+const buildEntityTypeUniqueId = (name, tenantId) => UTILS.generateEntityTypeUniqueId(name, tenantId)
+
 /**
  * UserProjectsHelper
  * @class
@@ -828,7 +830,8 @@ module.exports = class UserProjectsHelper {
 				const projectedData = {
 					_id: 1,
 					entityType: 1,
-					entityTypeId: 1,
+					entityTypeUniqueId: 1,
+					tenantId: 1,
 					childHierarchyPath: 1,
 				}
 
@@ -900,7 +903,8 @@ module.exports = class UserProjectsHelper {
 			if (updateParentHierarchy) {
 				const relatedEntities = await this.relatedEntities(
 					parentEntity._id,
-					parentEntity.entityTypeId,
+					parentEntity.entityTypeUniqueId ||
+						buildEntityTypeUniqueId(parentEntity.entityType, parentEntity.tenantId),
 					parentEntity.entityType,
 					['_id']
 				)
@@ -966,14 +970,14 @@ module.exports = class UserProjectsHelper {
 	 * @method
 	 * @name relatedEntities
 	 * @param {String} entityId - entity id.
-	 * @param {String} entityTypeId - entity type id.
+	 * @param {String} entityTypeUniqueId - entity type unique id.
 	 * @param {String} entityType - entity type.
 	 * @param {Array} [projection = "all"] - total fields to be projected.
 	 * @param {String} tenantId - user's tenant id
 	 * @returns {Array} - returns an array of related entities data.
 	 */
 
-	static relatedEntities(entityId, entityTypeId, entityType, projection = 'all', tenantId) {
+	static relatedEntities(entityId, entityTypeUniqueId, entityType, projection = 'all', tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// if (
@@ -989,10 +993,10 @@ module.exports = class UserProjectsHelper {
 					tenantId,
 				}
 
-				if (entityTypeId && entityId && entityType) {
+				if (entityTypeUniqueId && entityId && entityType) {
 					relatedEntitiesQuery[`groups.${entityType}`] = entityId
-					relatedEntitiesQuery['entityTypeId'] = {}
-					relatedEntitiesQuery['entityTypeId']['$ne'] = entityTypeId
+					relatedEntitiesQuery['entityTypeUniqueId'] = {}
+					relatedEntitiesQuery['entityTypeUniqueId']['$ne'] = entityTypeUniqueId
 				} else {
 					throw {
 						status: HTTP_STATUS_CODE.bad_request.status,
@@ -1136,6 +1140,7 @@ module.exports = class UserProjectsHelper {
 					'metaInformation',
 					'entityType',
 					'entityTypeId',
+					'entityTypeUniqueId',
 					'registryDetails',
 				])
 				if (!entities.length > 0) {
@@ -1418,14 +1423,27 @@ module.exports = class UserProjectsHelper {
 	static add(queryParams, data, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Find the entities document based on the entityType in queryParams
+				console.log('queryParams -----> ', queryParams)
+				console.log('entityTypeQuery -----> ', queryParams.entityTypeUniqueId)
 
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
-				let entityTypeDocument = await entityTypeQueries.findOne(
-					{ name: queryParams.type, tenantId: tenantId },
-					{ _id: 1 }
-				)
+				const entityTypeUniqueId =
+					queryParams.entityTypeUniqueId || buildEntityTypeUniqueId(queryParams.type, tenantId)
+				const entityTypeQuery = queryParams.entityTypeUniqueId
+					? {
+							tenantId: tenantId,
+							entityTypeUniqueId: entityTypeUniqueId,
+					  }
+					: {
+							tenantId: tenantId,
+							$or: [{ entityTypeUniqueId: entityTypeUniqueId }, { name: queryParams.type }],
+					  }
+				let entityTypeDocument = await entityTypeQueries.findOne(entityTypeQuery, {
+					_id: 1,
+					entityTypeUniqueId: 1,
+					name: 1,
+				})
 				if (!entityTypeDocument) {
 					throw {
 						status: HTTP_STATUS_CODE.bad_request.status,
@@ -1482,9 +1500,13 @@ module.exports = class UserProjectsHelper {
 						: []
 					// Construct the entity document to be created
 					let entityDoc = {
-						entityTypeId: entityTypeDocument._id,
+						entityTypeUniqueId:
+							entityTypeDocument.entityTypeUniqueId ||
+							entityTypeUniqueId ||
+							buildEntityTypeUniqueId(entityTypeDocument.name, tenantId),
 						childHierarchyPath: childHierarchyPath,
-						entityType: queryParams.type,
+						entityType: entityTypeDocument.name || queryParams.type,
+						entityUniqueId: singleEntity.externalId,
 						registryDetails: registryDetails,
 						groups: {},
 						metaInformation: _.omit(singleEntity, ['locationId', 'code']),
@@ -1720,18 +1742,67 @@ module.exports = class UserProjectsHelper {
 	static bulkCreate(entityType, programId, solutionId, userDetails, entityCSVData, translationFile) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Flag to track if at least one record is successfully processed
-				let hasSuccess = false
+				const entityTypeName = typeof entityType === 'object' ? entityType.type : entityType
+				const entityTypeUniqueIdInput = typeof entityType === 'object' ? entityType.entityTypeUniqueId : ''
+
+				// let solutionsDocument = new Array()
+				// if (programId && solutionId) {
+
+				// 	solutionsDocument = await database.models.entityTypes
+				// 		.find(
+				// 			{
+				// 				externalId: solutionId,
+				// 				programExternalId: programId,
+				// 			},
+				// 			{
+				// 				programId: 1,
+				// 				externalId: 1,
+				// 				subType: 1,
+				// 				entityType: 1,
+				// 				entityTypeId: 1,
+				// 			}
+				// 		)
+				// 		.lean()
+				// }
+
+				// let solutionsData
+
+				// if (solutionsDocument.length) {
+				// 	solutionsData = solutionsDocument.reduce(
+				// 		(ac, entities) => ({
+				// 			...ac,
+				// 			[entities.metaInformation.externalId]: {
+				// 				subType: entities.subType,
+				// 				solutionId: entities._id,
+				// 				programId: entities.programId,
+				// 				entityType: entities.entityType,
+				// 				entityTypeId: entities.entityTypeId,
+				// 				newEntities: new Array(),
+				// 			},
+				// 		}),
+				// 		{}
+				// 	)
+				// }
+
 				// Find the entity type document based on the provided entityType
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
-				let entityTypeDocument = await entityTypeQueries.findOne(
-					{
-						name: entityType,
-						tenantId: tenantId,
-					},
-					{ _id: 1, tenantId: 1 }
-				)
+				const entityTypeUniqueId = entityTypeUniqueIdInput || buildEntityTypeUniqueId(entityTypeName, tenantId)
+				const entityTypeQuery = entityTypeUniqueIdInput
+					? {
+							tenantId: tenantId,
+							entityTypeUniqueId: entityTypeUniqueId,
+					  }
+					: {
+							tenantId: tenantId,
+							$or: [{ entityTypeUniqueId: entityTypeUniqueId }, { name: entityTypeName }],
+					  }
+				let entityTypeDocument = await entityTypeQueries.findOne(entityTypeQuery, {
+					_id: 1,
+					tenantId: 1,
+					entityTypeUniqueId: 1,
+					name: 1,
+				})
 				if (!entityTypeDocument) {
 					throw {
 						status: HTTP_STATUS_CODE.bad_request.status,
@@ -1748,8 +1819,11 @@ module.exports = class UserProjectsHelper {
 								? userDetails.userInformation.userId
 								: CONSTANTS.common.SYSTEM
 						let entityCreation = {
-							entityTypeId: entityTypeDocument._id,
-							entityType: entityType,
+							entityTypeUniqueId:
+								entityTypeDocument.entityTypeUniqueId ||
+								entityTypeUniqueId ||
+								buildEntityTypeUniqueId(entityTypeDocument.name, tenantId),
+							entityType: entityTypeDocument.name || entityTypeName,
 							registryDetails: {},
 							groups: {},
 							updatedBy: userId,
@@ -1801,6 +1875,7 @@ module.exports = class UserProjectsHelper {
 								code: externalId,
 								locationId: externalId,
 							}
+							entityCreation.entityUniqueId = externalId
 						}
 
 						if (translationFile) {
@@ -1812,6 +1887,7 @@ module.exports = class UserProjectsHelper {
 						}
 
 						singleEntity['_SYSTEM_ID'] = newEntity._id.toString()
+						singleEntity.entityUniqueId = newEntity.entityUniqueId
 
 						if (singleEntity._SYSTEM_ID) {
 							singleEntity.status = CONSTANTS.apiResponses.SUCCESS
@@ -2055,23 +2131,28 @@ module.exports = class UserProjectsHelper {
 	static listEntitiesByType(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				console.log('req.userDetails -----> ', req.userDetails)
 				// Retrieve the schema meta information key
 				let schemaMetaInformation = this.entitiesSchemaData().SCHEMA_METAINFORMATION
-				let tenantId = req.userDetails.userInformation.tenantId
+				let tenantId = req.userDetails?.tenantAndOrgInfo?.tenantId || req.userDetails?.userInformation?.tenantId
 				// Define projection for entity document fields to retrieve
 				let projection = [
 					schemaMetaInformation + '.externalId',
 					schemaMetaInformation + '.name',
 					'registryDetails.locationId',
+					'entityTypeUniqueId',
 				]
 
 				// Calculate skipping value based on pagination parameters
 				let skippingValue = req.pageSize * (req.pageNo - 1)
 
-				// Query entities based on entity type ID
+				// Query entities based on entity type unique id, with legacy entityTypeId fallback.
+				const entityTypeFilter = UTILS.strictObjectIdCheck(req.params._id)
+					? { entityTypeId: ObjectId(req.params._id) }
+					: { entityTypeUniqueId: req.params._id }
 				let entityDocuments = await entitiesQueries.entityDocuments(
 					{
-						entityTypeId: ObjectId(req.params._id),
+						...entityTypeFilter,
 						tenantId: tenantId,
 					},
 					projection,
@@ -2210,7 +2291,7 @@ module.exports = class UserProjectsHelper {
 							metaInformation: 1,
 							groups: 1,
 							entityType: 1,
-							entityTypeId: 1,
+							entityTypeUniqueId: 1,
 						},
 					},
 					{
@@ -2238,6 +2319,7 @@ module.exports = class UserProjectsHelper {
 						entity.metaInformation.childrenCount = 0
 						entity.metaInformation.entityType = entity.entityType
 						entity.metaInformation.entityTypeId = entity.entityTypeId
+						entity.metaInformation.entityTypeUniqueId = entity.entityTypeUniqueId
 						entity.metaInformation.subEntityGroups = new Array()
 
 						entity.groups &&
@@ -2351,12 +2433,14 @@ async function populateTargetedEntityTypesData(targetedEntityTypes, tenantId) {
 				name: { $in: targetedEntityTypes },
 				tenantId: tenantId,
 			},
-			['name', '_id']
+			['name', '_id', 'entityTypeUniqueId']
 		)
 
 		formattedTargetedEntityTypes.forEach((entityType) => {
 			entityType['entityTypeId'] = entityType._id.toString()
 			entityType['entityType'] = entityType.name
+			entityType['entityTypeUniqueId'] =
+				entityType.entityTypeUniqueId || buildEntityTypeUniqueId(entityType.name, tenantId)
 			delete entityType._id
 			delete entityType.name
 		})

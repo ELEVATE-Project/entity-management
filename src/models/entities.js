@@ -9,7 +9,15 @@ module.exports = {
 	name: 'entities',
 	schema: {
 		entityTypeId: 'ObjectId',
+		entityTypeUniqueId: {
+			type: String,
+			index: true,
+		},
 		entityType: {
+			type: String,
+			index: true,
+		},
+		entityUniqueId: {
 			type: String,
 			index: true,
 		},
