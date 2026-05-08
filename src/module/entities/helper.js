@@ -1506,7 +1506,7 @@ module.exports = class UserProjectsHelper {
 							buildEntityTypeUniqueId(entityTypeDocument.name, tenantId),
 						childHierarchyPath: childHierarchyPath,
 						entityType: entityTypeDocument.name || queryParams.type,
-						entityUniqueId: singleEntity.externalId,
+						code: singleEntity.externalId,
 						registryDetails: registryDetails,
 						groups: {},
 						metaInformation: _.omit(singleEntity, ['locationId', 'code']),
@@ -1875,7 +1875,7 @@ module.exports = class UserProjectsHelper {
 								code: externalId,
 								locationId: externalId,
 							}
-							entityCreation.entityUniqueId = externalId
+							entityCreation.code = externalId
 						}
 
 						if (translationFile) {
@@ -1887,7 +1887,7 @@ module.exports = class UserProjectsHelper {
 						}
 
 						singleEntity['_SYSTEM_ID'] = newEntity._id.toString()
-						singleEntity.entityUniqueId = newEntity.entityUniqueId
+						singleEntity.code = newEntity.code
 
 						if (singleEntity._SYSTEM_ID) {
 							singleEntity.status = CONSTANTS.apiResponses.SUCCESS
