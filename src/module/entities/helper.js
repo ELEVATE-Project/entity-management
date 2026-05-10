@@ -15,7 +15,7 @@ const { Parser } = require('json2csv')
 
 const _ = require('lodash')
 
-const buildEntityTypeUniqueId = (name, tenantId) => UTILS.generateEntityTypeUniqueId(name, tenantId)
+const buildEntityTypeUniqueCode = (name, tenantId) => UTILS.generateEntityTypeUniqueCode(name, tenantId)
 
 /**
  * UserProjectsHelper
@@ -830,7 +830,7 @@ module.exports = class UserProjectsHelper {
 				const projectedData = {
 					_id: 1,
 					entityType: 1,
-					entityTypeUniqueId: 1,
+					entityTypeUniqueCode: 1,
 					tenantId: 1,
 					childHierarchyPath: 1,
 				}
@@ -903,8 +903,8 @@ module.exports = class UserProjectsHelper {
 			if (updateParentHierarchy) {
 				const relatedEntities = await this.relatedEntities(
 					parentEntity._id,
-					parentEntity.entityTypeUniqueId ||
-						buildEntityTypeUniqueId(parentEntity.entityType, parentEntity.tenantId),
+					parentEntity.entityTypeUniqueCode ||
+						buildentityTypeUniqueCode(parentEntity.entityType, parentEntity.tenantId),
 					parentEntity.entityType,
 					['_id']
 				)
@@ -970,14 +970,14 @@ module.exports = class UserProjectsHelper {
 	 * @method
 	 * @name relatedEntities
 	 * @param {String} entityId - entity id.
-	 * @param {String} entityTypeUniqueId - entity type unique id.
+	 * @param {String} entityTypeUniqueCode - entity type unique id.
 	 * @param {String} entityType - entity type.
 	 * @param {Array} [projection = "all"] - total fields to be projected.
 	 * @param {String} tenantId - user's tenant id
 	 * @returns {Array} - returns an array of related entities data.
 	 */
 
-	static relatedEntities(entityId, entityTypeUniqueId, entityType, projection = 'all', tenantId) {
+	static relatedEntities(entityId, entityTypeUniqueCode, entityType, projection = 'all', tenantId) {
 		return new Promise(async (resolve, reject) => {
 			try {
 				// if (
@@ -993,10 +993,10 @@ module.exports = class UserProjectsHelper {
 					tenantId,
 				}
 
-				if (entityTypeUniqueId && entityId && entityType) {
+				if (entityTypeUniqueCode && entityId && entityType) {
 					relatedEntitiesQuery[`groups.${entityType}`] = entityId
-					relatedEntitiesQuery['entityTypeUniqueId'] = {}
-					relatedEntitiesQuery['entityTypeUniqueId']['$ne'] = entityTypeUniqueId
+					relatedEntitiesQuery['entityTypeUniqueCode'] = {}
+					relatedEntitiesQuery['entityTypeUniqueCode']['$ne'] = entityTypeUniqueCode
 				} else {
 					throw {
 						status: HTTP_STATUS_CODE.bad_request.status,
@@ -1140,7 +1140,7 @@ module.exports = class UserProjectsHelper {
 					'metaInformation',
 					'entityType',
 					'entityTypeId',
-					'entityTypeUniqueId',
+					'entityTypeUniqueCode',
 					'registryDetails',
 				])
 				if (!entities.length > 0) {
@@ -1424,24 +1424,24 @@ module.exports = class UserProjectsHelper {
 		return new Promise(async (resolve, reject) => {
 			try {
 				console.log('queryParams -----> ', queryParams)
-				console.log('entityTypeQuery -----> ', queryParams.entityTypeUniqueId)
+				console.log('entityTypeQuery -----> ', queryParams.entityTypeUniqueCode)
 
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
-				const entityTypeUniqueId =
-					queryParams.entityTypeUniqueId || buildEntityTypeUniqueId(queryParams.type, tenantId)
-				const entityTypeQuery = queryParams.entityTypeUniqueId
+				const entityTypeUniqueCode =
+					queryParams.entityTypeUniqueCode || buildentityTypeUniqueCode(queryParams.type, tenantId)
+				const entityTypeQuery = queryParams.entityTypeUniqueCode
 					? {
 							tenantId: tenantId,
-							entityTypeUniqueId: entityTypeUniqueId,
+							entityTypeUniqueCode: entityTypeUniqueCode,
 					  }
 					: {
 							tenantId: tenantId,
-							$or: [{ entityTypeUniqueId: entityTypeUniqueId }, { name: queryParams.type }],
+							$or: [{ entityTypeUniqueCode: entityTypeUniqueCode }, { name: queryParams.type }],
 					  }
 				let entityTypeDocument = await entityTypeQueries.findOne(entityTypeQuery, {
 					_id: 1,
-					entityTypeUniqueId: 1,
+					entityTypeUniqueCode: 1,
 					name: 1,
 				})
 				if (!entityTypeDocument) {
@@ -1500,10 +1500,10 @@ module.exports = class UserProjectsHelper {
 						: []
 					// Construct the entity document to be created
 					let entityDoc = {
-						entityTypeUniqueId:
-							entityTypeDocument.entityTypeUniqueId ||
-							entityTypeUniqueId ||
-							buildEntityTypeUniqueId(entityTypeDocument.name, tenantId),
+						entityTypeUniqueCode:
+							entityTypeDocument.entityTypeUniqueCode ||
+							entityTypeUniqueCode ||
+							buildentityTypeUniqueCode(entityTypeDocument.name, tenantId),
 						childHierarchyPath: childHierarchyPath,
 						entityType: entityTypeDocument.name || queryParams.type,
 						code: singleEntity.externalId,
@@ -1743,7 +1743,7 @@ module.exports = class UserProjectsHelper {
 		return new Promise(async (resolve, reject) => {
 			try {
 				const entityTypeName = typeof entityType === 'object' ? entityType.type : entityType
-				const entityTypeUniqueIdInput = typeof entityType === 'object' ? entityType.entityTypeUniqueId : ''
+				const entityTypeUniqueCodeInput = typeof entityType === 'object' ? entityType.entityTypeUniqueCode : ''
 
 				// let solutionsDocument = new Array()
 				// if (programId && solutionId) {
@@ -1787,20 +1787,21 @@ module.exports = class UserProjectsHelper {
 				// Find the entity type document based on the provided entityType
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
-				const entityTypeUniqueId = entityTypeUniqueIdInput || buildEntityTypeUniqueId(entityTypeName, tenantId)
-				const entityTypeQuery = entityTypeUniqueIdInput
+				const entityTypeUniqueCode =
+					entityTypeUniqueCodeInput || buildentityTypeUniqueCode(entityTypeName, tenantId)
+				const entityTypeQuery = entityTypeUniqueCodeInput
 					? {
 							tenantId: tenantId,
-							entityTypeUniqueId: entityTypeUniqueId,
+							entityTypeUniqueCode: entityTypeUniqueCode,
 					  }
 					: {
 							tenantId: tenantId,
-							$or: [{ entityTypeUniqueId: entityTypeUniqueId }, { name: entityTypeName }],
+							$or: [{ entityTypeUniqueCode: entityTypeUniqueCode }, { name: entityTypeName }],
 					  }
 				let entityTypeDocument = await entityTypeQueries.findOne(entityTypeQuery, {
 					_id: 1,
 					tenantId: 1,
-					entityTypeUniqueId: 1,
+					entityTypeUniqueCode: 1,
 					name: 1,
 				})
 				if (!entityTypeDocument) {
@@ -1819,10 +1820,10 @@ module.exports = class UserProjectsHelper {
 								? userDetails.userInformation.userId
 								: CONSTANTS.common.SYSTEM
 						let entityCreation = {
-							entityTypeUniqueId:
-								entityTypeDocument.entityTypeUniqueId ||
-								entityTypeUniqueId ||
-								buildEntityTypeUniqueId(entityTypeDocument.name, tenantId),
+							entityTypeUniqueCode:
+								entityTypeDocument.entityTypeUniqueCode ||
+								entityTypeUniqueCode ||
+								buildentityTypeUniqueCode(entityTypeDocument.name, tenantId),
 							entityType: entityTypeDocument.name || entityTypeName,
 							registryDetails: {},
 							groups: {},
@@ -2140,7 +2141,7 @@ module.exports = class UserProjectsHelper {
 					schemaMetaInformation + '.externalId',
 					schemaMetaInformation + '.name',
 					'registryDetails.locationId',
-					'entityTypeUniqueId',
+					'entityTypeUniqueCode',
 				]
 
 				// Calculate skipping value based on pagination parameters
@@ -2149,7 +2150,7 @@ module.exports = class UserProjectsHelper {
 				// Query entities based on entity type unique id, with legacy entityTypeId fallback.
 				const entityTypeFilter = UTILS.strictObjectIdCheck(req.params._id)
 					? { entityTypeId: ObjectId(req.params._id) }
-					: { entityTypeUniqueId: req.params._id }
+					: { entityTypeUniqueCode: req.params._id }
 				let entityDocuments = await entitiesQueries.entityDocuments(
 					{
 						...entityTypeFilter,
@@ -2291,7 +2292,7 @@ module.exports = class UserProjectsHelper {
 							metaInformation: 1,
 							groups: 1,
 							entityType: 1,
-							entityTypeUniqueId: 1,
+							entityTypeUniqueCode: 1,
 						},
 					},
 					{
@@ -2319,7 +2320,7 @@ module.exports = class UserProjectsHelper {
 						entity.metaInformation.childrenCount = 0
 						entity.metaInformation.entityType = entity.entityType
 						entity.metaInformation.entityTypeId = entity.entityTypeId
-						entity.metaInformation.entityTypeUniqueId = entity.entityTypeUniqueId
+						entity.metaInformation.entityTypeUniqueCode = entity.entityTypeUniqueCode
 						entity.metaInformation.subEntityGroups = new Array()
 
 						entity.groups &&
@@ -2433,14 +2434,14 @@ async function populateTargetedEntityTypesData(targetedEntityTypes, tenantId) {
 				name: { $in: targetedEntityTypes },
 				tenantId: tenantId,
 			},
-			['name', '_id', 'entityTypeUniqueId']
+			['name', '_id', 'entityTypeUniqueCode']
 		)
 
 		formattedTargetedEntityTypes.forEach((entityType) => {
 			entityType['entityTypeId'] = entityType._id.toString()
 			entityType['entityType'] = entityType.name
-			entityType['entityTypeUniqueId'] =
-				entityType.entityTypeUniqueId || buildEntityTypeUniqueId(entityType.name, tenantId)
+			entityType['entityTypeUniqueCode'] =
+				entityType.entityTypeUniqueCode || buildentityTypeUniqueCode(entityType.name, tenantId)
 			delete entityType._id
 			delete entityType.name
 		})

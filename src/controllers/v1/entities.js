@@ -150,10 +150,10 @@ module.exports = class Entities extends Abstract {
 					'metaInformation.administration',
 					'metaInformation.city',
 					'metaInformation.country',
-					'entityTypeUniqueId',
+					'entityTypeCode',
 					'entityType',
 				]
-				let tenantId = req.userDetails?.tenantAndOrgInfo?.tenantId || req.userDetails.userInformation.tenantId
+				let tenantId = req.userDetails.userInformation.tenantId
 				let entityDocument = await entitiesQueries.entityDocuments(
 					{ _id: req.params._id, tenantId: tenantId },
 					projection
@@ -168,8 +168,8 @@ module.exports = class Entities extends Abstract {
 
 				let relatedEntities = await entitiesHelper.relatedEntities(
 					entityDocument[0]._id,
-					entityDocument[0].entityTypeUniqueId ||
-						UTILS.generateEntityTypeUniqueId(entityDocument[0].entityType, tenantId),
+					entityDocument[0].entityTypeCode ||
+						UTILS.generateEntityTypeCode(entityDocument[0].entityType, tenantId),
 					entityDocument[0].entityType,
 					projection,
 					tenantId
@@ -623,7 +623,7 @@ module.exports = class Entities extends Abstract {
 				// Prepare query parameters for adding the entity
 				let queryParams = {
 					type: req.query.type,
-					entityTypeUniqueId: req.query.entityTypeUniqueId,
+					entityTypeCode: req.query.entityTypeCode,
 					parentEntityId: req.query.parentEntityId,
 				}
 				// Call 'entitiesHelper.add' to perform the entity addition operation
@@ -995,7 +995,7 @@ module.exports = class Entities extends Abstract {
 				let newEntityData = await entitiesHelper.bulkCreate(
 					{
 						type: req.query.type,
-						entityTypeUniqueId: req.query.entityTypeUniqueId,
+						entityTypeCode: req.query.entityTypeCode,
 					},
 					null,
 					null,

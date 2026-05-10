@@ -74,7 +74,7 @@ module.exports = class EntityTypes extends Abstract {
 				}
 				let result = await entityTypesHelper.list(
 					query,
-					['name', 'entityTypeUniqueId'],
+					['name', 'entityTypeCode'],
 					req.pageNo,
 					req.pageSize,
 					req.searchText

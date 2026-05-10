@@ -9,7 +9,7 @@ module.exports = {
 	name: 'entities',
 	schema: {
 		entityTypeId: 'ObjectId',
-		entityTypeUniqueId: {
+		entityTypeCode: {
 			type: String,
 			index: true,
 		},
@@ -60,6 +60,10 @@ module.exports = {
 	compoundIndex: [
 		{
 			name: { 'metaInformation.externalId': 1, tenantId: 1 },
+			indexType: { unique: true },
+		},
+		{
+			name: { code: 1, tenantId: 1 },
 			indexType: { unique: true },
 		},
 	],

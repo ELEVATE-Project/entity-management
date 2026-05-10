@@ -11,7 +11,7 @@ module.exports = {
 		name: {
 			type: String,
 		},
-		entityTypeUniqueId: {
+		entityTypeCode: {
 			type: String,
 			index: true,
 		},
