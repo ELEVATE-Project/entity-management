@@ -52,5 +52,9 @@ module.exports = {
 			name: { name: 1, tenantId: 1 },
 			indexType: { unique: true },
 		},
+		{
+			name: { entityTypeCode: 1, tenantId: 1 },
+			indexType: { unique: true },
+		},
 	],
 }
