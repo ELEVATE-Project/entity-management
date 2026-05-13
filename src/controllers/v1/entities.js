@@ -620,10 +620,8 @@ module.exports = class Entities extends Abstract {
 	add(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Prepare query parameters for adding the entity
 				let queryParams = {
 					type: req.query.type,
-					entityTypeCode: req.query.entityTypeCode,
 					parentEntityId: req.query.parentEntityId,
 				}
 				// Call 'entitiesHelper.add' to perform the entity addition operation
