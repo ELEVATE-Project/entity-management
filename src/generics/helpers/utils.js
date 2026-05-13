@@ -246,7 +246,8 @@ function generateUniqueId() {
  * @param {String} tenantId - tenant id.
  * @returns {String} - unique identifier derived from name and tenant.
  */
-function generateEntityTypeCode(name, tenantId) {
+
+function generateUniqueCode(name, tenantId) {
 	return `${String(name || '').trim()}_${String(tenantId || '').trim()}`
 }
 
@@ -338,7 +339,7 @@ module.exports = {
 	noOfElementsInArray: noOfElementsInArray,
 	operatorValidation: operatorValidation,
 	generateUniqueId: generateUniqueId,
-	generateEntityTypeCode: generateEntityTypeCode,
+	generateUniqueCode: generateUniqueCode,
 	convertMongoIds: convertMongoIds,
 	stripOrgIds: stripOrgIds,
 	convertOrgIdsToString: convertOrgIdsToString,
