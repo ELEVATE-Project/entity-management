@@ -12,7 +12,7 @@ const entitiesQueries = require(DB_QUERY_BASE_PATH + '/entities')
 // const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper")
 // const programUsersQueries = require(DB_QUERY_BASE_PATH + "/programUsers")
 
-const buildEntityTypeUniqueId = (name, tenantId) => UTILS.generateEntityTypeUniqueId(name, tenantId)
+const generateUniqueCode = (name, tenantId) => UTILS.generateEntityTypeCode(name, tenantId)
 
 /**
  * UserProjectsHelper
@@ -39,10 +39,7 @@ module.exports = class UserProjectsHelper {
 							entityType = UTILS.valueParser(entityType)
 							entityType['tenantId'] = userDetails.tenantAndOrgInfo.tenantId
 							entityType['orgId'] = userDetails.tenantAndOrgInfo.orgId[0]
-							entityType['entityTypeUniqueId'] = buildEntityTypeUniqueId(
-								entityType.name,
-								entityType['tenantId']
-							)
+							entityType['entityTypeCode'] = generateUniqueCode(entityType.name, entityType['tenantId'])
 							entityType.registryDetails = {}
 							let removedKeys = []
 
@@ -191,7 +188,7 @@ module.exports = class UserProjectsHelper {
 						? userDetails.userInformation.userId
 						: CONSTANTS.common.SYSTEM
 
-				entityType.entityTypeUniqueId = buildEntityTypeUniqueId(entityType.name, entityType.tenantId)
+				entityType.entityTypeCode = generateUniqueCode(entityType.name, entityType.tenantId)
 
 				let newEntityType = await entityTypeQueries.create(
 					_.merge(
@@ -241,9 +238,9 @@ module.exports = class UserProjectsHelper {
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				const existingEntityType = await entityTypeQueries.findOne(
 					{ _id: ObjectId(entityTypeId), tenantId: tenantId },
-					{ name: 1, entityTypeUniqueId: 1 }
+					{ name: 1, entityTypeCode: 1 }
 				)
-				bodyData.entityTypeUniqueId = buildEntityTypeUniqueId(bodyData.name, tenantId)
+				bodyData.entityTypeCode = generateUniqueCode(bodyData.name, tenantId)
 
 				// Find and update the entity type by ID with the provided bodyData
 				let entityInformation = await entityTypeQueries.findOneAndUpdate(
@@ -256,13 +253,13 @@ module.exports = class UserProjectsHelper {
 					return reject({ status: 404, message: CONSTANTS.apiResponses.ENTITYTYPE_NOT_FOUND })
 				}
 
-				if (existingEntityType && existingEntityType.entityTypeUniqueId !== bodyData.entityTypeUniqueId) {
+				if (existingEntityType && existingEntityType.entityTypeCode !== bodyData.entityTypeCode) {
 					await entitiesQueries.updateMany(
 						{ entityTypeId: ObjectId(entityTypeId), tenantId: tenantId },
 						{
 							$set: {
 								entityType: bodyData.name,
-								entityTypeUniqueId: bodyData.entityTypeUniqueId,
+								entityTypeCode: bodyData.entityTypeCode,
 							},
 						}
 					)
@@ -351,7 +348,7 @@ module.exports = class UserProjectsHelper {
 									? userDetails && userDetails.userInformation.userId
 									: CONSTANTS.common.SYSTEM
 
-							entityType.entityTypeUniqueId = buildEntityTypeUniqueId(entityType.name, tenantId)
+							entityType.entityTypeCode = generateUniqueCode(entityType.name, tenantId)
 
 							if (!entityType.name) {
 								entityType['_SYSTEM_ID'] = ''
@@ -380,7 +377,7 @@ module.exports = class UserProjectsHelper {
 									{
 										$set: {
 											entityType: entityType.name,
-											entityTypeUniqueId: entityType.entityTypeUniqueId,
+											entityTypeCode: entityType.entityTypeCode,
 										},
 									}
 								)
@@ -480,9 +477,19 @@ module.exports = class UserProjectsHelper {
 
 				// Retrieve entity type data based on the provided query and projection
 				const result = await entityTypeQueries.getAggregate(aggregateData)
+				const tenantId = bodyQuery.tenantId
+				const responseData = (result[0] && Array.isArray(result[0].data) ? result[0].data : []).map(
+					(entityType) => {
+						// Backfill entityTypeCode for older records that were created before the field existed.
+						if (!entityType.entityTypeCode && entityType.name && tenantId) {
+							entityType.entityTypeCode = generateUniqueCode(entityType.name, tenantId)
+						}
+						return entityType
+					}
+				)
 				return resolve({
 					message: CONSTANTS.apiResponses.ENTITY_TYPES_FETCHED,
-					result: result[0].data,
+					result: responseData,
 				})
 			} catch (error) {
 				return reject(error)
