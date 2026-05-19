@@ -129,6 +129,8 @@ module.exports = class UserProjectsHelper {
 						} else {
 							// Add failure status if no matching entity is found
 							rowStatus[`${key}Status`] = CONSTANTS.apiResponses.ENTITY_NOT_FOUND
+							// Add failure status if no matching entity is found to the csv file.
+							entityIds.push(CONSTANTS.apiResponses.ENTITY_NOT_FOUND)
 						}
 					}
 
@@ -706,14 +708,19 @@ module.exports = class UserProjectsHelper {
 				let finalEntityDocuments = []
 				// check the language criteria is set to english or not
 				const isEnglish = !language || language === CONSTANTS.common.ENGLISH_LANGUGE_CODE
-				// construct the name expression based on language
-				const nameExpr = isEnglish ? '$metaInformation.name' : `$translations.${language}.name`
+				const shouldSortByName = sortKey === 'name' && !!sortOrder
+				// construct the name expression based on language with fallback to English
+				const nameExpr = isEnglish
+					? '$metaInformation.name'
+					: { $ifNull: [`$translations.${language}.name`, '$metaInformation.name'] }
 				// create a query pipeline
 				let pipeline = [
 					queryObject,
 					{
 						$project: {
 							name: nameExpr,
+							// Add a lowercase helper for case-insensitive name sorting.
+							...(shouldSortByName ? { sortName: { $toLower: nameExpr } } : {}),
 							externalId: '$metaInformation.externalId',
 							addressLine1: '$metaInformation.addressLine1',
 							addressLine2: '$metaInformation.addressLine2',
@@ -728,7 +735,14 @@ module.exports = class UserProjectsHelper {
 					sortOrder = sortOrder.toLowerCase() === 'desc' ? -1 : 1
 
 					// Create sort object dynamically
-					pipeline.push({ $sort: { [sortKey]: sortOrder } })
+					// For name sorting, use the lowercase helper and remove it from output.
+					if (sortKey === 'name') {
+						pipeline.push({ $sort: { sortName: sortOrder } })
+						pipeline.push({ $project: { sortName: 0 } })
+					} else {
+						// For other fields, sort directly by the requested key.
+						pipeline.push({ $sort: { [sortKey]: sortOrder } })
+					}
 				}
 				// append the remaining to pipeline
 				pipeline = [
@@ -1278,7 +1292,6 @@ module.exports = class UserProjectsHelper {
 				let result = await entitiesQueries.getAggregate(aggregateData)
 				count = result?.[0]?.totalCount?.[0]?.count || 0
 
-
 				if (aggregateStaging == true) {
 					if (!Array.isArray(result) || !(result.length > 0)) {
 						throw {
@@ -1707,45 +1720,8 @@ module.exports = class UserProjectsHelper {
 	static bulkCreate(entityType, programId, solutionId, userDetails, entityCSVData, translationFile) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// let solutionsDocument = new Array()
-				// if (programId && solutionId) {
-
-				// 	solutionsDocument = await database.models.entityTypes
-				// 		.find(
-				// 			{
-				// 				externalId: solutionId,
-				// 				programExternalId: programId,
-				// 			},
-				// 			{
-				// 				programId: 1,
-				// 				externalId: 1,
-				// 				subType: 1,
-				// 				entityType: 1,
-				// 				entityTypeId: 1,
-				// 			}
-				// 		)
-				// 		.lean()
-				// }
-
-				// let solutionsData
-
-				// if (solutionsDocument.length) {
-				// 	solutionsData = solutionsDocument.reduce(
-				// 		(ac, entities) => ({
-				// 			...ac,
-				// 			[entities.metaInformation.externalId]: {
-				// 				subType: entities.subType,
-				// 				solutionId: entities._id,
-				// 				programId: entities.programId,
-				// 				entityType: entities.entityType,
-				// 				entityTypeId: entities.entityTypeId,
-				// 				newEntities: new Array(),
-				// 			},
-				// 		}),
-				// 		{}
-				// 	)
-				// }
-
+				// Flag to track if at least one record is successfully processed
+				let hasSuccess = false
 				// Find the entity type document based on the provided entityType
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				let orgId = userDetails.tenantAndOrgInfo.orgId[0]
@@ -1830,9 +1806,6 @@ module.exports = class UserProjectsHelper {
 						if (translationFile) {
 							entityCreation['translations'] = translationFile[entityCreation.metaInformation.name]
 						}
-
-						// if (solutionsData && singleEntity._solutionId && singleEntity._solutionId != '')
-						// 	singleEntity['createdByProgramId'] = solutionsData[singleEntity._solutionId]['programId']
 						let newEntity = await entitiesQueries.create(entityCreation)
 						if (!newEntity._id) {
 							return
@@ -1843,19 +1816,8 @@ module.exports = class UserProjectsHelper {
 						if (singleEntity._SYSTEM_ID) {
 							singleEntity.status = CONSTANTS.apiResponses.SUCCESS
 							singleEntity.message = CONSTANTS.apiResponses.SUCCESS
+							hasSuccess = true
 						}
-
-						// if (
-						// 	solutionsData &&
-						// 	singleEntity._solutionId &&
-						// 	singleEntity._solutionId != '' &&
-						// 	newEntity.entityType == solutionsData[singleEntity._solutionId]['entityType']
-						// ) {
-						// 	solutionsData[singleEntity._solutionId].newEntities.push(newEntity._id)
-						// }
-
-						// await this.pushEntitiesToElasticSearch([singleEntity["_SYSTEM_ID"]]);
-
 						return singleEntity
 					})
 				)
@@ -1863,23 +1825,11 @@ module.exports = class UserProjectsHelper {
 					throw CONSTANTS.apiResponses.SOMETHING_WRONG_INSERTED_UPDATED
 				}
 
-				// solutionsData &&
-				// 	(await Promise.all(
-				// 		Object.keys(solutionsData).map(async (solutionExternalId) => {
-				// 			if (solutionsData[solutionExternalId].newEntities.length > 0) {
-				// 				await database.models.solutions.updateOne(
-				// 					{ _id: solutionsData[solutionExternalId].solutionId },
-				// 					{
-				// 						$addToSet: {
-				// 							entities: { $each: solutionsData[solutionExternalId].newEntities },
-				// 						},
-				// 					}
-				// 				)
-				// 			}
-				// 		})
-				// 	))
-
-				return resolve(entityUploadedData)
+				// return resolve(entityUploadedData)
+				return resolve({
+					data: entityUploadedData,
+					hasSuccess,
+				})
 			} catch (error) {
 				return reject(error)
 			}
@@ -1899,6 +1849,8 @@ module.exports = class UserProjectsHelper {
 	static bulkUpdate(entityCSVData, translationFile, userDetails) {
 		return new Promise(async (resolve, reject) => {
 			try {
+				// Flag to track if at least one record is successfully processed
+				let hasSuccess = false
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
 				const entityUploadedData = await Promise.all(
 					entityCSVData.map(async (singleEntity) => {
@@ -1982,6 +1934,7 @@ module.exports = class UserProjectsHelper {
 							} else {
 								singleEntity['status'] = CONSTANTS.apiResponses.SUCCESS
 								singleEntity['message'] = CONSTANTS.apiResponses.SUCCESS
+								hasSuccess = true
 							}
 						} else {
 							singleEntity['status'] = CONSTANTS.apiResponses.NO_INFORMATION_TO_UPDATE
@@ -1996,7 +1949,10 @@ module.exports = class UserProjectsHelper {
 					throw CONSTANTS.apiResponses.SOMETHING_WRONG_INSERTED_UPDATED
 				}
 
-				return resolve(entityUploadedData)
+				return resolve({
+					data: entityUploadedData,
+					hasSuccess,
+				})
 			} catch (error) {
 				return reject(error)
 			}
