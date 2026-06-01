@@ -62,7 +62,6 @@ module.exports = class EntityTypes extends Abstract {
 			try {
 				let organizationId
 				let query = {}
-
 				// create query to fetch assets
 				query['tenantId'] = req.userDetails.tenantAndOrgInfo
 					? req.userDetails.tenantAndOrgInfo.tenantId
@@ -73,7 +72,13 @@ module.exports = class EntityTypes extends Abstract {
 					organizationId = req.userDetails.userInformation.organizationId
 					query['orgId'] = { $in: [organizationId] }
 				}
-				let result = await entityTypesHelper.list(query, ['name'], req.pageNo, req.pageSize, req.searchText)
+				let result = await entityTypesHelper.list(
+					query,
+					['name', 'entityTypeCode'],
+					req.pageNo,
+					req.pageSize,
+					req.searchText
+				)
 
 				return resolve(result)
 			} catch (error) {

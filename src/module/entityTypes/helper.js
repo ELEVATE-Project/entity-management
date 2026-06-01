@@ -7,9 +7,12 @@
 
 // Dependencies
 const entityTypeQueries = require(DB_QUERY_BASE_PATH + '/entityTypes')
+const entitiesQueries = require(DB_QUERY_BASE_PATH + '/entities')
 
 // const entitiesHelper = require(MODULES_BASE_PATH + "/entities/helper")
 // const programUsersQueries = require(DB_QUERY_BASE_PATH + "/programUsers")
+
+const generateUniqueCode = (name, tenantId) => UTILS.generateEntityTypeCode(name, tenantId)
 
 /**
  * UserProjectsHelper
@@ -36,6 +39,7 @@ module.exports = class UserProjectsHelper {
 							entityType = UTILS.valueParser(entityType)
 							entityType['tenantId'] = userDetails.tenantAndOrgInfo.tenantId
 							entityType['orgId'] = userDetails.tenantAndOrgInfo.orgId[0]
+							entityType['entityTypeCode'] = generateUniqueCode(entityType.name, entityType['tenantId'])
 							entityType.registryDetails = {}
 							let removedKeys = []
 
@@ -184,6 +188,8 @@ module.exports = class UserProjectsHelper {
 						? userDetails.userInformation.userId
 						: CONSTANTS.common.SYSTEM
 
+				entityType.entityTypeCode = generateUniqueCode(entityType.name, entityType.tenantId)
+
 				let newEntityType = await entityTypeQueries.create(
 					_.merge(
 						{
@@ -230,6 +236,11 @@ module.exports = class UserProjectsHelper {
 				delete bodyData.orgIds
 
 				let tenantId = userDetails.tenantAndOrgInfo.tenantId
+				const existingEntityType = await entityTypeQueries.findOne(
+					{ _id: ObjectId(entityTypeId), tenantId: tenantId },
+					{ name: 1, entityTypeCode: 1 }
+				)
+				bodyData.entityTypeCode = generateUniqueCode(bodyData.name, tenantId)
 
 				// Find and update the entity type by ID with the provided bodyData
 				let entityInformation = await entityTypeQueries.findOneAndUpdate(
@@ -240,6 +251,18 @@ module.exports = class UserProjectsHelper {
 
 				if (!entityInformation) {
 					return reject({ status: 404, message: CONSTANTS.apiResponses.ENTITYTYPE_NOT_FOUND })
+				}
+
+				if (existingEntityType && existingEntityType.entityTypeCode !== bodyData.entityTypeCode) {
+					await entitiesQueries.updateMany(
+						{ entityTypeId: ObjectId(entityTypeId), tenantId: tenantId },
+						{
+							$set: {
+								entityType: bodyData.name,
+								entityTypeCode: bodyData.entityTypeCode,
+							},
+						}
+					)
 				}
 
 				resolve({
@@ -321,9 +344,11 @@ module.exports = class UserProjectsHelper {
 
 							// Get the userId from userDetails or default to SYSTEM
 							const userId =
-								userDetails && userDetails.userInformation.id
-									? userDetails && userDetails.userInformation.id
+								userDetails && userDetails.userInformation.userId
+									? userDetails && userDetails.userInformation.userId
 									: CONSTANTS.common.SYSTEM
+
+							entityType.entityTypeCode = generateUniqueCode(entityType.name, tenantId)
 
 							if (!entityType.name) {
 								entityType['_SYSTEM_ID'] = ''
@@ -345,6 +370,18 @@ module.exports = class UserProjectsHelper {
 									entityType
 								)
 							)
+
+							if (updateEntityType && updateEntityType._id) {
+								await entitiesQueries.updateMany(
+									{ entityTypeId: ObjectId(entityType._SYSTEM_ID), tenantId: tenantId },
+									{
+										$set: {
+											entityType: entityType.name,
+											entityTypeCode: entityType.entityTypeCode,
+										},
+									}
+								)
+							}
 
 							delete entityType.registryDetails
 
@@ -440,9 +477,19 @@ module.exports = class UserProjectsHelper {
 
 				// Retrieve entity type data based on the provided query and projection
 				const result = await entityTypeQueries.getAggregate(aggregateData)
+				const tenantId = bodyQuery.tenantId
+				const responseData = (result[0] && Array.isArray(result[0].data) ? result[0].data : []).map(
+					(entityType) => {
+						// Backfill entityTypeCode for older records that were created before the field existed.
+						if (!entityType.entityTypeCode && entityType.name && tenantId) {
+							entityType.entityTypeCode = generateUniqueCode(entityType.name, tenantId)
+						}
+						return entityType
+					}
+				)
 				return resolve({
 					message: CONSTANTS.apiResponses.ENTITY_TYPES_FETCHED,
-					result: result[0].data,
+					result: responseData,
 				})
 			} catch (error) {
 				return reject(error)

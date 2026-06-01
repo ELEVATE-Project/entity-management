@@ -150,7 +150,7 @@ module.exports = class Entities extends Abstract {
 					'metaInformation.administration',
 					'metaInformation.city',
 					'metaInformation.country',
-					'entityTypeId',
+					'entityTypeCode',
 					'entityType',
 				]
 				let tenantId = req.userDetails.userInformation.tenantId
@@ -168,7 +168,8 @@ module.exports = class Entities extends Abstract {
 
 				let relatedEntities = await entitiesHelper.relatedEntities(
 					entityDocument[0]._id,
-					entityDocument[0].entityTypeId,
+					entityDocument[0].entityTypeCode ||
+						UTILS.generateEntityTypeCode(entityDocument[0].entityType, tenantId),
 					entityDocument[0].entityType,
 					projection,
 					tenantId
@@ -619,7 +620,6 @@ module.exports = class Entities extends Abstract {
 	add(req) {
 		return new Promise(async (resolve, reject) => {
 			try {
-				// Prepare query parameters for adding the entity
 				let queryParams = {
 					type: req.query.type,
 					parentEntityId: req.query.parentEntityId,
@@ -991,7 +991,10 @@ module.exports = class Entities extends Abstract {
 					translationFile = JSON.parse(req.files.translationFile.data.toString())
 				}
 				let newEntityData = await entitiesHelper.bulkCreate(
-					req.query.type,
+					{
+						type: req.query.type,
+						entityTypeCode: req.query.entityTypeCode,
+					},
 					null,
 					null,
 					req.userDetails,

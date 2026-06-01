@@ -11,6 +11,10 @@ module.exports = {
 		name: {
 			type: String,
 		},
+		entityTypeCode: {
+			type: String,
+			index: true,
+		},
 		profileForm: Array,
 		profileFields: Array,
 		types: Array,
@@ -46,6 +50,10 @@ module.exports = {
 	compoundIndex: [
 		{
 			name: { name: 1, tenantId: 1 },
+			indexType: { unique: true },
+		},
+		{
+			name: { entityTypeCode: 1, tenantId: 1 },
 			indexType: { unique: true },
 		},
 	],

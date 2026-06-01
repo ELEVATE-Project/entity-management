@@ -102,7 +102,6 @@ module.exports = (req) => {
 		},
 		listByEntityType: function () {
 			req.checkParams('_id').exists().withMessage('required Entity type')
-			req.checkParams('_id').exists().isMongoId().withMessage('Invalid Entity ID')
 		},
 		subEntityListBasedOnRoleAndLocation: function () {
 			req.checkParams('_id').exists().withMessage('required state location id')

@@ -238,9 +238,22 @@ function generateUniqueId() {
 	return uuidV4()
 }
 
+/**
+ * Build a tenant-scoped unique identifier for entity types.
+ * @function
+ * @name generateEntityTypeCode
+ * @param {String} name - entity type name.
+ * @param {String} tenantId - tenant id.
+ * @returns {String} - unique identifier derived from name and tenant.
+ */
+
+function generateUniqueCode(name, tenantId) {
+	return `${String(name || '').trim()}_${String(tenantId || '').trim()}`
+}
+
 // Helper function to convert mongo ids to objectIds to facilitate proper query in aggregate function
 function convertMongoIds(query) {
-	const keysToConvert = ['_id', 'entityTypeId'] // Add other fields if needed
+	const keysToConvert = ['_id', 'entityTypeCode'] // Add other fields if needed
 
 	const convertValue = (value) => {
 		if (Array.isArray(value)) {
@@ -326,6 +339,7 @@ module.exports = {
 	noOfElementsInArray: noOfElementsInArray,
 	operatorValidation: operatorValidation,
 	generateUniqueId: generateUniqueId,
+	generateUniqueCode: generateUniqueCode,
 	convertMongoIds: convertMongoIds,
 	stripOrgIds: stripOrgIds,
 	convertOrgIdsToString: convertOrgIdsToString,
